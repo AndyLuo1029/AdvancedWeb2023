@@ -4,19 +4,25 @@
   <mat-card class="my-card">
      <mat-card-content>
         <mat-card-content>
-            <form class="my-form">
-               <mat-form-field class="full-width">
+            <form class="my-form" [formGroup]="loginForm">
+               <mat-form-field class="full-width" hideRequiredMarker>
                   <mat-label>Number</mat-label>
-                  <input matInput placeholder="Number" [(ngModel)]="number" name="number">
+                  <input matInput placeholder="Number" formControlName="number" name="number">
+
+                  <mat-error *ngIf="loginForm.controls['number'].errors?.['required']">
+                     Please enter number
+                  </mat-error>
                </mat-form-field>
-               <mat-form-field class="full-width">
+               <mat-form-field class="full-width" hideRequiredMarker>
                   <mat-label>Password</mat-label>
-                  <input matInput placeholder="Password" type="password" [(ngModel)]="password" name="password">
+                  <input matInput placeholder="Password" type="password" formControlName="password" name="password">
+                  
+                  <mat-error *ngIf="loginForm.controls['password'].errors?.['required']">
+                     Please enter password
+                  </mat-error>
                </mat-form-field>
+               <button mat-raised-button (click)="login()" color="primary" type="submit">Login</button>
             </form>
           </mat-card-content>
      </mat-card-content>
-     <mat-card-actions>
-        <button mat-raised-button (click)="login()" color="primary">Login</button>
-     </mat-card-actions>
   </mat-card>
