@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import { FormGroup, FormControl, Validators, ValidatorFn } from '@angular/forms';
+import {HttpClient, HttpHeaders} from "@angular/common/http";
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-register',
@@ -8,6 +10,8 @@ import { FormGroup, FormControl, Validators, ValidatorFn } from '@angular/forms'
 })
 export class RegisterComponent {
 
+  constructor(public http:HttpClient, private router: Router) { }
+  
   registerForm = new FormGroup({
     // Setting Validation Controls
     username: new FormControl('', [Validators.required]),
@@ -72,13 +76,28 @@ export class RegisterComponent {
     };
   }
 
+  private url = "http://localhost:8080/register";
   register(): void {
     if (this.registerForm.invalid) {
-  
       return;
     }
-    console.log(this.registerForm.value.username);
-
+    // console.log(this.registerForm.value.username);
+    const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
+    this.http.post(this.url, 
+        {username:this.registerForm.value.username, 
+        password:this.registerForm.value.password, 
+        email: this.registerForm.value.email}, httpOptions)
+      .subscribe((response:any) => { 
+        if(response.code == 400) {
+          window.alert(response.message); 
+        }
+        else {
+          if(response.code == 200) {
+            window.alert(response.message); 
+            this.router.navigate(['/login'])
+          }
+        }
+      });
     // if (this.number === 'admin' && this.password === '123456') {
     //   // sessionStorage.setItem('access_token', 'true')
     //   this.router.navigate(['/'])

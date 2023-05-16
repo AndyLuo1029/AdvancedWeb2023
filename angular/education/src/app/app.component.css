@@ -4,3 +4,8 @@
 .home {
   font-size: 20px;
 }
+.router-active {
+  background: rgba(255,255,255,.15);
+  border: 2px solid rgb(255, 255, 255);
+  border-radius: 10px;
+}

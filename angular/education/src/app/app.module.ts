@@ -10,6 +10,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { HomeComponent } from './home/home.component';
 import { ThreeJsComponent } from './three-js/three-js.component';
+import { HttpClientModule } from '@angular/common/http';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -17,14 +19,15 @@ import { ThreeJsComponent } from './three-js/three-js.component';
     RegisterComponent,
     PageNotFoundComponent,
     HomeComponent,
-    ThreeJsComponent
+    ThreeJsComponent,
   ],
   imports: [
     MyMaterialModule,
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    FormsModule, ReactiveFormsModule
+    FormsModule, ReactiveFormsModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]
