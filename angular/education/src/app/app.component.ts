@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
 export class AppComponent {
   title = 'education';
 
-  hideWhen: Array<string> = ['/login', '/register'];
+  hideWhen: Array<string> = ['/login', '/register', '/home'];
   // put all the route names where you want it hidden in above array
 
   constructor(private _router:Router) {}
