@@ -8,7 +8,7 @@
         select * from User where username = #{username}
     </select>
     <insert id="addUser" parameterType="com.web.education.pojo.User" useGeneratedKeys="true" keyProperty="userID">
-        insert into User (username, password, email, phone) values (#{username}, #{password}, #{email}, #{phone})
+        insert into User (username, password, email) values (#{username}, #{password}, #{email})
     </insert>
 
 </mapper>

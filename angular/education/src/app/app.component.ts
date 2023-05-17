@@ -13,7 +13,11 @@ export class AppComponent {
   // put all the route names where you want it hidden in above array
 
   constructor(private _router:Router) {}
- 
+
+  isLogin() {
+    const username = localStorage.getItem("username");
+    return (username != null && username != "")
+  }
 
   shouldShowTopbar() {
     // console.log(this._router.routerState.snapshot.url)

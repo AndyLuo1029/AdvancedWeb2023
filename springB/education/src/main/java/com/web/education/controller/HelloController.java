@@ -4,13 +4,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.atomic.AtomicLong;
 import com.web.education.response.GreetingResponse;
+
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+
 @RestController
 public class HelloController {
 
-    @RequestMapping("/hello")
-    public String index() {
-        return "Hello, World!";
-    }
     private final AtomicLong counter = new AtomicLong();
     @CrossOrigin(origins = "*")
     @RequestMapping("/greeting")

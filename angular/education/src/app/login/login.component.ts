@@ -38,7 +38,9 @@ export class LoginComponent {
         else {
           if(response.code == 200) {
             window.alert(response.message); 
-            this.router.navigate(['/home'])
+            localStorage.setItem("token", response.token);
+            localStorage.setItem("username", response.username);
+            this.router.navigate(['/home']);
           }
         }
       });

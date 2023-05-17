@@ -12,23 +12,9 @@ export class LogoutComponent {
 
   private url = "http://localhost:8080/logout";
   logout(): void {
-  
-    const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
-    this.http.post(this.url, 
-        {
-          username:"123", 
-         
-        }, httpOptions)
-      .subscribe((response:any) => { 
-        if(response.code == 400) {
-          window.alert(response.message); 
-        }
-        else {
-          if(response.code == 200) {
-            window.alert(response.message); 
-            this.router.navigate(['/home'])
-          }
-        }
-      });
-}
+    localStorage.removeItem("token");
+    localStorage.removeItem("username"); 
+    this.router.navigate(['/login'])
+ 
+  }
 }
