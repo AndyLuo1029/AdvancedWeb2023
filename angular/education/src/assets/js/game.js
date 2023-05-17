@@ -782,7 +782,7 @@ class PlayerLocal extends Player{
 		super(game, model);
 		
 		const player = this;
-		const socket = io.connect();
+		const socket = io.connect("127.0.0.1:2002");
 		socket.on('setId', function(data){
 			player.id = data.id;
 		});

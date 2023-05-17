@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, NgZone, OnInit } from '@angular/core';
 // import * as THREE from 'three';
 // const THREEJS = require('THREEJS')
 import Game from '../../assets/js/game.js'
@@ -10,6 +10,8 @@ import Game from '../../assets/js/game.js'
   styleUrls: ['./three-js.component.css']
 })
 export class ThreeJsComponent implements OnInit{
+
+	constructor(private ngZone:NgZone) {}
     loadScript(url: string) {
 		const body = <HTMLDivElement> document.body;
 		const script = document.createElement('script');
@@ -26,9 +28,12 @@ export class ThreeJsComponent implements OnInit{
 		// this.loadScript('../../assets/libs/FBXLoader.js');
 		// this.loadScript('../../assets/libs/Detector.js');
 		// this.loadScript('../../assets/libs/toon3d.js');
-		document.addEventListener("DOMContentLoaded", function(){
-			const game = new Game();
-		});
+		this.ngZone.runOutsideAngular(() => {
+			document.addEventListener("DOMContentLoaded", function(){
+				const game = new Game();
+			});
+		  });
+	
 	}
 }
 

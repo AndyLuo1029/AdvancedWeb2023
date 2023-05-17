@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { LogoutComponent } from './logout/logout.component';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',

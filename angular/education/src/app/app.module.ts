@@ -11,6 +11,7 @@ import { PageNotFoundComponent } from './page-not-found/page-not-found.component
 import { HomeComponent } from './home/home.component';
 import { ThreeJsComponent } from './three-js/three-js.component';
 import { HttpClientModule } from '@angular/common/http';
+import { LogoutComponent } from './logout/logout.component';
 
 @NgModule({
   declarations: [
@@ -20,6 +21,7 @@ import { HttpClientModule } from '@angular/common/http';
     PageNotFoundComponent,
     HomeComponent,
     ThreeJsComponent,
+    LogoutComponent,
   ],
   imports: [
     MyMaterialModule,
