@@ -1,0 +1,11 @@
+.user-data {
+    display: flex;
+}
+.user-table {
+    height: 500px;
+    width: 500px;
+}
+#userChart {
+    height: 500px;
+    width: 700px;
+}

@@ -15,7 +15,7 @@ import { LogoutComponent } from './logout/logout.component';
 import { AuthInterceptor } from './http-interceptors/auth-interceptor';
 import { LinkComponent } from './link/link.component';
 import { SelectComponent } from './select/select.component';
-import { BackErrorHandler } from './http-interceptors/back-error-handler';
+import { NgxEchartsModule } from 'ngx-echarts';
 import { UserInfoComponent } from './user-info/user-info.component';
 
 @NgModule({
@@ -37,7 +37,10 @@ import { UserInfoComponent } from './user-info/user-info.component';
     AppRoutingModule,
     BrowserAnimationsModule,
     FormsModule, ReactiveFormsModule,
-    HttpClientModule
+    HttpClientModule,
+    NgxEchartsModule.forRoot({
+      echarts: () => import('echarts')
+    })
   ],
   providers: [{provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi:true}],
   bootstrap: [AppComponent]

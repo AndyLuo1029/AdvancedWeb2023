@@ -17,7 +17,7 @@ const routes: Routes = [
   { path: 'login', title: '登录', component: LoginComponent, canActivate: [notLoginGuard] },
   { path: 'three', title: 'three', component: ThreeJsComponent },
   { path: 'select', title: '选择角色', component: SelectComponent, canActivate: [loginGuard]},
-  { path: 'user', title: '个人信息', component: UserInfoComponent, canActivate: [loginGuard] }
+  { path: 'user', title: '个人信息', component: UserInfoComponent, canActivate: [loginGuard]},
   { path: '**', component: PageNotFoundComponent },
 ];
 

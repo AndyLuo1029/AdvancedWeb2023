@@ -4,7 +4,7 @@ import {HttpClient, HttpHeaders} from "@angular/common/http";
 import { Router } from '@angular/router';
 import { BackErrorHandler } from '../http-interceptors/back-error-handler';
 import { catchError } from 'rxjs';
-
+import { Global } from '../global';
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
@@ -79,7 +79,7 @@ export class RegisterComponent {
     };
   }
 
-  private url = "http://localhost:8080/register";
+  private url = Global.backURL + "/register";
   register(): void {
     if (this.registerForm.invalid) {
       return;

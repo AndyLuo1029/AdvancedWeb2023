@@ -1,1 +1,41 @@
-<p>user-info works!</p>
+<div class="user-data" *ngIf="!empty">
+    <div echarts [options]="options" id ="userChart" >测试图表</div>
+    <div class="user-table">
+        <table mat-table id="userTable" [dataSource]="dataSource" class="mat-elevation-z8">
+
+            <!--- Note that these columns can be defined in any order.
+                  The actual rendered columns are set as a property on the row definition" -->
+          
+            <!-- Position Column -->
+            <ng-container matColumnDef="position">
+              <th mat-header-cell *matHeaderCellDef> No. </th>
+              <td mat-cell *matCellDef="let element"> {{element.position}} </td>
+              <!-- <td mat-footer-cell *matFooterCellDef> 1 </td> -->
+            </ng-container>
+    
+            <ng-container matColumnDef="hitrate">
+              <th mat-header-cell *matHeaderCellDef> 命中率% </th>
+              <td mat-cell *matCellDef="let element"> {{element.hitrate}} </td>
+            </ng-container>
+          
+            <ng-container matColumnDef="time">
+                <th mat-header-cell *matHeaderCellDef> 通过用时(s) </th>
+                <td mat-cell *matCellDef="let element"> {{element.time=='0'?'-':element.time}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef> 完成时间 </th>
+                <td mat-cell *matCellDef="let element"> {{element.date}} </td>
+            </ng-container>
+          
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            <!-- <tr mat-footer-row *matFooterRowDef="displayedColumns"></tr> -->
+          </table>
+          
+          
+    </div>
+</div>
+<div *ngIf="empty">
+    暂无数据
+</div>

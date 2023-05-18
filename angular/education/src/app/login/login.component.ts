@@ -1,9 +1,10 @@
 import { Component, ErrorHandler } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import {HttpClient, HttpHeaders} from "@angular/common/http";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { catchError } from 'rxjs';
 import { BackErrorHandler } from '../http-interceptors/back-error-handler'
+import { Global } from '../global';
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
@@ -22,7 +23,7 @@ export class LoginComponent {
     password: new FormControl('', [Validators.required])
   })
 
-  private url = "http://localhost:8080/login";
+  private url = Global.backURL+"/login";
   login(): void {
     if (this.loginForm.invalid) {
   

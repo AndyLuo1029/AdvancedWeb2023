@@ -15,8 +15,8 @@ public class JwtUtil {
     private static final String SECRET = "!Q@W#E$R^Y&U";
     //token签发者
     private static final String ISSUSRE = "JOSH";
-    //token过期时间
-    public static final Long EXPIRE_DATE = 24*60*60L;
+    //token过期时间(毫秒)
+    public static final Long EXPIRE_DATE = 1000 * 24*60*60L;
 
 
     public static String createToken(String username){
