@@ -2,15 +2,18 @@ import { Component } from '@angular/core';
 import { FormGroup, FormControl, Validators, ValidatorFn } from '@angular/forms';
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import { Router } from '@angular/router';
+import { BackErrorHandler } from '../http-interceptors/back-error-handler';
+import { catchError } from 'rxjs';
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.css']
+  styleUrls: ['./register.component.css'],
+  providers: [{provide: BackErrorHandler}]
 })
 export class RegisterComponent {
 
-  constructor(public http:HttpClient, private router: Router) { }
+  constructor(public http:HttpClient, private router: Router, private handler:BackErrorHandler) { }
   
   registerForm = new FormGroup({
     // Setting Validation Controls
@@ -87,6 +90,7 @@ export class RegisterComponent {
         {username:this.registerForm.value.username, 
         password:this.registerForm.value.password, 
         email: this.registerForm.value.email}, httpOptions)
+      .pipe(catchError(this.handler.handleError))
       .subscribe((response:any) => { 
         if(response.code == 400) {
           window.alert(response.message); 

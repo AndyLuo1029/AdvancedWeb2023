@@ -304,6 +304,8 @@
       <span class="spacer"></span>
       <button mat-flat-button color="primary" routerLink="/register" routerLinkActive="router-active" *ngIf="!isLogin()">注册</button>
       <button mat-flat-button color="primary" routerLink="/login" routerLinkActive="router-active" *ngIf="!isLogin()">登录</button>
+      <button mat-flat-button color="primary" routerLink="/select" routerLinkActive="router-active" *ngIf="isLogin()">选择角色</button>
+      <!-- <app-link></app-link> -->
       <app-logout *ngIf="isLogin()"></app-logout>
   </mat-toolbar-row>
 </mat-toolbar>

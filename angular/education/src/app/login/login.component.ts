@@ -1,15 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, ErrorHandler } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import {HttpClient, HttpHeaders} from "@angular/common/http";
+import { catchError } from 'rxjs';
+import { BackErrorHandler } from '../http-interceptors/back-error-handler'
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
+  providers: [{provide: BackErrorHandler}]
 })
 export class LoginComponent {
 
-  constructor(public http:HttpClient, public router: Router) { }
+  constructor(public http:HttpClient, public router: Router, private handler:BackErrorHandler) { }
   // number: string = ''
   // password: string = ''
 
@@ -31,6 +34,7 @@ export class LoginComponent {
           username:this.loginForm.value.number, 
           password:this.loginForm.value.password, 
         }, httpOptions)
+      .pipe(catchError(this.handler.handleError))
       .subscribe((response:any) => { 
         if(response.code == 400) {
           window.alert(response.message); 

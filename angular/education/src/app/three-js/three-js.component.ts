@@ -2,8 +2,8 @@ import { Component, NgZone, OnInit } from '@angular/core';
 // import * as THREE from 'three';
 // const THREEJS = require('THREEJS')
 import Game from '../../assets/js/game.js'
-// const THREEJS = require('../../assets/js/game.js')
-// import THREEJS fomr 'THREEJS'
+
+import * as io from 'socket.io-client';
 @Component({
   selector: 'app-three-js',
   templateUrl: './three-js.component.html',
@@ -29,9 +29,10 @@ export class ThreeJsComponent implements OnInit{
 		// this.loadScript('../../assets/libs/Detector.js');
 		// this.loadScript('../../assets/libs/toon3d.js');
 		this.ngZone.runOutsideAngular(() => {
-			document.addEventListener("DOMContentLoaded", function(){
-				const game = new Game();
-			});
+			const socket = io.connect("http://127.0.0.1:2002")
+			// document.addEventListener("DOMContentLoaded", function(){
+			// 	const game = new Game(socket);
+			// });
 		  });
 	
 	}

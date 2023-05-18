@@ -9,7 +9,7 @@ import { LogoutComponent } from './logout/logout.component';
 export class AppComponent {
   title = 'education';
 
-  hideWhen: Array<string> = ['/login', '/register', '/home'];
+  hideWhen: Array<string> = ['/login', '/register', '/home', '/select'];
   // put all the route names where you want it hidden in above array
 
   constructor(private _router:Router) {}

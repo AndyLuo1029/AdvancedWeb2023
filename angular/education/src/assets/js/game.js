@@ -17,7 +17,7 @@ function include(file) {
 // include("../../assets/libs/toon3d.js")
 
 export default class Game{
-	constructor(){
+	constructor(socket){
 		if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 		this.modes = Object.freeze({
@@ -29,7 +29,7 @@ export default class Game{
 			GAMEOVER: Symbol("gameover")
 		});
 		this.mode = this.modes.NONE;
-		
+		this.socket = socket
 		this.domElement
 
 		this.container;
@@ -782,7 +782,7 @@ class PlayerLocal extends Player{
 		super(game, model);
 		
 		const player = this;
-		const socket = io.connect("127.0.0.1:2002");
+		const socket = game.socket;
 		socket.on('setId', function(data){
 			player.id = data.id;
 		});

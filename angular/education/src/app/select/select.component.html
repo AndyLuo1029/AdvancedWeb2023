@@ -1,0 +1,16 @@
+<p class="title">请选择你的英雄</p>
+<div class="character-select">
+    <mat-card 
+        *ngFor="let character of characters;let i = index;" 
+        (click)="onSelect(i)"
+        [ngClass]="{'character-card':true, 'character-selected':character.selected}">
+
+        <mat-card-header>
+            {{ character.id }}
+        </mat-card-header>
+        
+        <mat-card-content>
+            <!-- <img src> -->
+        </mat-card-content>
+    </mat-card>
+</div>

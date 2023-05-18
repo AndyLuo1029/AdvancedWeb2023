@@ -1,0 +1,28 @@
+.title {
+    font-size: 30px;
+    height: 50px;
+    width: 300px;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.character-select {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    width: 1200px;
+}
+
+.character-selected {
+   /* z-index: 20px; */
+   top: -10px;
+   box-shadow: 5px 5px 10px 10px rgba(0, 0, 0, .2);
+}
+
+.character-card {
+    width: 300px;
+    margin: 20px;
+}
+.content {
+    margin: 20px auto 32px !important;
+}
