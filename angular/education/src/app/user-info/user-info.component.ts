@@ -74,7 +74,7 @@ export class UserInfoComponent {
                 position: String(parseInt(i)+1),
                 hitrate: response[i].hitrate,
                 time:response[i].time,
-                date:response[i].date
+                date:new Date(response[i].date).toJSON().replace(/T|Z|(\.\d{3})/g," ").trim()
               })
               this.time.push(response[i].time);
             }
@@ -119,7 +119,8 @@ export class UserInfoComponent {
       series: [
         {
           data: this.time,
-          type: 'bar'
+          type: 'bar',
+          barMaxWidth: '100px'
         }
       ]
     };
@@ -142,7 +143,7 @@ export class UserInfoComponent {
     hitSum /= length;
     timeSum /= success;
     let passrate = (success/length*100).toFixed(1)+'(通过率)'
-    this.dataSource.push({position: '总计', hitrate: parseFloat(hitSum.toFixed(3)), time: timeSum.toFixed(2), date:passrate})
+    this.dataSource.push({position: '总计(平均)', hitrate: parseFloat(hitSum.toFixed(3)), time: timeSum.toFixed(2), date:passrate})
     this.userTable.renderRows()
     console.log(this.dataSource)
   }

@@ -3,15 +3,23 @@ package com.web.education.pojo;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 
+import java.util.Date;
+
 public class Cqb {
     private int id;
     private String username;
     private double hitrate;
     private int time;
     @TableField(fill = FieldFill.INSERT)
-    private String date;
+    private Date date;
 
-    public Cqb(int id, String username, double hitrate, int time, String date) {
+    public Cqb(String username, double hitrate, int time) {
+        this.username = username;
+        this.hitrate = hitrate;
+        this.time = time;
+    }
+
+    public Cqb(int id, String username, double hitrate, int time, Date date) {
         this.id = id;
         this.username = username;
         this.hitrate = hitrate;
@@ -51,11 +59,11 @@ public class Cqb {
         this.time = time;
     }
 
-    public String getDate() {
+    public Date getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(Date date) {
         this.date = date;
     }
 }
