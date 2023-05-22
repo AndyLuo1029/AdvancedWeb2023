@@ -31,7 +31,10 @@ export class SelectComponent {
 		{id:5, selected:false, name:"Robber"},
 		{id:6, selected:false, name:"BeachBabe"},
 	]
-
+	maps = [
+		{id:1, selected:false, name:"CQB"},
+		{id:2, selected:false, name:"PVE"},
+	]
 	onSelect(index:any) {
 		for( let ch of this.characters) {
 			ch.selected = false;
@@ -44,6 +47,13 @@ export class SelectComponent {
 		this.characters[index].selected = true;
 		// console.log(index)
 		// console.log(this.characters)
+	}
+	onSelectMap(index:any) {
+		for( let map of this.maps) {
+			map.selected = false;
+		}
+		
+		this.maps[index].selected = true;
 	}
 }
 
