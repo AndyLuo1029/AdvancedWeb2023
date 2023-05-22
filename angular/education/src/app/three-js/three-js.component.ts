@@ -2,38 +2,43 @@ import { Component, NgZone, OnInit } from '@angular/core';
 // import * as THREE from 'three';
 // const THREEJS = require('THREEJS')
 import Game from '../../assets/js/game.js'
-
-import * as io from 'socket.io-client';
+import { SocketService } from '../service/socket.service';
+// import * as io from 'socket.io-client';
 @Component({
   selector: 'app-three-js',
   templateUrl: './three-js.component.html',
-  styleUrls: ['./three-js.component.css']
+  styleUrls: ['./three-js.component.css'],
+  providers: [{provide: SocketService}]
 })
 export class ThreeJsComponent implements OnInit{
 
-	constructor(private ngZone:NgZone) {}
-    loadScript(url: string) {
-		const body = <HTMLDivElement> document.body;
-		const script = document.createElement('script');
-		script.innerHTML = '';
-		script.src = url;
-		script.async = false;
-		script.defer = true;
-		body.appendChild(script);
+	private socket: any;
+	constructor(private ngZone:NgZone, private wsService: SocketService) {
+		this.socket = wsService.connect("localhost:2002");
+		console.log(this.socket)
+		// this.socket.on('setId', function(data:any){
+		// 	console.log(data)
+		// });
+		// this.sendMessage();
 	}
-	ngOnInit(): void {
-		// this.loadScript("https://code.jquery.com/jquery-1.11.1.js");
-		// this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/92/three.min.js');
-		// this.loadScript('../../assets/libs/inflate.min.js');
-		// this.loadScript('../../assets/libs/FBXLoader.js');
-		// this.loadScript('../../assets/libs/Detector.js');
-		// this.loadScript('../../assets/libs/toon3d.js');
-		this.ngZone.runOutsideAngular(() => {
-			const socket = io.connect("http://127.0.0.1:2002")
-			// document.addEventListener("DOMContentLoaded", function(){
-			// 	const game = new Game(socket);
-			// });
-		  });
+    // loadScript(url: string) {
+	// 	const body = <HTMLDivElement> document.body;
+	// 	const script = document.createElement('script');
+	// 	script.innerHTML = '';
+	// 	script.src = url;
+	// 	script.async = false;
+	// 	script.defer = true;
+	// 	body.appendChild(script);
+	// }
+	sendMessage() {
+		console.log("send")
+		this.socket.emit('sendMessage', { message: "msg" });
+	}
+	ngOnInit(): void {	
+		document.addEventListener("DOMContentLoaded", ()=>{
+			const game = new Game(this.socket);
+		});
+		
 	
 	}
 }

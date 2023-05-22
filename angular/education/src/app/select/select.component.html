@@ -6,7 +6,9 @@
         [ngClass]="{'character-card':true, 'character-selected':character.selected}">
 
         <mat-card-header>
-            {{ character.name }}
+            <mat-card-title>
+                {{ character.name }}
+            </mat-card-title>
         </mat-card-header>
       
         <mat-card-content>
@@ -19,4 +21,22 @@
     <!-- <div id="scene-container"> -->
         <!-- Our <canvas> will be inserted here -->
     <!-- </div> -->
+</div>
+<p class="title map-title">选择地图</p>
+<div class="map-select">
+    <mat-card 
+        *ngFor="let map of maps;let i = index;" 
+        (click)="onSelectMap(i)"
+        [ngClass]="{'map-card':true, 'character-selected':map.selected}">
+
+        <mat-card-header>
+            <mat-card-title>
+                {{ map.name }}
+            </mat-card-title>
+        </mat-card-header>
+        <img src="../../assets/images/maps/cqb.jpg">
+        <mat-card-content>
+            <!-- <img src> -->
+        </mat-card-content>
+    </mat-card>
 </div>

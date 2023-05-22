@@ -5,14 +5,21 @@
     text-align: center;
     margin: 0 auto;
 }
-
+.map-title {
+    margin-top: 50px;
+}
 .character-select {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
     width: 1200px;
 }
-
+.map-select {
+    width: 1200px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
 .character-selected {
    /* z-index: 20px; */
    top: -10px;
@@ -21,6 +28,10 @@
 
 .character-card {
     width: 300px;
+    margin: 20px;
+}
+.map-card {
+    width: 500px;
     margin: 20px;
 }
 .content {
