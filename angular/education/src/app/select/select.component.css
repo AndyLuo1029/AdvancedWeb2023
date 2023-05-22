@@ -26,3 +26,12 @@
 .content {
     margin: 20px auto 32px !important;
 }
+
+.scene-containers {
+    height: 400px;
+    width: 270px;
+}
+#scene-container {
+    height: 400px;
+    width: 300px;
+}
