@@ -8,6 +8,7 @@ import { ThreeJsComponent } from './three-js/three-js.component';
 import { notLoginGuard } from './http-interceptors/not-login-guard';
 import { SelectComponent } from './select/select.component';
 import { loginGuard } from './http-interceptors/login-guard';
+import { leaveThreeGuard } from './http-interceptors/leave-three-guard'
 import { UserInfoComponent } from './user-info/user-info.component';
 
 const routes: Routes = [
@@ -15,7 +16,7 @@ const routes: Routes = [
   { path: 'register', title: '注册', component: RegisterComponent, canActivate: [notLoginGuard]},
   { path: 'home', title: '主页', component: HomeComponent },
   { path: 'login', title: '登录', component: LoginComponent, canActivate: [notLoginGuard] },
-  { path: 'three', title: 'three', component: ThreeJsComponent },
+  { path: 'three', title: 'three', component: ThreeJsComponent, canActivate: [loginGuard], canDeactivate: [leaveThreeGuard] },
   { path: 'select', title: '选择角色', component: SelectComponent, canActivate: [loginGuard]},
   { path: 'user', title: '个人信息', component: UserInfoComponent, canActivate: [loginGuard]},
   { path: '**', component: PageNotFoundComponent },
@@ -36,7 +37,10 @@ const routes: Routes = [
 // }
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, {
+      canceledNavigationResolution: 'computed',
+    }),
+  ],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

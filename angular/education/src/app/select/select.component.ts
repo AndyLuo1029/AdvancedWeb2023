@@ -1,22 +1,25 @@
-import { Component, ElementRef } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit } from '@angular/core';
 import { NgClass } from '@angular/common'
 import * as THREE from 'three'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { GridHelper } from 'three';
 import { animation } from '@angular/animations';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-select',
   templateUrl: './select.component.html',
   styleUrls: ['./select.component.css']
 })
-export class SelectComponent {
+export class SelectComponent implements AfterViewInit {
 
-	constructor(private el: ElementRef) {}
+	constructor(private el: ElementRef, public router:Router) {}
 
 	private game:Game[] = [];
 	private lastSelect:number = -1;
+	private lastSelectMap:number = -1;
 	ngAfterViewInit() {    
 		for(let i = 0; i < 6; i++) {
+			// if(i > 1) break;
 			const game = new Game(this.characters[i].name, i, this.el);
 			this.game.push(game) 
 		}
@@ -52,8 +55,17 @@ export class SelectComponent {
 		for( let map of this.maps) {
 			map.selected = false;
 		}
-		
+		this.lastSelectMap = index;
 		this.maps[index].selected = true;
+	}
+
+	enter() {
+		if(this.lastSelect == -1 || this.lastSelectMap == -1) {
+			window.alert("请完成人物和地图选择")
+			return
+		}
+		//check the user 
+		this.router.navigate(['/three']);
 	}
 }
 
@@ -135,7 +147,7 @@ class Game{
 		mesh.receiveShadow = true;
 		this.scene.add( mesh );
 
-		// var grid = new THREE.GridHelper( 4000, 40, 0x000000, 0x000000 );
+		// var grid:any = new THREE.GridHelper( 4000, 40, 0x000000, 0x000000 );
 		// //grid.position.y = -100;
 		// grid.material.opacity = 0.2;
 		// grid.material.transparent = true;
@@ -151,7 +163,7 @@ class Game{
 			game.player.mixer = object.mixer;
 			game.player.root = object.mixer.getRoot();
 			
-			object.name = "FireFighter";
+			object.name = game.skin;
 					
 			object.traverse( function ( child:any ) {
 				if ( child.isMesh ) {
@@ -160,20 +172,21 @@ class Game{
 				}
 			} );
 			
-        const tLoader = new THREE.TextureLoader();
-        tLoader.load(`${game.assetsPath}images/SimplePeople_${game.skin}_White.png`, function(texture){
-				object.traverse( function ( child:any ) {
-					if ( child.isMesh ){
-						child.material.map = texture;
-					}
-				} );
-			});
-            
+			const tLoader = new THREE.TextureLoader();
+			tLoader.load(`${game.assetsPath}images/SimplePeople_${game.skin}_White.png`, function(texture){
+					object.traverse( function ( child:any ) {
+						if ( child.isMesh ){
+							child.material.map = texture;
+						}
+					} );
+				});
+            // object.position.set(0,0,0);
+			// object.quaternion.set(0,0,0);
 			game.scene.add(object);
 			game.player.object = object;
 			game.animations.Idle = object.animations[0];
             
-      game.loadNextAnim(loader);
+      		game.loadNextAnim(loader);
 		} );
 		
 		this.renderer = new THREE.WebGLRenderer( { antialias: true } );

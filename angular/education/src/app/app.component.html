@@ -61,9 +61,10 @@
 
   .content {
     display: flex;
-    margin: 82px auto 32px;
+    /* margin: 82px auto 32px; */
+    margin: 0 auto;
     padding: 0 16px;
-    max-width: 960px;
+    /* max-width: 960px; */
     flex-direction: column;
     align-items: center;
   }
@@ -297,14 +298,14 @@
 
 <!-- Toolbar -->
 <!-- https://stackoverflow.com/questions/36814390/how-to-manipulate-a-component-on-specific-routes-in-angular2 -->
-<mat-toolbar color="primary" *ngIf="shouldShowTopbar()">
+<mat-toolbar color="primary" *ngIf="shouldShowTopbar()" class="toolbar-nav">
   <mat-toolbar-row>
     <!--  <span>HOME</span> -->
       <button class="home" mat-flat-button color="primary" routerLink="/home" routerLinkActive="router-active">青少年军事训练中心</button>
       <span class="spacer"></span>
       <button mat-flat-button color="primary" routerLink="/register" routerLinkActive="router-active" *ngIf="!isLogin()">注册</button>
       <button mat-flat-button color="primary" routerLink="/login" routerLinkActive="router-active" *ngIf="!isLogin()">登录</button>
-      <button mat-flat-button color="primary" routerLink="/select" routerLinkActive="router-active" *ngIf="isLogin()">选择角色</button>
+      <button mat-flat-button color="primary" routerLink="/select" routerLinkActive="router-active" *ngIf="isLogin()">进入教学</button>
       <button mat-flat-button color="primary" routerLink="/user" routerLinkActive="router-active" *ngIf="isLogin()">个人信息</button>
 
       <!-- <app-link></app-link> -->
