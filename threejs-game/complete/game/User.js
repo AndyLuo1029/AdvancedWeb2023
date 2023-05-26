@@ -99,7 +99,7 @@ class User{
 	set firing(mode){
 		this.isFiring = mode;
 		if (mode){
-			console.log(this.speed)
+			//console.log(this.speed)
 			this.action =  (Math.abs(this.speed) === 0 ) ? "firing" : "firingwalk";
 			//console.log(this.action)
 			this.bulletTime = this.game.clock.getElapsedTime();
@@ -261,6 +261,7 @@ class User{
 			}
 		}
 		if (this.isFiring){
+			if(this.speed===0)this.action ="firing";
 			const elapsedTime = this.game.clock.getElapsedTime() - this.bulletTime;
 			if (elapsedTime > 0.6) this.shoot();
 		}

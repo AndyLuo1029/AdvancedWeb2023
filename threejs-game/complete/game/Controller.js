@@ -328,9 +328,7 @@ class Controller{
         if(this.move.up===0&&this.move.right===0)speed =0;
         if(speed!==undefined){
             this.user.speed = speed;
-            this.fire(this.user.isFiring)
         }
-
         else this.user.speed =0;
 
         if(this.rotate.right!==0){
