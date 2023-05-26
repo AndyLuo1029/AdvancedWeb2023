@@ -1,17 +1,18 @@
-import { Group, 
+import { Group,
          Object3D,
          Vector3,
          Quaternion,
          Raycaster,
-         AnimationMixer, 
-         SphereGeometry, 
-         MeshBasicMaterial, 
+         AnimationMixer,
+         SphereGeometry,
+         MeshBasicMaterial,
          Mesh,
 		 BufferGeometry,
 		 Line
 		} from '../../libs/three137/three.module.js';
 import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
 import { DRACOLoader } from '../../libs/three137/DRACOLoader.js';
+
 
 class User{
     constructor(game, pos, heading){
@@ -38,6 +39,7 @@ class User{
 
 		this.ready = false;
 
+		this.object
         //this.initMouseHandler();
 		this.initRifleDirection();
     }
@@ -53,38 +55,38 @@ class User{
 		this.rifleDirection.shot = new Quaternion(-0.082, -0.789, 0.594, -0.138);
 	}
 
-    initMouseHandler(){
-		this.game.renderer.domElement.addEventListener( 'click', raycast, false );
+   // initMouseHandler(){
+		// this.game.renderer.domElement.addEventListener( 'click', raycast, false );
 			
-    	const self = this;
-    	const mouse = { x:0, y:0 };
+    	// const self = this;
+    	// const mouse = { x:0, y:0 };
     	
-    	function raycast(e){
-    		
-			mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
-			mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
-
-			//2. set the picking ray from the camera position and mouse coordinates
-			self.raycaster.setFromCamera( mouse, self.game.camera );    
-
-			//3. compute intersections
-			const intersects = self.raycaster.intersectObject( self.game.navmesh );
-			
-			if (intersects.length>0){
-				const pt = intersects[0].point;
-				console.log(pt);
-
-				self.root.position.copy(pt);
-
-                self.root.remove( self.dolly )
-
-                self.dolly.position.copy( self.game.camera.position );
-                self.dolly.quaternion.copy( self.game.camera.quaternion );
-
-                self.root.attach(self.dolly);
-			}	
-		}
-    }
+    	// function raycast(e){
+    	//
+		// 	mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+		// 	mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+		//
+		// 	//2. set the picking ray from the camera position and mouse coordinates
+		// 	self.raycaster.setFromCamera( mouse, self.game.camera );
+		//
+		// 	//3. compute intersections
+		// 	const intersects = self.raycaster.intersectObject( self.game.navmesh );
+		//
+		// 	if (intersects.length>0){
+		// 		const pt = intersects[0].point;
+		// 		console.log(pt);
+		//
+		// 		self.root.position.copy(pt);
+		//
+        //         self.root.remove( self.dolly )
+		//
+        //         self.dolly.position.copy( self.game.camera.position );
+        //         self.dolly.quaternion.copy( self.game.camera.quaternion );
+		//
+        //         self.root.attach(self.dolly);
+		// 	}
+		// }
+    //}
 
     set position(pos){
         this.root.position.copy( pos );
@@ -97,11 +99,14 @@ class User{
 	set firing(mode){
 		this.isFiring = mode;
 		if (mode){
-			this.action = ( Math.abs(this.speed) == 0 ) ? "firing" : "firingwalk";
+			console.log(this.speed )
+			this.action =  (Math.abs(this.speed) === 0 ) ? "firing" : "firingwalk";
+			//console.log(this.action)
 			this.bulletTime = this.game.clock.getElapsedTime();
 		}else{
 			this.action = 'idle';
 		}
+		console.log(this.action)
 	}
 
 	shoot(){
@@ -122,12 +127,21 @@ class User{
     }
 
     load(){
+
+
+
     	const loader = new GLTFLoader( ).setPath(`${this.game.assetsPath}factory/`);
 		const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath( '../../libs/three137/draco/' );
         loader.setDRACOLoader( dracoLoader );
-        
-        // Load a glTF resource
+		const user = this;
+
+		loader.load( 'Idle.glb', function( object ){
+			user.anim=	object.animations[0]
+		});
+		console.log(this.animations)
+
+        //Load a glTF resource
 		loader.load(
 			// resource URL
 			'eve2.glb',
@@ -146,7 +160,6 @@ class User{
 						if (child.name.includes('Rifle')) this.rifle = child;
                     }
                 });
-
 				if (this.rifle){
 					const geometry = new BufferGeometry().setFromPoints( [ new Vector3( 0, 0, 0 ), new Vector3( 1, 0, 0 ) ] );
 
@@ -159,15 +172,19 @@ class User{
 					this.aim = line;
 					line.visible = false;
 				}
+				user.object.add(this.object);
 
                 this.animations = {};
 
                 gltf.animations.forEach( animation => {
                     this.animations[animation.name.toLowerCase()] = animation;
+					console.log(this.animations)
+					//console.log(animation.name.toLowerCase())
                 })
-
+				//this.animations['idle']=user.anim;
+				//console.log(this.animations)
                 this.mixer = new AnimationMixer(gltf.scene);
-            
+
                 this.action = 'idle';
 
 				this.ready = true;
@@ -188,10 +205,11 @@ class User{
     set action(name){
 		if (this.actionName == name.toLowerCase()) return;    
 		
-		//console.log(`User action:${name}`);
+		console.log(`User action:${name}`);
 		
 		const clip = this.animations[name.toLowerCase()];
 
+		//console.log(clip)
 		if (clip!==undefined){
 			const action = this.mixer.clipAction( clip );
 			if (name=='shot'){

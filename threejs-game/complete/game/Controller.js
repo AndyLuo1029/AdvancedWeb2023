@@ -34,7 +34,7 @@ class Controller{
         this.cameraBase.position.copy( this.camera.position );
         this.cameraBase.quaternion.copy( this.camera.quaternion );
         this.target.attach( this.cameraBase );
-        this.target.rotateY(0.7);
+        //this.target.rotateY(0.7);
 
         this.cameraHigh = new Camera();
         this.cameraHigh.position.copy( this.camera.position );
@@ -45,52 +45,57 @@ class Controller{
         this.yAxis = new Vector3(0, 1, 0);
         this.xAxis = new Vector3(1, 0, 0);
         this.forward = new Vector3(0, 0, 1);
+        this.right = new Vector3(1, 0, 0);
         this.down = new Vector3(0, -1, 0);
 
         this.speed = 5;
 
+        this.run = false;
         this.checkForGamepad();
 
-        if('ontouchstart' in document.documentElement){
-            const options1 = {
-                left: true,
-                app: this,
-                onMove: this.onMove
-            }
-
-            const joystick1 = new JoyStick(options1);
-
-            const options2 = {
-                right: true,
-                app: this,
-                onMove: this.onLook
-            }
-
-            const joystick2 = new JoyStick(options2);
-
-            const fireBtn = document.createElement("div");
-            fireBtn.style.cssText = "position:absolute; bottom:55px; width:40px; height:40px; background:#FFFFFF; border:#444 solid medium; border-radius:50%; left:50%; transform:translateX(-50%);";
-            fireBtn.addEventListener('mousedown', this.fire.bind(this, true));
-            fireBtn.addEventListener('mouseup', this.fire.bind(this, false));
-            document.body.appendChild(fireBtn);
-
-            this.touchController = { joystick1, joystick2, fireBtn };
-        }else{
+        // if('ontouchstart' in document.documentElement){
+        //     const options1 = {
+        //         left: true,
+        //         app: this,
+        //         onMove: this.onMove
+        //     }
+        //
+        //     const joystick1 = new JoyStick(options1);
+        //
+        //     const options2 = {
+        //         right: true,
+        //         app: this,
+        //         onMove: this.onLook
+        //     }
+        //
+        //     const joystick2 = new JoyStick(options2);
+        //
+        //     const fireBtn = document.createElement("div");
+        //     fireBtn.style.cssText = "position:absolute; bottom:55px; width:40px; height:40px; background:#FFFFFF; border:#444 solid medium; border-radius:50%; left:50%; transform:translateX(-50%);";
+        //     fireBtn.addEventListener('mousedown', this.fire.bind(this, true));
+        //     fireBtn.addEventListener('mouseup', this.fire.bind(this, false));
+        //     document.body.appendChild(fireBtn);
+        //
+        //     this.touchController = { joystick1, joystick2, fireBtn };
+        // }
+        // else{
             document.addEventListener('keydown', this.keyDown.bind(this));
             document.addEventListener('keyup', this.keyUp.bind(this));
             document.addEventListener('mousedown', this.mouseDown.bind(this));
             document.addEventListener('mouseup', this.mouseUp.bind(this));
-            document.addEventListener('mousemove', this.mouseMove.bind(this));
+            //document.addEventListener('mousemove', this.mouseMove.bind(this));
             this.keys = {   
                             w:false, 
                             a:false, 
                             d:false, 
-                            s:false, 
+                            s:false,
+                            v:false,
+                            shift:false,
                             space:false,
-                            mousedown:false, 
-                            mouseorigin:{x:0, y:0}
+                            // mousedown:false,
+                            // mouseorigin:{x:0, y:0}
                         };
-        }
+        // }
     }
 
     checkForGamepad(){
@@ -104,11 +109,11 @@ class Controller{
             if (connecting) {
                 gamepads[gamepad.index] = gamepad;
                 self.gamepad = gamepad;
-                if (self.touchController) self.showTouchController(false);
+                // if (self.touchController) self.showTouchController(false);
             } else {
                 delete self.gamepad;
                 delete gamepads[gamepad.index];
-                if (self.touchController) self.showTouchController(true);
+                // if (self.touchController) self.showTouchController(true);
             }
         }
 
@@ -116,13 +121,13 @@ class Controller{
         window.addEventListener("gamepaddisconnected", function(e) { gamepadHandler(e, false); }, false);
     }
 
-    showTouchController(mode){
-        if (this.touchController == undefined) return;
-
-        this.touchController.joystick1.visible = mode;
-        this.touchController.joystick2.visible = mode;
-        this.touchController.fireBtn.style.display = mode ? 'block' : 'none';
-    }
+    // showTouchController(mode){
+    //     if (this.touchController == undefined) return;
+    //
+    //     this.touchController.joystick1.visible = mode;
+    //     this.touchController.joystick2.visible = mode;
+    //     this.touchController.fireBtn.style.display = mode ? 'block' : 'none';
+    // }
 
     keyDown(e){
         //console.log('keyCode:' + e.keyCode);
@@ -143,8 +148,8 @@ class Controller{
             case 68:
                 this.keys.d = true;
                 break;
-            case 32:
-                if (!repeat) this.fire(true);
+            // case 32:
+            //     if (!repeat) this.fire(true);
                 break;                                           
         }
     }
@@ -167,36 +172,38 @@ class Controller{
                 this.keys.d = false;
                 if (!this.keys.a) this.move.right = 0;
                 break;   
-            case 32:
-                this.fire(false);
+            // case 32:
+            //     this.fire(false);
                 break;                          
         }
     }
 
     mouseDown(e){
-        this.keys.mousedown = true;
-        this.keys.mouseorigin.x = e.offsetX;
-        this.keys.mouseorigin.y = e.offsetY;
-    }
+            this.fire(true)
+         // this.keys.mousedown = true;
+         // this.keys.mouseorigin.x = e.offsetX;
+         // this.keys.mouseorigin.y = e.offsetY;
+     }
 
-    mouseUp(e){
-        this.keys.mousedown = false;
-        this.look.up = 0;
-        this.look.right = 0;
-    }
+     mouseUp(e){
+         this.fire(false)
+         // this.keys.mousedown = false;
+         // this.look.up = 0;
+         // this.look.right = 0;
+     }
 
-    mouseMove(e){
-        if (!this.keys.mousedown) return;
-        let offsetX = e.offsetX - this.keys.mouseorigin.x;
-        let offsetY = e.offsetY - this.keys.mouseorigin.y;
-        if (offsetX<-100) offsetX = -100;
-        if (offsetX>100) offsetX = 100;
-        offsetX /= 100;
-        if (offsetY<-100) offsetY = -100;
-        if (offsetY>100) offsetY = 100;
-        offsetY /= 100;
-        this.onLook(-offsetY, offsetX);
-    }
+    // mouseMove(e){
+    //     if (!this.keys.mousedown) return;
+    //     let offsetX = e.offsetX - this.keys.mouseorigin.x;
+    //     let offsetY = e.offsetY - this.keys.mouseorigin.y;
+    //     if (offsetX<-100) offsetX = -100;
+    //     if (offsetX>100) offsetX = 100;
+    //     offsetX /= 100;
+    //     if (offsetY<-100) offsetY = -100;
+    //     if (offsetY>100) offsetY = 100;
+    //     offsetY /= 100;
+    //     this.onLook(-offsetY, offsetX);
+    // }
 
     fire(mode){
         //console.log(`Fire:${mode}`);
@@ -264,33 +271,52 @@ class Controller{
                 this.target.position.copy(intersects[0].point);
                 playerMoved = true;
             }
-        }else{
-            speed = 0;
         }
+        // else{
+        //     speed = 0;
+        // }
 
-        this.user.speed = speed;
+
         
         if (Math.abs(this.move.right)>0.1){
-            const theta = dt * (this.move.right-0.1) * 1;
-            this.target.rotateY(theta);
-            playerMoved = true;
-        }
+            const right = this.right.clone().applyQuaternion(this.target.quaternion);
 
+            speed = this.speed * dt ;
+            if (this.user.isFiring && speed>0.03) speed = 0.02;
+            speed*=this.move.right;
+
+            const pos = this.target.position.clone().add(right.multiplyScalar(speed));
+            pos.y += 2;
+            this.raycaster.set( pos, this.down );
+
+            const intersects = this.raycaster.intersectObject( this.navmesh );
+            if ( intersects.length>0 ){
+                this.target.position.copy(intersects[0].point);
+                playerMoved = true;
+            }
+            //const theta = dt * (this.move.right-0.1) * 1;
+            //this.target.rotateY(theta);
+            //playerMoved = true;
+        }
+        if(speed!==undefined)
+            this.user.speed = speed;
+        else this.user.speed =0;
+        console.log(playerMoved)
         if (playerMoved){
             this.cameraBase.getWorldPosition(this.tmpVec3);
             this.camera.position.lerp(this.tmpVec3, 0.7);
             //if (speed) console.log(speed.toFixed(2));
             let run = false;
-            if (speed>0.03){
-                if (this.overRunSpeedTime){
-                    const elapsedTime = this.clock.elapsedTime - this.overRunSpeedTime;
-                    run = elapsedTime>0.1;
-                }else{
-                    this.overRunSpeedTime = this.clock.elapsedTime;
-                }
-            }else{
-                delete this.overRunSpeedTime;
-            }
+            // if (speed>0.03){
+            //     if (this.overRunSpeedTime){
+            //         const elapsedTime = this.clock.elapsedTime - this.overRunSpeedTime;
+            //         run = elapsedTime>0.1;
+            //     }else{
+            //         this.overRunSpeedTime = this.clock.elapsedTime;
+            //     }
+            // }else{
+            //     delete this.overRunSpeedTime;
+            // }
             if (run){
                 this.user.action = 'run';    
             }else{
@@ -303,9 +329,9 @@ class Controller{
         if (this.look.up==0 && this.look.right==0){
             let lerpSpeed = 0.7;
             this.cameraBase.getWorldPosition(this.tmpVec3);
-            if (this.game.seeUser(this.tmpVec3, true)){
-                this.cameraBase.getWorldQuaternion(this.tmpQuat);
-            }else{
+             if (this.game.seeUser(this.tmpVec3, true)){
+                 this.cameraBase.getWorldQuaternion(this.tmpQuat);
+             }else{
                 this.cameraHigh.getWorldPosition(this.tmpVec3);
                 this.cameraHigh.getWorldQuaternion(this.tmpQuat);
             }
