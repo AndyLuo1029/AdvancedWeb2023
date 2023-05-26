@@ -148,6 +148,9 @@ class Controller{
             case 68:
                 this.keys.d = true;
                 break;
+            case 16:
+                //shift
+                this.keys.shift =true;
             // case 32:
             //     if (!repeat) this.fire(true);
                 break;                                           
@@ -171,7 +174,10 @@ class Controller{
             case 68:
                 this.keys.d = false;
                 if (!this.keys.a) this.move.right = 0;
-                break;   
+                break;
+            case 16:
+                //shift
+                this.keys.shift =false;
             // case 32:
             //     this.fire(false);
                 break;                          
@@ -258,7 +264,12 @@ class Controller{
             const forward = this.forward.clone().applyQuaternion(this.target.quaternion);
             speed = this.move.up>0 ? this.speed * dt : this.speed * dt * 0.3;
             speed *= this.move.up;
-            if (this.user.isFiring && speed>0.03) speed = 0.02; 
+            if(!this.user.isRun)speed*=0.3;
+            if (this.user.isFiring && speed>0.03) {
+                if(this.user.isRun)speed = 0.05;
+                else speed = 0.02;
+            }
+
             const pos = this.target.position.clone().add(forward.multiplyScalar(speed));
             pos.y += 2;
             //console.log(`Moving>> target rotation:${this.target.rotation} forward:${forward} pos:${pos}`);
@@ -281,8 +292,12 @@ class Controller{
         if (Math.abs(this.move.right)>0.1){
             const right = this.right.clone().applyQuaternion(this.target.quaternion);
 
-            speed = this.speed * dt ;
-            if (this.user.isFiring && speed>0.03) speed = 0.02;
+            speed = this.speed * dt*0.5 ;
+            if(!this.user.isRun)speed*=0.3;
+            if (this.user.isFiring && speed>0.03) {
+                if(this.user.isRun)speed = 0.05;
+                else speed = 0.02;
+            }
             speed*=this.move.right;
 
             const pos = this.target.position.clone().add(right.multiplyScalar(speed));
@@ -301,12 +316,12 @@ class Controller{
         if(speed!==undefined)
             this.user.speed = speed;
         else this.user.speed =0;
-        console.log(playerMoved)
+        //console.log(playerMoved)
         if (playerMoved){
             this.cameraBase.getWorldPosition(this.tmpVec3);
             this.camera.position.lerp(this.tmpVec3, 0.7);
             //if (speed) console.log(speed.toFixed(2));
-            let run = false;
+            //let run = false;
             // if (speed>0.03){
             //     if (this.overRunSpeedTime){
             //         const elapsedTime = this.clock.elapsedTime - this.overRunSpeedTime;
@@ -317,7 +332,7 @@ class Controller{
             // }else{
             //     delete this.overRunSpeedTime;
             // }
-            if (run){
+            if (this.keys.shift){
                 this.user.action = 'run';    
             }else{
                 this.user.action = (this.user.isFiring) ? 'firingwalk' : 'walk';

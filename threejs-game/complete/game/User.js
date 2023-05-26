@@ -36,7 +36,7 @@ class User{
 
 		this.speed = 0;
 		this.isFiring = false;
-
+		this.isRun = false;
 		this.ready = false;
 
 		this.object
@@ -99,16 +99,14 @@ class User{
 	set firing(mode){
 		this.isFiring = mode;
 		if (mode){
-			console.log(this.speed )
 			this.action =  (Math.abs(this.speed) === 0 ) ? "firing" : "firingwalk";
 			//console.log(this.action)
 			this.bulletTime = this.game.clock.getElapsedTime();
 		}else{
 			this.action = 'idle';
 		}
-		console.log(this.action)
+		//console.log(this.action)
 	}
-
 	shoot(){
 		if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
 		this.aim.getWorldPosition(this.tmpVec);
@@ -205,8 +203,14 @@ class User{
     set action(name){
 		if (this.actionName == name.toLowerCase()) return;    
 		
-		console.log(`User action:${name}`);
-		
+		//console.log(`User action:${name}`);
+		if(name.toLowerCase()==="run"){
+			this.isRun =true;
+		}
+		else{
+			this.isRun = false;
+		}
+
 		const clip = this.animations[name.toLowerCase()];
 
 		//console.log(clip)
