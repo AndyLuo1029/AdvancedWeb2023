@@ -38,7 +38,7 @@ class User{
 		this.isFiring = false;
 		this.isRun = false;
 		this.ready = false;
-
+		this.healthPoint = 100;
 		this.object
         //this.initMouseHandler();
 		this.initRifleDirection();
@@ -263,7 +263,14 @@ class User{
 		if (this.isFiring){
 			if(this.speed===0)this.action ="firing";
 			const elapsedTime = this.game.clock.getElapsedTime() - this.bulletTime;
-			if (elapsedTime > 0.6) this.shoot();
+			if (elapsedTime > 0.6) {
+				this.shoot();
+				if(this.healthPoint>0)this.healthPoint-=20;//开枪自残
+			}
+		}
+		if(this.healthPoint<=0){
+			console.log("gameover")
+			this.healthPoint = 100;
 		}
     }
 }
