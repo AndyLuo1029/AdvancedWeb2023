@@ -20,7 +20,7 @@ class Controller{
         this.target = game.user.root;
         this.navmesh = game.navmesh;
         this.game = game;
-
+        this.perspective =3;
         this.raycaster = new Raycaster();
 
         this.move = { up:0, right:0 };
@@ -156,6 +156,7 @@ class Controller{
                 break;
             case 86:
                 this.keys.v =true;
+                this.perspective = (this.perspective ==3)? 1:3;
                 break;
             // case 32:
             //     if (!repeat) this.fire(true);
@@ -372,8 +373,8 @@ class Controller{
         }
 
 
-        if (this.look.up==0 && this.look.right==0){
-             //console.log(this.camera.position,this.target.position,this.target.position-this.camera.position);
+         if (this.look.up==0 && this.look.right==0){
+             //console.log(this.tmpVec3,this.target.position,this.camera.position)
             let lerpSpeed = 0.7;
             this.cameraBase.getWorldPosition(this.tmpVec3);
              if (this.game.seeUser(this.tmpVec3, true)){
@@ -384,14 +385,12 @@ class Controller{
             }
              this.camera.position.lerp(this.tmpVec3, lerpSpeed);
              this.camera.quaternion.slerp(this.tmpQuat, lerpSpeed);
-             if(this.keys.v){
+             if(this.perspective===1){
                  this.camera.position.setX(this.target.position.x) ;
                  this.camera.position.setY(this.target.position.y+1.57) ;
                  this.camera.position.setZ(this.target.position.z) ;
-
-                 this.camera.rotateY(0.4);
-
-
+                 this.camera.rotateY(0.2);
+                 this.game.seeUser(this.camera.position, true);
              }
 
         }else{
