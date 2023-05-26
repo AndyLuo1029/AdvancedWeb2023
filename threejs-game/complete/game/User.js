@@ -261,7 +261,7 @@ class User{
 		}
 		if (this.isFiring){
 			const elapsedTime = this.game.clock.getElapsedTime() - this.bulletTime;
-			if (elapsedTime > 0.6) this.shoot(); 
+			if (elapsedTime > 0.6) this.shoot();
 		}
     }
 }

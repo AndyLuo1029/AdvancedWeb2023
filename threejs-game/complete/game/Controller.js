@@ -25,6 +25,7 @@ class Controller{
 
         this.move = { up:0, right:0 };
         this.look = { up:0, right:0 };
+        this.rotate ={up:0,right:0};
 
         this.tmpVec3 = new Vector3();
         this.tmpQuat = new Quaternion();
@@ -83,7 +84,7 @@ class Controller{
             document.addEventListener('keyup', this.keyUp.bind(this));
             document.addEventListener('mousedown', this.mouseDown.bind(this));
             document.addEventListener('mouseup', this.mouseUp.bind(this));
-            //document.addEventListener('mousemove', this.mouseMove.bind(this));
+            document.addEventListener('mousemove', this.mouseMove.bind(this));
             this.keys = {   
                             w:false, 
                             a:false, 
@@ -93,7 +94,7 @@ class Controller{
                             shift:false,
                             space:false,
                             // mousedown:false,
-                            // mouseorigin:{x:0, y:0}
+                            mouseorigin:{x:0, y:0}
                         };
         // }
     }
@@ -198,18 +199,24 @@ class Controller{
          // this.look.right = 0;
      }
 
-    // mouseMove(e){
-    //     if (!this.keys.mousedown) return;
-    //     let offsetX = e.offsetX - this.keys.mouseorigin.x;
-    //     let offsetY = e.offsetY - this.keys.mouseorigin.y;
-    //     if (offsetX<-100) offsetX = -100;
-    //     if (offsetX>100) offsetX = 100;
-    //     offsetX /= 100;
-    //     if (offsetY<-100) offsetY = -100;
-    //     if (offsetY>100) offsetY = 100;
-    //     offsetY /= 100;
-    //     this.onLook(-offsetY, offsetX);
-    // }
+     mouseMove(e){
+
+         if(e.offsetX>window.innerWidth*4/5){
+             this.rotate.right = -0.7;
+             const maxx =window.innerWidth/5
+             const det =e.offsetX-window.innerWidth*4/5
+             this.rotate.right -= det/maxx*0.3
+         }
+         else if (e.offsetX<window.innerWidth/5){
+             this.rotate.right =   0.7;
+             const maxx =window.innerWidth/5
+             const det =window.innerWidth/5-e.offsetX
+             this.rotate.right += det/maxx*0.3
+         }
+
+         else this.rotate.right =0;
+         //this.keys.mouseorigin.x = e.offsetX;
+     }
 
     fire(mode){
         //console.log(`Fire:${mode}`);
@@ -309,13 +316,22 @@ class Controller{
                 this.target.position.copy(intersects[0].point);
                 playerMoved = true;
             }
-            //const theta = dt * (this.move.right-0.1) * 1;
-            //this.target.rotateY(theta);
+            // const theta = dt * (this.move.right-0.1) * 1;
+            // this.target.rotateY(theta);
             //playerMoved = true;
         }
+
         if(speed!==undefined)
             this.user.speed = speed;
         else this.user.speed =0;
+
+        if(this.rotate.right!==0){
+            const theta = dt * (this.rotate.right - 0.1);
+            this.target.rotateY(theta);
+            playerMoved = true;
+        }
+
+
         //console.log(playerMoved)
         if (playerMoved){
             this.cameraBase.getWorldPosition(this.tmpVec3);
@@ -342,6 +358,7 @@ class Controller{
         }
 
         if (this.look.up==0 && this.look.right==0){
+            //console.log(this.tmpVec3);
             let lerpSpeed = 0.7;
             this.cameraBase.getWorldPosition(this.tmpVec3);
              if (this.game.seeUser(this.tmpVec3, true)){
