@@ -186,7 +186,11 @@ class Controller{
     }
 
     mouseDown(e){
-            this.fire(true)
+        let repeat = false;
+        if (e.repeat !== undefined) {
+            repeat = e.repeat;
+        }
+        if (!repeat)  this.fire(true)
          // this.keys.mousedown = true;
          // this.keys.mouseorigin.x = e.offsetX;
          // this.keys.mouseorigin.y = e.offsetY;
@@ -292,7 +296,7 @@ class Controller{
         }
         // else{
         //     speed = 0;
-        // }
+        //  }
 
 
         
@@ -321,8 +325,12 @@ class Controller{
             //playerMoved = true;
         }
 
-        if(speed!==undefined)
+        if(this.move.up===0&&this.move.right===0)speed =0;
+        if(speed!==undefined){
             this.user.speed = speed;
+            this.fire(this.user.isFiring)
+        }
+
         else this.user.speed =0;
 
         if(this.rotate.right!==0){
