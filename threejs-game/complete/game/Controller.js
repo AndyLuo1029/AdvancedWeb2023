@@ -30,6 +30,7 @@ class Controller{
         this.tmpVec3 = new Vector3();
         this.tmpQuat = new Quaternion();
 
+
         //Used to return the camera to its base position and orientation after a look event
         this.cameraBase = new Object3D();
         this.cameraBase.position.copy( this.camera.position );
@@ -92,9 +93,9 @@ class Controller{
                             s:false,
                             v:false,
                             shift:false,
-                            space:false,
+                            //space:false,
                             // mousedown:false,
-                            mouseorigin:{x:0, y:0}
+                            //mouseorigin:{x:0, y:0}
                         };
         // }
     }
@@ -152,9 +153,13 @@ class Controller{
             case 16:
                 //shift
                 this.keys.shift =true;
+                break;
+            case 86:
+                this.keys.v =true;
+                break;
             // case 32:
             //     if (!repeat) this.fire(true);
-                break;                                           
+            //    break;
         }
     }
 
@@ -177,11 +182,14 @@ class Controller{
                 if (!this.keys.a) this.move.right = 0;
                 break;
             case 16:
-                //shift
                 this.keys.shift =false;
+                break;
+            case 86:
+                this.keys.v =false;
+                break;
             // case 32:
             //     this.fire(false);
-                break;                          
+            //     break;
         }
     }
 
@@ -363,8 +371,9 @@ class Controller{
             if (this.user !== undefined && !this.user.isFiring) this.user.action = 'idle';
         }
 
+
         if (this.look.up==0 && this.look.right==0){
-            //console.log(this.tmpVec3);
+             //console.log(this.camera.position,this.target.position,this.target.position-this.camera.position);
             let lerpSpeed = 0.7;
             this.cameraBase.getWorldPosition(this.tmpVec3);
              if (this.game.seeUser(this.tmpVec3, true)){
@@ -373,8 +382,18 @@ class Controller{
                 this.cameraHigh.getWorldPosition(this.tmpVec3);
                 this.cameraHigh.getWorldQuaternion(this.tmpQuat);
             }
-            this.camera.position.lerp(this.tmpVec3, lerpSpeed);
-            this.camera.quaternion.slerp(this.tmpQuat, lerpSpeed);
+             this.camera.position.lerp(this.tmpVec3, lerpSpeed);
+             this.camera.quaternion.slerp(this.tmpQuat, lerpSpeed);
+             if(this.keys.v){
+                 this.camera.position.setX(this.target.position.x) ;
+                 this.camera.position.setY(this.target.position.y+1.57) ;
+                 this.camera.position.setZ(this.target.position.z) ;
+
+                 this.camera.rotateY(0.4);
+
+
+             }
+
         }else{
             const delta = 1 * dt;
             this.camera.rotateOnWorldAxis(this.yAxis, this.look.right * delta);
