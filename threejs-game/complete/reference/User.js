@@ -1,24 +1,27 @@
-import { Group,
+import { Group, 
          Object3D,
          Vector3,
          Quaternion,
          Raycaster,
-         AnimationMixer,
-         SphereGeometry,
-         MeshBasicMaterial,
+         AnimationMixer, 
+         SphereGeometry, 
+         MeshBasicMaterial, 
          Mesh,
 		 BufferGeometry,
-		 Line
+		 Line,
+		 LoopOnce
 		} from '../../libs/three137/three.module.js';
 import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
 import { DRACOLoader } from '../../libs/three137/DRACOLoader.js';
-
+import { SFX } from '../../libs/SFX.js';
 
 class User{
     constructor(game, pos, heading){
         this.root = new Group();
         this.root.position.copy( pos );
         this.root.rotation.set( 0, heading, 0, 'XYZ' );
+
+		this.startInfo = { pos: pos.clone(), heading };
 
         this.game = game;
 
@@ -36,10 +39,9 @@ class User{
 
 		this.speed = 0;
 		this.isFiring = false;
-		this.isRun = false;
+
 		this.ready = false;
-		this.healthPoint = 100;
-		this.object
+
         //this.initMouseHandler();
 		this.initRifleDirection();
     }
@@ -55,38 +57,51 @@ class User{
 		this.rifleDirection.shot = new Quaternion(-0.082, -0.789, 0.594, -0.138);
 	}
 
-   // initMouseHandler(){
-		// this.game.renderer.domElement.addEventListener( 'click', raycast, false );
+    initMouseHandler(){
+		this.game.renderer.domElement.addEventListener( 'click', raycast, false );
 			
-    	// const self = this;
-    	// const mouse = { x:0, y:0 };
+    	const self = this;
+    	const mouse = { x:0, y:0 };
     	
-    	// function raycast(e){
-    	//
-		// 	mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
-		// 	mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
-		//
-		// 	//2. set the picking ray from the camera position and mouse coordinates
-		// 	self.raycaster.setFromCamera( mouse, self.game.camera );
-		//
-		// 	//3. compute intersections
-		// 	const intersects = self.raycaster.intersectObject( self.game.navmesh );
-		//
-		// 	if (intersects.length>0){
-		// 		const pt = intersects[0].point;
-		// 		console.log(pt);
-		//
-		// 		self.root.position.copy(pt);
-		//
-        //         self.root.remove( self.dolly )
-		//
-        //         self.dolly.position.copy( self.game.camera.position );
-        //         self.dolly.quaternion.copy( self.game.camera.quaternion );
-		//
-        //         self.root.attach(self.dolly);
-		// 	}
-		// }
-    //}
+    	function raycast(e){
+    		
+			mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+			mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+
+			//2. set the picking ray from the camera position and mouse coordinates
+			self.raycaster.setFromCamera( mouse, self.game.camera );    
+
+			//3. compute intersections
+			const intersects = self.raycaster.intersectObject( self.game.navmesh );
+			
+			if (intersects.length>0){
+				const pt = intersects[0].point;
+				console.log(pt);
+
+				self.root.position.copy(pt);
+
+                self.root.remove( self.dolly )
+
+                self.dolly.position.copy( self.game.camera.position );
+                self.dolly.quaternion.copy( self.game.camera.quaternion );
+
+                self.root.attach(self.dolly);
+			}	
+		}
+    }
+
+	reset(){
+		this.position = this.startInfo.pos;
+		this.root.rotation.set(0, this.startInfo.heading, 0, 'XYZ');
+		this.root.rotateY(0.7);
+		this.root.userData.dead = false;
+		this.ammo = 100;
+		this.health = 100;
+		this.action = 'idle';
+		this.dead = false;
+		this.speed = 0;
+		this.isFiring = false;
+	}
 
     set position(pos){
         this.root.position.copy( pos );
@@ -99,21 +114,23 @@ class User{
 	set firing(mode){
 		this.isFiring = mode;
 		if (mode){
-			//console.log(this.speed)
-			this.action =  (Math.abs(this.speed) === 0 ) ? "firing" : "firingwalk";
-			//console.log(this.action)
+			this.action = ( Math.abs(this.speed) == 0 ) ? "firing" : "firingwalk";
 			this.bulletTime = this.game.clock.getElapsedTime();
 		}else{
 			this.action = 'idle';
 		}
-		//console.log(this.action)
 	}
+
 	shoot(){
+		if (this.ammo<1) return;
 		if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
 		this.aim.getWorldPosition(this.tmpVec);
 		this.aim.getWorldQuaternion(this.tmpQuat);
 		this.bulletHandler.createBullet( this.tmpVec, this.tmpQuat );
 		this.bulletTime = this.game.clock.getElapsedTime();
+		this.ammo--;
+		this.game.ui.ammo = Math.max(0, Math.min(this.ammo/100, 1));
+		this.sfx.play('shot');
 	}
 
     addSphere(){
@@ -126,21 +143,12 @@ class User{
     }
 
     load(){
-
-
-
     	const loader = new GLTFLoader( ).setPath(`${this.game.assetsPath}factory/`);
 		const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath( '../../libs/three137/draco/' );
         loader.setDRACOLoader( dracoLoader );
-		const user = this;
-
-		loader.load( 'Idle.glb', function( object ){
-			user.anim=	object.animations[0]
-		});
-		console.log(this.animations)
-
-        //Load a glTF resource
+        
+        // Load a glTF resource
 		loader.load(
 			// resource URL
 			'eve2.glb',
@@ -156,9 +164,11 @@ class User{
                 this.object.traverse( child => {
                     if ( child.isMesh){
                         child.castShadow = true;
+						child.frustumCulled = false;
 						if (child.name.includes('Rifle')) this.rifle = child;
                     }
                 });
+
 				if (this.rifle){
 					const geometry = new BufferGeometry().setFromPoints( [ new Vector3( 0, 0, 0 ), new Vector3( 1, 0, 0 ) ] );
 
@@ -171,19 +181,15 @@ class User{
 					this.aim = line;
 					line.visible = false;
 				}
-				user.object.add(this.object);
 
                 this.animations = {};
 
                 gltf.animations.forEach( animation => {
                     this.animations[animation.name.toLowerCase()] = animation;
-					console.log(this.animations)
-					//console.log(animation.name.toLowerCase())
                 })
-				//this.animations['idle']=user.anim;
-				//console.log(this.animations)
-                this.mixer = new AnimationMixer(gltf.scene);
 
+                this.mixer = new AnimationMixer(gltf.scene);
+            
                 this.action = 'idle';
 
 				this.ready = true;
@@ -201,25 +207,50 @@ class User{
 		);
 	}
 
+	initSounds(){
+		const assetsPath = `${this.game.assetsPath}factory/sfx/`;
+		this.sfx = new SFX(this.game.camera, assetsPath, this.game.listener);
+		this.sfx.load('footsteps', true, 0.8, this.object);
+		this.sfx.load('eve-groan', false, 0.8, this.object);
+		this.sfx.load('shot', false, 0.8, this.object);
+	}
+
     set action(name){
-		if (this.actionName == name.toLowerCase()) return;    
+		name = name.toLowerCase();
+		if (this.actionName == name) return;    
 		
 		//console.log(`User action:${name}`);
-		if(name.toLowerCase()==="run"){
-			this.isRun =true;
+		if (name == 'shot'){ 
+			this.health -= 25;
+			if (this.health>=0){
+				name = 'hit';
+				//Temporarily disable control
+				this.game.active = false;
+				setTimeout( () => this.game.active = true, 1000);
+			}
+			this.game.tintScreen(name);
+			this.game.ui.health = Math.max(0, Math.min(this.health/100, 1)); 
+			if (this.sfx) this.sfx.play('eve-groan');
 		}
-		else{
-			this.isRun = false;
+
+		if (this.sfx){
+			if (name=='walk' || name=='firingwalk' || name=='run'){
+				this.sfx.play('footsteps');
+			}else{
+				this.sfx.stop('footsteps');
+			}
 		}
 
 		const clip = this.animations[name.toLowerCase()];
 
-		//console.log(clip)
 		if (clip!==undefined){
 			const action = this.mixer.clipAction( clip );
 			if (name=='shot'){
 				action.clampWhenFinished = true;
-				action.setLoop( THREE.LoopOnce );
+				action.setLoop( LoopOnce );
+				this.dead = true;
+				this.root.userData.dead = true;
+				this.game.gameover();
 			}
 			action.reset();
 			const nofade = this.actionName == 'shot';
@@ -248,10 +279,7 @@ class User{
 			}
 		}
 	}
-	getHit(bullet){
-		//判断子弹是否与自己相交（hitbox相交）若相交则
-		//this.healthPoint-=bullet.damage;
-	}
+	
 	update(dt){
 		if (this.mixer) this.mixer.update(dt);
 		if (this.rotateRifle !== undefined){
@@ -264,16 +292,8 @@ class User{
 			}
 		}
 		if (this.isFiring){
-			if(this.speed===0)this.action ="firing";
 			const elapsedTime = this.game.clock.getElapsedTime() - this.bulletTime;
-			if (elapsedTime > 0.6) {
-				this.shoot();
-				if(this.healthPoint>0)this.healthPoint-=20;//开枪自残
-			}
-		}
-		if(this.healthPoint<=0){
-			console.log("gameover")
-			this.healthPoint = 100;
+			if (elapsedTime > 0.6) this.shoot(); 
 		}
     }
 }
