@@ -5,6 +5,10 @@ class NPC{
 		const fps = options.fps || 30; //default fps
 		
 		this.name = options.name | 'NPC';
+		this.hp = 10;
+		this.id = parseInt(Math.random()*(99-10+1)+10,10);
+		this.blink = false;
+		this.dt = 0;
 		
 		this.animations = {};	
 		
@@ -24,7 +28,7 @@ class NPC{
         this.speed = options.speed;
         this.app = options.app;
 
-		this.visible = options.visible !== undefined ? options.visible : false; // 设置默认不可见
+		this.visible = options.visible !== undefined ? options.visible : true; // 设置默认不可见
 
         
         if (options.app.pathfinder){

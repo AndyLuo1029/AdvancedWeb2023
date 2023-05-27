@@ -87,7 +87,7 @@ class NPCHandler{
 				if (child.isMesh){
 					child.castShadow = true;
 					child.frustumCulled = false;
-					child.visible = false; // Add this line to hide the NPC mesh
+					child.visible = true; // Add this line to hide the NPC mesh
 				}
 			});
 

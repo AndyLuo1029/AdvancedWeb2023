@@ -6,7 +6,9 @@ import { LoadingBar } from '../../libs/LoadingBar.js';
 import { Pathfinding } from '../../libs/pathfinding/Pathfinding.js';
 import { User } from './User.js';
 import { Controller } from './Controller.js';
-import {BulletHandler} from './BulletHandler.js';
+import { BulletHandler } from './BulletHandler.js';
+import { FrontSight} from './frontSight.js';
+
 
 class Game{
 	constructor(){
@@ -22,9 +24,8 @@ class Game{
 		this.assetsPath = '../../assets/'; // 资源路径
         
 		// 创建相机，并设置位置和旋转角度
-		this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 500 );
-		this.camera.position.set( -10.6, 1.6, -3.5 );
-		this.camera.rotation.y = -Math.PI*0.6;
+		this.camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 500 );
+		this.camera.position.set( -6, 1.8, 3 );
 
 		let col = 0x201510;
 		this.scene = new THREE.Scene(); // 创建场景
@@ -62,6 +63,12 @@ class Game{
         this.setEnvironment(); // 设置环境贴图
 
 		this.load(); // 加载模型和角色
+
+		// add frontSight to camera
+		const frontSight = new FrontSight(THREE);
+		this.camera.add(frontSight.frontSight);
+		this.camera.add(frontSight.frontSightRing);
+		this.scene.add(this.camera); // 将相机添加到场景中
 
 		this.raycaster = new THREE.Raycaster(); // 创建射线投射器
 		this.tmpVec = new THREE.Vector3(); // 创建临时向量
@@ -172,7 +179,7 @@ class Game{
 	load(){
         this.loadEnvironment();
 		this.npcHandler = new NPCHandler(this);
-		this.user = new User(this, new THREE.Vector3( -5.97, 0.021, -1.49), 1.57);
+		this.user = new User(this, new THREE.Vector3( -6, 0.021, -2), 1*Math.PI);
     }
 
 	// 加载环境模型及其子对象，并设置导航网格和阴影等属性。

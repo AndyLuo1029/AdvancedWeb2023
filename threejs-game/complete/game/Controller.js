@@ -1,6 +1,4 @@
 import { Object3D, Camera, Vector3, Quaternion, Raycaster } from '../../libs/three137/three.module.js';
-import { JoyStick } from '../../libs/JoyStick.js';
-//import { Game } from './Game.js';
 
 /*
 控制器类，用于处理玩家的移动和相机控制输入。
@@ -34,7 +32,8 @@ class Controller{
         this.cameraBase.position.copy( this.camera.position );
         this.cameraBase.quaternion.copy( this.camera.quaternion );
         this.target.attach( this.cameraBase );
-        this.target.rotateY(0.7);
+        // make the whole group to rotate an angle
+        // this.target.rotateY(0.7);
 
         this.cameraHigh = new Camera();
         this.cameraHigh.position.copy( this.camera.position );
@@ -49,83 +48,24 @@ class Controller{
 
         this.speed = 5;
 
-        this.checkForGamepad();
-
-        if('ontouchstart' in document.documentElement){
-            const options1 = {
-                left: true,
-                app: this,
-                onMove: this.onMove
-            }
-
-            const joystick1 = new JoyStick(options1);
-
-            const options2 = {
-                right: true,
-                app: this,
-                onMove: this.onLook
-            }
-
-            const joystick2 = new JoyStick(options2);
-
-            const fireBtn = document.createElement("div");
-            fireBtn.style.cssText = "position:absolute; bottom:55px; width:40px; height:40px; background:#FFFFFF; border:#444 solid medium; border-radius:50%; left:50%; transform:translateX(-50%);";
-            fireBtn.addEventListener('mousedown', this.fire.bind(this, true));
-            fireBtn.addEventListener('mouseup', this.fire.bind(this, false));
-            document.body.appendChild(fireBtn);
-
-            this.touchController = { joystick1, joystick2, fireBtn };
-        }else{
-            document.addEventListener('keydown', this.keyDown.bind(this));
-            document.addEventListener('keyup', this.keyUp.bind(this));
-            document.addEventListener('mousedown', this.mouseDown.bind(this));
-            document.addEventListener('mouseup', this.mouseUp.bind(this));
-            document.addEventListener('mousemove', this.mouseMove.bind(this));
-            this.keys = {   
-                            w:false, 
-                            a:false, 
-                            d:false, 
-                            s:false, 
-                            space:false,
-                            mousedown:false, 
-                            mouseorigin:{x:0, y:0}
-                        };
-        }
-    }
-
-    checkForGamepad(){
-        const gamepads = {};
-
-        const self = this;
-
-        function gamepadHandler(event, connecting) {
-            const gamepad = event.gamepad;
-
-            if (connecting) {
-                gamepads[gamepad.index] = gamepad;
-                self.gamepad = gamepad;
-                if (self.touchController) self.showTouchController(false);
-            } else {
-                delete self.gamepad;
-                delete gamepads[gamepad.index];
-                if (self.touchController) self.showTouchController(true);
-            }
-        }
-
-        window.addEventListener("gamepadconnected", function(e) { gamepadHandler(e, true); }, false);
-        window.addEventListener("gamepaddisconnected", function(e) { gamepadHandler(e, false); }, false);
-    }
-
-    showTouchController(mode){
-        if (this.touchController == undefined) return;
-
-        this.touchController.joystick1.visible = mode;
-        this.touchController.joystick2.visible = mode;
-        this.touchController.fireBtn.style.display = mode ? 'block' : 'none';
+        document.addEventListener('keydown', this.keyDown.bind(this));
+        document.addEventListener('keyup', this.keyUp.bind(this));
+        document.addEventListener('mousedown', this.mouseDown.bind(this));
+        document.addEventListener('mouseup', this.mouseUp.bind(this));
+        document.addEventListener('mousemove', this.mouseMove.bind(this));
+        this.keys = {   
+                        w:false, 
+                        a:false, 
+                        d:false, 
+                        s:false, 
+                        space:false,
+                        mousedown:false, 
+                        mouseorigin:{x:0, y:0}
+                    };
     }
 
     keyDown(e){
-        //console.log('keyCode:' + e.keyCode);
+        // repeat is true when the key is held down continuously
         let repeat = false;
         if (e.repeat !== undefined) {
             repeat = e.repeat;
@@ -142,10 +82,7 @@ class Controller{
                 break;
             case 68:
                 this.keys.d = true;
-                break;
-            case 32:
-                if (!repeat) this.fire(true);
-                break;                                           
+                break;                                        
         }
     }
 
@@ -166,10 +103,7 @@ class Controller{
             case 68:
                 this.keys.d = false;
                 if (!this.keys.a) this.move.right = 0;
-                break;   
-            case 32:
-                this.fire(false);
-                break;                          
+                break;                         
         }
     }
 
@@ -177,12 +111,14 @@ class Controller{
         this.keys.mousedown = true;
         this.keys.mouseorigin.x = e.offsetX;
         this.keys.mouseorigin.y = e.offsetY;
+        this.fire(true);
     }
 
     mouseUp(e){
         this.keys.mousedown = false;
         this.look.up = 0;
         this.look.right = 0;
+        this.fire(false);
     }
 
     mouseMove(e){
@@ -211,19 +147,6 @@ class Controller{
     onLook( up, right ){
         this.look.up = up*0.25;
         this.look.right = -right;
-    }
-
-    gamepadHandler(){
-        const gamepads = navigator.getGamepads();
-        const gamepad = gamepads[this.gamepad.index];
-        const leftStickX = gamepad.axes[0];
-        const leftStickY = gamepad.axes[1];
-        const rightStickX = gamepad.axes[2];
-        const rightStickY = gamepad.axes[3];
-        const fire = gamepad.buttons[7].pressed;
-        this.onMove(-leftStickY, leftStickX);
-        this.onLook(-rightStickY, rightStickX);
-        this.fire(fire);
     }
 
     keyHandler(){
@@ -279,7 +202,7 @@ class Controller{
         if (playerMoved){
             this.cameraBase.getWorldPosition(this.tmpVec3);
             this.camera.position.lerp(this.tmpVec3, 0.7);
-            //if (speed) console.log(speed.toFixed(2));
+            // if (speed) console.log(speed.toFixed(2));
             let run = false;
             if (speed>0.03){
                 if (this.overRunSpeedTime){
