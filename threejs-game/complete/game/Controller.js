@@ -1,6 +1,4 @@
 import { Object3D, Camera, Vector3, Quaternion, Raycaster } from '../../libs/three137/three.module.js';
-import { JoyStick } from '../../libs/JoyStick.js';
-//import { Game } from './Game.js';
 
 /*
 控制器类，用于处理玩家的移动和相机控制输入。
@@ -53,86 +51,27 @@ class Controller{
         this.speed = 5;
 
         this.run = false;
-        this.checkForGamepad();
 
-        // if('ontouchstart' in document.documentElement){
-        //     const options1 = {
-        //         left: true,
-        //         app: this,
-        //         onMove: this.onMove
-        //     }
-        //
-        //     const joystick1 = new JoyStick(options1);
-        //
-        //     const options2 = {
-        //         right: true,
-        //         app: this,
-        //         onMove: this.onLook
-        //     }
-        //
-        //     const joystick2 = new JoyStick(options2);
-        //
-        //     const fireBtn = document.createElement("div");
-        //     fireBtn.style.cssText = "position:absolute; bottom:55px; width:40px; height:40px; background:#FFFFFF; border:#444 solid medium; border-radius:50%; left:50%; transform:translateX(-50%);";
-        //     fireBtn.addEventListener('mousedown', this.fire.bind(this, true));
-        //     fireBtn.addEventListener('mouseup', this.fire.bind(this, false));
-        //     document.body.appendChild(fireBtn);
-        //
-        //     this.touchController = { joystick1, joystick2, fireBtn };
-        // }
-        // else{
-            document.addEventListener('keydown', this.keyDown.bind(this));
-            document.addEventListener('keyup', this.keyUp.bind(this));
-            document.addEventListener('mousedown', this.mouseDown.bind(this));
-            document.addEventListener('mouseup', this.mouseUp.bind(this));
-            document.addEventListener('mousemove', this.mouseMove.bind(this));
-            this.keys = {   
-                            w:false, 
-                            a:false, 
-                            d:false, 
-                            s:false,
-                            v:false,
-                            shift:false,
-                            //space:false,
-                            // mousedown:false,
-                            //mouseorigin:{x:0, y:0}
-                        };
-        // }
+        document.addEventListener('keydown', this.keyDown.bind(this));
+        document.addEventListener('keyup', this.keyUp.bind(this));
+        document.addEventListener('mousedown', this.mouseDown.bind(this));
+        document.addEventListener('mouseup', this.mouseUp.bind(this));
+        document.addEventListener('mousemove', this.mouseMove.bind(this));
+        this.keys = {   
+                        w:false, 
+                        a:false, 
+                        d:false, 
+                        s:false,
+                        v:false,
+                        shift:false,
+                        //space:false,
+                        // mousedown:false,
+                        //mouseorigin:{x:0, y:0}
+                    };
     }
-
-    checkForGamepad(){
-        const gamepads = {};
-
-        const self = this;
-
-        function gamepadHandler(event, connecting) {
-            const gamepad = event.gamepad;
-
-            if (connecting) {
-                gamepads[gamepad.index] = gamepad;
-                self.gamepad = gamepad;
-                // if (self.touchController) self.showTouchController(false);
-            } else {
-                delete self.gamepad;
-                delete gamepads[gamepad.index];
-                // if (self.touchController) self.showTouchController(true);
-            }
-        }
-
-        window.addEventListener("gamepadconnected", function(e) { gamepadHandler(e, true); }, false);
-        window.addEventListener("gamepaddisconnected", function(e) { gamepadHandler(e, false); }, false);
-    }
-
-    // showTouchController(mode){
-    //     if (this.touchController == undefined) return;
-    //
-    //     this.touchController.joystick1.visible = mode;
-    //     this.touchController.joystick2.visible = mode;
-    //     this.touchController.fireBtn.style.display = mode ? 'block' : 'none';
-    // }
 
     keyDown(e){
-        //console.log('keyCode:' + e.keyCode);
+        // repeat is true when the key is held down continuously
         let repeat = false;
         if (e.repeat !== undefined) {
             repeat = e.repeat;
@@ -158,9 +97,6 @@ class Controller{
                 this.keys.v =true;
                 this.perspective = (this.perspective ==3)? 1:3;
                 break;
-            // case 32:
-            //     if (!repeat) this.fire(true);
-            //    break;
         }
     }
 
@@ -188,9 +124,6 @@ class Controller{
             case 86:
                 this.keys.v =false;
                 break;
-            // case 32:
-            //     this.fire(false);
-            //     break;
         }
     }
 
@@ -244,19 +177,6 @@ class Controller{
     onLook( up, right ){
         this.look.up = up*0.25;
         this.look.right = -right;
-    }
-
-    gamepadHandler(){
-        const gamepads = navigator.getGamepads();
-        const gamepad = gamepads[this.gamepad.index];
-        const leftStickX = gamepad.axes[0];
-        const leftStickY = gamepad.axes[1];
-        const rightStickX = gamepad.axes[2];
-        const rightStickY = gamepad.axes[3];
-        const fire = gamepad.buttons[7].pressed;
-        this.onMove(-leftStickY, leftStickX);
-        this.onLook(-rightStickY, rightStickX);
-        this.fire(fire);
     }
 
     keyHandler(){

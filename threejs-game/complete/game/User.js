@@ -12,6 +12,7 @@ import { Group,
 		} from '../../libs/three137/three.module.js';
 import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
 import { DRACOLoader } from '../../libs/three137/DRACOLoader.js';
+import * as THREE from '../../libs/three137/three.module.js';
 
 
 class User{
@@ -42,6 +43,7 @@ class User{
 		this.object
         //this.initMouseHandler();
 		this.initRifleDirection();
+		this.hp = 5;
     }
 
 	initRifleDirection(){
@@ -110,8 +112,11 @@ class User{
 	}
 	shoot(){
 		if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
-		this.aim.getWorldPosition(this.tmpVec);
-		this.aim.getWorldQuaternion(this.tmpQuat);
+		// this.aim.getWorldPosition(this.tmpVec);
+		// this.aim.getWorldQuaternion(this.tmpQuat);
+		this.camera.getWorldPosition(this.tmpVec);
+		this.camera.getWorldQuaternion(this.tmpQuat);
+		// this.tmpQuat.set(1,0,-1,0);
 		this.bulletHandler.createBullet( this.tmpVec, this.tmpQuat );
 		this.bulletTime = this.game.clock.getElapsedTime();
 	}
@@ -160,16 +165,26 @@ class User{
                     }
                 });
 				if (this.rifle){
-					const geometry = new BufferGeometry().setFromPoints( [ new Vector3( 0, 0, 0 ), new Vector3( 1, 0, 0 ) ] );
-
+					const geometry = new BufferGeometry().setFromPoints( [ new Vector3( 0, 0, 0 ), new Vector3( 7, 0, 0 ) ] );
+					
         			const line = new Line( geometry );
         			line.name = 'aim';
-					line.scale.x = 50;
 
 					this.rifle.add(line);
 					line.position.set(0, 0, 0.5);
 					this.aim = line;
 					line.visible = false;
+					const muzzleloader = new GLTFLoader( ).setPath(`${this.game.assetsPath}weapons/`);
+					muzzleloader.load(
+						'muzzle_flash.glb',
+						gltf => {
+							this.muzzle = gltf.scene;
+							this.aim.add( this.muzzle);
+							this.muzzle.rotateY(-Math.PI/2);
+							this.muzzle.position.set(7, 0, 0);
+							this.muzzle.scale.set(0.9, 0.9, 0.9);		
+						}
+					);
 				}
 				user.object.add(this.object);
 
@@ -264,18 +279,25 @@ class User{
 			}
 		}
 		if (this.isFiring){
+			this.aim.visible = false;
 			if(this.speed===0)this.action ="firing";
 			const elapsedTime = this.game.clock.getElapsedTime() - this.bulletTime;
 			if (elapsedTime > 0.6) {
 				this.shoot();
+				this.aim.rotateX(Math.random() * Math.PI);
+				this.aim.visible = true;
 				if(this.healthPoint>0)this.healthPoint-=20;//开枪自残
 			}
+		}
+		else{
+			this.aim.visible = false;
 		}
 		if(this.healthPoint<=0){
 			console.log("gameover")
 			this.healthPoint = 100;
 		}
-    }
+	}
 }
+
 
 export { User };
