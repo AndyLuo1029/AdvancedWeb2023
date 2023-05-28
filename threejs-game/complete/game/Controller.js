@@ -23,7 +23,7 @@ class Controller{
 
         this.move = { up:0, right:0 };
         this.look = { up:0, right:0 };
-        this.rotate ={up:0,right:0};
+        this.rotate = { up:0,right:0 };
 
         this.tmpVec3 = new Vector3();
         this.tmpQuat = new Quaternion();
@@ -41,6 +41,7 @@ class Controller{
         this.cameraHigh.position.y += 10;
         this.cameraHigh.lookAt( this.target.position );
         this.target.attach( this.cameraHigh );
+
 
         this.yAxis = new Vector3(0, 1, 0);
         this.xAxis = new Vector3(1, 0, 0);
@@ -68,6 +69,9 @@ class Controller{
                         // mousedown:false,
                         //mouseorigin:{x:0, y:0}
                     };
+
+        this.domElement = document.body;
+        this.isLocked = false;
     }
 
     keyDown(e){
@@ -133,39 +137,20 @@ class Controller{
             repeat = e.repeat;
         }
         if (!repeat)  this.fire(true)
-         // this.keys.mousedown = true;
-         // this.keys.mouseorigin.x = e.offsetX;
-         // this.keys.mouseorigin.y = e.offsetY;
      }
 
      mouseUp(e){
          this.fire(false)
-         // this.keys.mousedown = false;
-         // this.look.up = 0;
-         // this.look.right = 0;
      }
 
      mouseMove(e){
-
-         if(e.offsetX>window.innerWidth*4/5){
-             this.rotate.right = -0.7;
-             const maxx =window.innerWidth/5
-             const det =e.offsetX-window.innerWidth*4/5
-             this.rotate.right -= det/maxx*0.3
-         }
-         else if (e.offsetX<window.innerWidth/5){
-             this.rotate.right =   0.7;
-             const maxx =window.innerWidth/5
-             const det =window.innerWidth/5-e.offsetX
-             this.rotate.right += det/maxx*0.3
-         }
-
-         else this.rotate.right =0;
-         //this.keys.mouseorigin.x = e.offsetX;
-     }
+        if(this.isLocked){
+            this.rotate.right = -e.movementX*0.001;
+            this.rotate.up = e.movementY*0.001;
+        }        
+    }
 
     fire(mode){
-        //console.log(`Fire:${mode}`);
         this.user.firing = mode;
     }
 
@@ -193,13 +178,8 @@ class Controller{
     update(dt=0.0167){   
         let playerMoved = false;
         let speed;
-
-        if (this.gamepad){
-            this.gamepadHandler();
-        }else if(this.keys){
-            this.keyHandler();
-        }
-
+        this.keyHandler();
+    
         if (this.move.up!=0){
             const forward = this.forward.clone().applyQuaternion(this.target.quaternion);
             speed = this.move.up>0 ? this.speed * dt : this.speed * dt * 0.3;
@@ -239,6 +219,7 @@ class Controller{
                 else speed = 0.02;
             }
             speed*=this.move.right;
+            speed *= 1.5;
 
             const pos = this.target.position.clone().add(right.multiplyScalar(speed));
             pos.y += 2;
@@ -261,28 +242,44 @@ class Controller{
         else this.user.speed =0;
 
         if(this.rotate.right!==0){
-            const theta = dt * (this.rotate.right - 0.1);
-            this.target.rotateY(theta);
+            // const theta = dt * (this.rotate.right - 0.1);
+            // this.target.rotateY(theta);
+            this.target.rotateOnWorldAxis(this.yAxis, this.rotate.right);
+            this.rotate.right = 0;
             playerMoved = true;
         }
+
+        if(this.rotate.up!==0){   
+            this.target.rotateX(this.rotate.up);
+
+            // let rotBorder = 0;
+            // if(this.perspective == 3){
+            //     rotBorder = 2.80;
+            // }
+            // else {
+            //     rotBorder = 2.75;
+            // }
+            // if(Math.abs(this.target.rotation.x) < rotBorder){
+            //     if(this.target.rotation.x > 0){
+            //         this.target.rotation.x = rotBorder;
+            //     }   
+            //     else{
+            //         this.target.rotation.x = -rotBorder;
+            //     }
+            // }
+
+            this.rotate.up = 0;
+            playerMoved = true;
+        }
+        
+        
+        
 
 
         //console.log(playerMoved)
         if (playerMoved){
             this.cameraBase.getWorldPosition(this.tmpVec3);
             this.camera.position.lerp(this.tmpVec3, 0.7);
-            //if (speed) console.log(speed.toFixed(2));
-            //let run = false;
-            // if (speed>0.03){
-            //     if (this.overRunSpeedTime){
-            //         const elapsedTime = this.clock.elapsedTime - this.overRunSpeedTime;
-            //         run = elapsedTime>0.1;
-            //     }else{
-            //         this.overRunSpeedTime = this.clock.elapsedTime;
-            //     }
-            // }else{
-            //     delete this.overRunSpeedTime;
-            // }
             if (this.keys.shift){
                 this.user.action = 'run';    
             }else{
@@ -309,7 +306,7 @@ class Controller{
                  this.camera.position.setX(this.target.position.x) ;
                  this.camera.position.setY(this.target.position.y+1.57) ;
                  this.camera.position.setZ(this.target.position.z) ;
-                 this.camera.rotateY(0.2);
+                
                  this.game.seeUser(this.camera.position, true);
              }
 
@@ -319,6 +316,20 @@ class Controller{
             const cameraXAxis = this.xAxis.clone().applyQuaternion(this.camera.quaternion);
             this.camera.rotateOnWorldAxis(cameraXAxis, this.look.up * delta);
         }
+    }
+
+    onPointerlockChange() {
+        this.isLocked = document.pointerLockElement === this.domElement;
+    }
+    onPointerlockError() {
+        console.error( 'THREE.PointerLockControls: Unable to use Pointer Lock API' );
+    }
+    connect() {
+        this.domElement.addEventListener('click', this.domElement.requestPointerLock); // 思考函数后面为什么要加bind(this)
+        document.addEventListener( 'pointerlockchange',
+        this.onPointerlockChange.bind(this), false );
+                document.addEventListener( 'pointerlockerror',
+        this.onPointerlockError.bind(this), false );
     }
 }
 

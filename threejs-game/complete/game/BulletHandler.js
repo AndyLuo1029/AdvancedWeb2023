@@ -85,7 +85,7 @@ class BulletHandler{
             let closestDistance = Infinity;
             const p1 = bullet.position.clone();
             let target;
-            const dist = dt * 50;
+            const dist = dt * 100;
             //Move bullet to next position
             bullet.translateZ(-dist);
             const p3 = bullet.position.clone();
@@ -99,76 +99,64 @@ class BulletHandler{
             // make the raycaster visible
             // this.game.scene.add(new THREE.ArrowHelper(this.raycaster.ray.direction, this.raycaster.ray.origin, 10, 0xff0000) );
 
-            // get the factory children intersect distance
-            this.factoryIntersects = this.raycaster.intersectObjects(this.game.factory.children, true);        
-            if (this.factoryIntersects.length>0){
-                // get the first intersect object
-                this.fI = this.factoryIntersects[0].distance;
-            }
-            else{
-                this.fI = Infinity;
-            }
-            // get the npc intersect distance
-            // this.npcs.forEach(npc => {
-            //     let res = this.raycaster.intersectObject(npc.object,true);
-            //     if(res.length>0 && res[0].distance < closestDistance){
-            //         closestDistance = res[0].distance;
-            //     }
-            // });
-
-            // console.log(this.fI, closestDistance);
-
-            if( this.fI > dist ){
-                // console.log('in');
-                // if won't intersect factory children, then the bullet is valid, goto further check
-                bullet.position.copy(p1);
-                const iterations = 1;
-                const p = this.tmpVec3;
-            
-                for(let i=1; i<=iterations; i++){
-                    p.lerpVectors(p1, p3, i/iterations);
-                    // console.log(bullet.userData);
-                    if (bullet.userData.targetType==1){
-                        const p2 = this.user.position.clone();
-                        p2.y += 1.2;
-                        hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 2.4, 0.4);
-                        if (hit) target = this.user;
-                    }else{
-                        this.npcs.some( npc => {
-                            if (!npc.dead){
-                                const p2 = npc.position.clone();
-                                p2.y += 1.5;
-                                hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 3.0, 0.5);
-                                if (hit){
-                                    target = npc;
-                                    return true;
-                                }
-                            }
-                        })
-                    }
-                    if (hit) break;
-                }
-                
-                if (hit){
-                    target.hp -= 1;
-                    bullet.userData.remove = true;
-                    console.log([target.id,target.hp]);
-                    this.blink(target);
-                    if(target.hp<=0) target.action = 'shot';
+            // 穿小模不穿大模
+            // if won't intersect factory children, then the bullet is valid, goto further check
+            bullet.position.copy(p1);
+            const iterations = 1;
+            const p = this.tmpVec3;
+        
+            for(let i=1; i<=iterations; i++){
+                p.lerpVectors(p1, p3, i/iterations);
+                // console.log(bullet.userData);
+                if (bullet.userData.targetType==1){
+                    const p2 = this.user.position.clone();
+                    p2.y += 1.2;
+                    hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 2.4, 0.4);
+                    if (hit) target = this.user;
                 }else{
+                    this.npcs.some( npc => {
+                        if (!npc.dead){
+                            const p2 = npc.position.clone();
+                            p2.y += 1.5;
+                            hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 3.0, 1);
+                            if (hit){
+                                target = npc;
+                                return true;
+                            }
+                        }
+                    })
+                }
+                if (hit) break;
+            }
+            
+            if (hit){
+                target.hp -= 1;
+                bullet.userData.remove = true;
+                console.log([target.id,target.hp]);
+                this.blink(target);
+                if(target.hp<=0) target.action = 'shot';
+            }else{
+                // when not hit, get the factory children intersect distance
+                this.factoryIntersects = this.raycaster.intersectObjects(this.game.factory.children, true);        
+                if (this.factoryIntersects.length>0){
+                    // get the first intersect object
+                    this.fI = this.factoryIntersects[0].distance;
+                }
+                else{
+                    this.fI = Infinity;
+                }
+
+                if( this.fI > dist ){
                     bullet.translateZ(-dist);
                     // bullet.rotateX(-dt * 0.03);
                     bullet.userData.distance += dist;
                     bullet.userData.remove = (bullet.userData.distance > 50);
                 }
+                else {
+                    // else if intersect factory children before npcs, then the bullet is invalid, remove it
+                    bullet.userData.remove = true;
+                }
             }
-            else {
-                // else if intersect factory children before npcs, then the bullet is invalid, remove it
-                bullet.userData.remove = true;
-            }
-
-            // 目前的问题：不能每个update都 raycast判断是否击中，性能消耗太大；不能在else里直接remove子弹，否则子弹射出就会消失；目标是在子弹碰到墙体就把子弹删除！考虑和人的关系。
-
 
             // reset fI, factoryIntersects
             this.fI = 0;
@@ -193,7 +181,6 @@ class BulletHandler{
         }while(found);
 
         // reset material color after blink
-        // 逻辑有问题： 如果多个人blink，应该分别单独计算他们的时间并且做恢复，但这里写的，只要有一个人blink恢复就不会再检测了
         if(this.haveBlink > 0){
             this.npcs.some( npc => {
                 if (npc.blink){
@@ -211,9 +198,8 @@ class BulletHandler{
                 }
             })
         }
-
         // if(this.bullets.length>0) console.log(this.bullets[0].userdata);
-        console.log(this.bullets.length);
+        // console.log(this.bullets.length);
     }
 
     blink(target){

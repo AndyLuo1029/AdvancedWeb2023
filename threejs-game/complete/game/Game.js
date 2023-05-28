@@ -268,6 +268,7 @@ class Game{
 	startRendering(){
 		if (this.npcHandler.ready && this.user.ready && this.bulletHandler == undefined){
 			this.controller = new Controller(this);
+			this.controller.connect();
 			this.bulletHandler = new BulletHandler(this);
 			this.renderer.setAnimationLoop( this.render.bind(this) );
 		}

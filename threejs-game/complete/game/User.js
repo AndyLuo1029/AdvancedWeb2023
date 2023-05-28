@@ -52,43 +52,12 @@ class User{
 		this.rifleDirection.idle = new Quaternion(-0.178, -0.694, 0.667, 0.203);
 		this.rifleDirection.walk = new Quaternion( 0.044, -0.772, 0.626, -0.102);
 		this.rifleDirection.firingwalk = new Quaternion(-0.034, -0.756, 0.632, -0.169);
+		this.rifleDirection.fpsFiringwalk = new Quaternion(0.005, -0.789, 0.594, -0.085);
 		this.rifleDirection.firing = new Quaternion( -0.054, -0.750, 0.633, -0.184);
+		this.rifleDirection.fpsFiring = new Quaternion(0.005, -0.789, 0.594, -0.085);
 		this.rifleDirection.run = new Quaternion( 0.015, -0.793, 0.595, -0.131);
 		this.rifleDirection.shot = new Quaternion(-0.082, -0.789, 0.594, -0.138);
 	}
-
-   // initMouseHandler(){
-		// this.game.renderer.domElement.addEventListener( 'click', raycast, false );
-			
-    	// const self = this;
-    	// const mouse = { x:0, y:0 };
-    	
-    	// function raycast(e){
-    	//
-		// 	mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
-		// 	mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
-		//
-		// 	//2. set the picking ray from the camera position and mouse coordinates
-		// 	self.raycaster.setFromCamera( mouse, self.game.camera );
-		//
-		// 	//3. compute intersections
-		// 	const intersects = self.raycaster.intersectObject( self.game.navmesh );
-		//
-		// 	if (intersects.length>0){
-		// 		const pt = intersects[0].point;
-		// 		console.log(pt);
-		//
-		// 		self.root.position.copy(pt);
-		//
-        //         self.root.remove( self.dolly )
-		//
-        //         self.dolly.position.copy( self.game.camera.position );
-        //         self.dolly.quaternion.copy( self.game.camera.quaternion );
-		//
-        //         self.root.attach(self.dolly);
-		// 	}
-		// }
-    //}
 
     set position(pos){
         this.root.position.copy( pos );
@@ -143,7 +112,7 @@ class User{
 		loader.load( 'Idle.glb', function( object ){
 			user.anim=	object.animations[0]
 		});
-		console.log(this.animations)
+		// console.log(this.animations);
 
         //Load a glTF resource
 		loader.load(
@@ -192,7 +161,7 @@ class User{
 
                 gltf.animations.forEach( animation => {
                     this.animations[animation.name.toLowerCase()] = animation;
-					console.log(this.animations)
+					// console.log(this.animations);
 					//console.log(animation.name.toLowerCase())
                 })
 				//this.animations['idle']=user.anim;
@@ -250,7 +219,22 @@ class User{
 			this.curAction = action;
 		}
 		if (this.rifle && this.rifleDirection){
-			const q = this.rifleDirection[name.toLowerCase()];
+			// console.log(this.perspective,name);
+			let q = undefined;
+			if(this.perspective == 1){
+				if(name == 'firingwalk'){
+					q = this.rifleDirection['fpsFiringwalk'];
+					// console.log("fpsFiringwalk");
+				}
+				else if(name == 'firing'){
+					q = this.rifleDirection['fpsFiring'];
+					// console.log("fpsFiring");
+				}	
+			}
+			else{
+				q = this.rifleDirection[name.toLowerCase()];
+			}
+
 			if (q!==undefined){
 				const start = new Quaternion();
 				start.copy(this.rifle.quaternion);
@@ -268,6 +252,7 @@ class User{
 		//this.healthPoint-=bullet.damage;
 	}
 	update(dt){
+		this.perspective = this.game.controller.perspective;
 		if (this.mixer) this.mixer.update(dt);
 		if (this.rotateRifle !== undefined){
 			this.rotateRifle.time += dt;
@@ -293,7 +278,7 @@ class User{
 			this.aim.visible = false;
 		}
 		if(this.healthPoint<=0){
-			console.log("gameover")
+			// console.log("gameover")
 			this.healthPoint = 100;
 		}
 	}
