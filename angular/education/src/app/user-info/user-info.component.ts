@@ -1,7 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import * as echarts from 'echarts';
 import { Global } from '../global';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BackErrorHandler } from '../http-interceptors/back-error-handler';
 import { catchError } from 'rxjs';
@@ -55,9 +55,14 @@ export class UserInfoComponent {
     let url = Global.backURL + "/user/data";
     let username = localStorage.getItem("username")
     const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
+  
     this.http.post(url, username, httpOptions)
-      .pipe(catchError(this.handler.handleError))
+      .pipe(catchError((error: HttpErrorResponse)=>{
+        this.empty = true
+        return this.handler.handleError(error)
+      }))
       .subscribe((response:any) => { 
+        console.log(response)
         if(response.code == 400) {
           window.alert(response.message); 
           this.empty = true

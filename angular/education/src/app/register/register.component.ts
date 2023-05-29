@@ -17,11 +17,16 @@ export class RegisterComponent {
   
   registerForm = new FormGroup({
     // Setting Validation Controls
-    username: new FormControl('', [Validators.required]),
+    username: new FormControl('', 
+      [Validators.required,
+       Validators.maxLength(50),
+       Validators.pattern('^[A-Za-z\\d$@$!%*?&_]*$')]),
     email: new FormControl('', [Validators.email]),
     password: new FormControl('', 
       [Validators.required,
-       Validators.minLength(8)]),
+       Validators.minLength(8),
+       Validators.maxLength(50),
+       Validators.pattern('^(?=.*[a-zA-Z])(?=.*[0-9])[A-Za-z\\d$@$!%*?&]*$')]),
     passwordCheck: new FormControl('',
       [Validators.required,
        this.PasswordValidator("password")]),
@@ -32,6 +37,12 @@ export class RegisterComponent {
     if (this.registerForm.get("username")?.hasError('required')) {
       return '请输入用户名';
     }
+    if (this.registerForm.get("username")?.hasError('maxlength')) {
+      return '用户名至多50个字符';
+    }
+    if (this.registerForm.get("username")?.hasError('pattern')) {
+      return '用户名只能包含字母和数字和特殊字符';
+    }
     return ''
   }
   getErrorPassword() {
@@ -40,6 +51,12 @@ export class RegisterComponent {
     }
     if (this.registerForm.get("password")?.hasError('minlength')) {
       return '密码至少为8位';
+    }
+    if (this.registerForm.get("password")?.hasError('maxlength')) {
+      return '密码至多为50位';
+    }
+    if (this.registerForm.get("password")?.hasError('pattern')) {
+      return '密码需包含字母和数字,不能有中文';
     }
     return ''
   }

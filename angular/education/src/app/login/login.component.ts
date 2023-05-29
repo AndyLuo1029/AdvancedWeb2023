@@ -19,7 +19,7 @@ export class LoginComponent {
 
   loginForm = new FormGroup({
     // Setting Validation Controls
-    number: new FormControl('', [Validators.required]),
+    username: new FormControl('', [Validators.required]),
     password: new FormControl('', [Validators.required])
   })
 
@@ -32,7 +32,7 @@ export class LoginComponent {
     const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
     this.http.post(this.url, 
         {
-          username:this.loginForm.value.number, 
+          username:this.loginForm.value.username, 
           password:this.loginForm.value.password, 
         }, httpOptions)
       .pipe(catchError(this.handler.handleError))
@@ -49,12 +49,6 @@ export class LoginComponent {
           }
         }
       });
-
-    // if (this.number === 'admin' && this.password === '123456') {
-    //   // sessionStorage.setItem('access_token', 'true')
-    //   this.router.navigate(['/'])
-     
-    // } 
   }
 
 }

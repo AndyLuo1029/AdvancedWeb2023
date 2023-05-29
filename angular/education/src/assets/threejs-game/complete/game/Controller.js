@@ -76,7 +76,9 @@ class Controller{
 
             this.touchController = { joystick1, joystick2, fireBtn };
         }else{
-            document.addEventListener('keydown', this.keyDown.bind(this));
+            
+		
+            document.addEventListener('keydown', this.keyDown);
             document.addEventListener('keyup', this.keyUp.bind(this));
             document.addEventListener('mousedown', this.mouseDown.bind(this));
             document.addEventListener('mouseup', this.mouseUp.bind(this));
@@ -92,7 +94,14 @@ class Controller{
                         };
         }
     }
-
+    clear() {
+        console.log(1)
+        document.removeEventListener('keydown', this.keyDown);
+        document.removeEventListener('keyup', this.keyUp);
+        document.removeEventListener('mousedown', this.mouseDown);
+        document.removeEventListener('mouseup', this.mouseUp);
+        document.removeEventListener('mousemove', this.mouseMove);
+    }
     checkForGamepad(){
         const gamepads = {};
 
@@ -124,7 +133,7 @@ class Controller{
         this.touchController.fireBtn.style.display = mode ? 'block' : 'none';
     }
 
-    keyDown(e){
+    keyDown = (e)=>{
         //console.log('keyCode:' + e.keyCode);
         let repeat = false;
         if (e.repeat !== undefined) {
@@ -132,6 +141,7 @@ class Controller{
         }
         switch(e.keyCode){
             case 87:
+                this.game.gameFinish(1);
                 this.keys.w = true;
                 break;
             case 65:

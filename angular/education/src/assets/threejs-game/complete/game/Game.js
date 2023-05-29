@@ -9,8 +9,10 @@ import { Controller } from './Controller.js';
 import {BulletHandler} from './BulletHandler.js';
 
 class Game{
-	constructor(){
+	constructor(gameFinish){
 		// 创建场景容器
+		this.gameFinish = gameFinish;
+		// gameFinish();
 		const container = document.getElementById( 'three' );
 		// document.body.appendChild( container );
 
@@ -267,6 +269,29 @@ class Game{
 	}
     stopRendering() {
 		this.renderer.setAnimationLoop(null );
+		this.gameFinish = null
+		this.user = null
+		this.controller.clear();
+		this.scene.traverse((child) => {
+			if (child.material) {
+			  child.material.dispose();
+			}
+			if (child.geometry) {
+			  child.geometry.dispose();
+			}
+			child = null;
+		  });
+	   
+		  // 场景中的参数释放清理或者置空等
+		  this.renderer.forceContextLoss();
+		  this.renderer.dispose();
+		  this.scene.clear();
+		  this.flows = [];
+		  this.scene = null;
+		  this.camera = null;
+		  this.controls = null;
+
+		  this.renderer = null;
 	}
 	/* 该函数在每一帧被调用，用于更新游戏中的各个对象并进行渲染。
 	具体而言，它会计算时间差值 dt，并分别调用 NPC、用户、控制器和子弹管理器的 update 函数来更新它们的状态。

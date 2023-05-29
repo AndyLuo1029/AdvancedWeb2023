@@ -9,6 +9,7 @@ import com.web.education.response.ErrorResponse;
 import com.web.education.response.UserLoginResponse;
 import com.web.education.response.UserRegisterResponse;
 import com.web.education.util.JwtUtil;
+import com.web.education.util.Password;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,8 @@ public class UserController {
             sqlSession.close();
             return new ErrorResponse("用户名已存在", 400);
         } else {
-            userMapper.addUser(new User(request.getUsername(), request.getPassword(), request.getEmail()));
+            String encoded = Password.encodePassword(request.getPassword());
+            userMapper.addUser(new User(request.getUsername(), encoded, request.getEmail()));
             sqlSession.commit();
             sqlSession.close();
             return new UserRegisterResponse("注册成功", 200);
@@ -47,14 +49,20 @@ public class UserController {
         HashMap<String, Object> map = new HashMap<>();
         // 自定义要查询
         map.put("username",username);
-        map.put("password",request.getPassword());
+//        map.put("password",request.getPassword());
         List<User> userList =uMapper.selectByMap(map);
 
         if (userList.size() > 0) {
-            String token = JwtUtil.createToken(username);
-            return new UserLoginResponse("登录成功", 200, token, username);
+            boolean check = Password.checkPassword(request.getPassword(), userList.get(0).getPassword());
+            if(check) {
+                String token = JwtUtil.createToken(username);
+                return new UserLoginResponse("登录成功", 200, token, username);
+            }
+            else {
+                return new ErrorResponse("密码错误", 400);
+            }
         } else {
-            return new ErrorResponse("用户名或密码错误", 400);
+            return new ErrorResponse("用户名不存在", 400);
         }
     }
 }
