@@ -1,7 +1,8 @@
 import { AfterViewInit, Component, ElementRef, OnInit } from '@angular/core';
 import { NgClass } from '@angular/common'
 import * as THREE from 'three'
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 import { GridHelper } from 'three';
 import { animation } from '@angular/animations';
 import { Router } from '@angular/router';
@@ -14,18 +15,23 @@ export class SelectComponent implements AfterViewInit {
 
 	constructor(private el: ElementRef, public router:Router) {}
 
-	private game:Game[] = [];
+	private users:User[] = [];
 	private lastSelect:number = -1;
 	private lastSelectMap:number = -1;
 	ngAfterViewInit() {    
 		for(let i = 0; i < 6; i++) {
 			// if(i > 1) break;
-			const game = new Game(this.characters[i].name, i, this.el);
-			this.game.push(game) 
+			const user = new User(this.characters[i].name, i, this.el);
+			this.users.push(user) 
 		}
 
 	}
-
+	ngOnDestroy() {
+		for(let i = 0; i < 6; i++) {
+			this.users[i].renderer.setAnimationLoop(null );
+		}
+		
+	}
 	characters = [
 		{id:1, selected:false, name:"BeachBabe"},
 		{id:2, selected:false, name:"BusinessMan"},
@@ -43,10 +49,10 @@ export class SelectComponent implements AfterViewInit {
 			ch.selected = false;
 		}
 		if(this.lastSelect != -1) {
-			this.game[this.lastSelect].toggleAnimation();
+			this.users[this.lastSelect].toggleAnimation();
 		}
 		this.lastSelect = index
-		this.game[index].toggleAnimation();
+		this.users[index].toggleAnimation();
 		this.characters[index].selected = true;
 		// console.log(index)
 		// console.log(this.characters)
@@ -75,198 +81,374 @@ export class SelectComponent implements AfterViewInit {
 	}
 }
 
-interface Animations {
-  'Idle'?: any;
-  // 'Pointing Gesture'?: any;
+interface RifleDirection {
+	'idle'?: any;
+	'walk'?: any;
+	'firingwalk'?: any;
+	'fpsFiringwalk'?: any;
+	'firing'?: any;
+	'fpsFiring'?: any;
+	'run'?: any;
+	'shot'?: any;
+	// 'Pointing Gesture'?: any;
 }
-class Game{
-	container: any;
-	player:any;
-	animations:Animations;
-	stats: any;
-	controls: any;
-	camera: any;
-	scene: any;
-	renderer: any;
-	anims: string[];
+
+interface Animations {
+	'firing'?: THREE.AnimationClip;
+	// 'Pointing Gesture'?: any;
+}
+class User{
+	camera: THREE.PerspectiveCamera;
+	scene: THREE.Scene;
+	light: THREE.DirectionalLight;
+	renderer: THREE.WebGLRenderer;
+	root: any;
+	game: any;
+	raycaster: any;
+	loadingBar: any;
+	tmpVec: any;
+	tmpQuat: any;
+	speed: number;
+	isFiring: boolean;
+	isRun: boolean;
+	ready: boolean;
+	healthPoint: number;
+	object: any;
+	hp: number;
+	rifleDirection!: RifleDirection;
+	bulletTime: any;
+	bulletHandler: undefined;
+	hitPoint: any;
+	anim: any;
+	rifle: any;
+	aim: any;
+	muzzle: any;
+	animations!: Animations;
+	mixer: any;
+	actionName: any;
+	curAction: any;
+
+	rotateRifle!: { start: any; end: any; time: number; };
 	assetsPath: string;
 	clock: THREE.Clock;
-	skin:String;
-	id:number;
-	constructor(skin:String, id:number, el:any){
-    
-		this.container;
-		this.player = { };
-    	this.animations = { };
-		this.stats;
-		this.controls;
-		this.camera;
-		this.scene;
-		this.renderer;
-		this.skin = skin;
-		this.id = id;
-		let domID = 'scene-container-' + this.id ;
-		// console.log(domID)
-		// this.container = document.getElementsByClassName("sceene-containers")[id];
-		this.container = el.nativeElement.querySelector('#'+domID)
-		// console.log(this.container)
-		const game = this;
-		this.anims = ['Pointing Gesture'];
-        
-		this.assetsPath = '../../assets/';
+	id: number;
+    constructor(skin:String, id:number, el:any){
+		this.id = id
+		const pos = new THREE.Vector3( -6, 0.021, -2);
+		const heading = 1*Math.PI;
+		let domID = 'scene-container-' + id ;
+		const container = el.nativeElement.querySelector('#'+domID);
 		
-		this.clock = new THREE.Clock();
-        
-    this.init();
+		this.assetsPath = '../../assets/threejs-game/assets/';
 
-		window.onerror = function(error){
-			console.error(JSON.stringify(error));
-		}
-	}
-	
-	init() {
+		this.clock = new THREE.Clock(); // 用于计算时间差
+		// 创建相机，并设置位置和旋转角度
+		this.camera = new THREE.PerspectiveCamera( 40, container.clientWidth/container.clientHeight, 0.1, 500 );
+		// this.camera.position.set( -6, 1.8, 3 );
+		this.camera.position.set( -7, 1.4, -4.5 );
+		const target = new THREE.Vector3( -6, 0.8, -2);
+		this.camera.lookAt(target);
+		let col = 0xada1a1;
+		this.scene = new THREE.Scene(); // 创建场景
+		this.scene.background = new THREE.Color( col ); // 设置背景颜色
+		this.scene.fog = new THREE.Fog( col, 100, 200 ); // 添加雾效
 
-		this.camera = new THREE.PerspectiveCamera( 45, this.container.clientWidth/this.container.clientHeight, 1, 2000 );
-		this.camera.position.set(112, 100, 600);
-        this.camera.lookAt(0, 150, 0);
-		this.scene = new THREE.Scene();
-		this.scene.background = new THREE.Color( 0xa0a0a0 );
-		this.scene.fog = new THREE.Fog( 0xa0a0a0, 700, 1800 );
+		const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1); // 创建环境光
+		this.scene.add(ambient);
 
-		let light = new THREE.HemisphereLight( 0xffffff, 0x444444 );
-		light.position.set( 0, 200, 0 );
-		this.scene.add( light );
+		const light = new THREE.DirectionalLight(); // 创建平行光
+		light.position.set( 4, 20, 20 );
+		light.target.position.set(-2, 0, 0);
+		light.castShadow = true; // 开启阴影
 
-		let light2 = new THREE.DirectionalLight( 0xffffff );
-		light2.position.set( 0, 200, 100 );
-		light2.castShadow = true;
-		light2.shadow.camera.top = 180;
-		light2.shadow.camera.bottom = -100;
-		light2.shadow.camera.left = -120;
-		light2.shadow.camera.right = 120;
-		this.scene.add( light2 );
+		// 设置灯光的阴影属性
+		light.shadow.mapSize.width = 1024;
+		light.shadow.mapSize.height = 512;
+		light.shadow.camera.near = 0.5;
+		light.shadow.camera.far = 50;
+		const d = 30;
+		light.shadow.camera.left = -d;
+		light.shadow.camera.bottom = -d*0.25;
+		light.shadow.camera.right = light.shadow.camera.top = d;
 
-		// // ground
-		var mesh = new THREE.Mesh( new THREE.PlaneGeometry( 4000, 4000 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
+		this.scene.add(light); // 将灯光添加到场景中
+		this.light = light;
+		// ground
+
+		var mesh = new THREE.Mesh( new THREE.PlaneGeometry( 100, 100 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
 		mesh.rotation.x = - Math.PI / 2;
 		//mesh.position.y = -100;
 		mesh.receiveShadow = true;
 		this.scene.add( mesh );
 
-		// var grid:any = new THREE.GridHelper( 4000, 40, 0x000000, 0x000000 );
-		// //grid.position.y = -100;
-		// grid.material.opacity = 0.2;
-		// grid.material.transparent = true;
-		// this.scene.add( grid );
-
-		// model
-		const loader = new FBXLoader();
-		const game = this;
-		
-		loader.load( `${this.assetsPath}fbx/people/${this.skin}.fbx`, function ( object:any ) {
-
-			object.mixer = new THREE.AnimationMixer( object );
-			game.player.mixer = object.mixer;
-			game.player.root = object.mixer.getRoot();
-			
-			object.name = game.skin;
-					
-			object.traverse( function ( child:any ) {
-				if ( child.isMesh ) {
-					child.castShadow = true;
-					child.receiveShadow = false;		
-				}
-			} );
-			
-			const tLoader = new THREE.TextureLoader();
-			tLoader.load(`${game.assetsPath}images/SimplePeople_${game.skin}_White.png`, function(texture){
-					object.traverse( function ( child:any ) {
-						if ( child.isMesh ){
-							child.material.map = texture;
-						}
-					} );
-				});
-            // object.position.set(0,0,0);
-			// object.quaternion.set(0,0,0);
-			game.scene.add(object);
-			game.player.object = object;
-			game.animations.Idle = object.animations[0];
-            
-      		game.loadNextAnim(loader);
-		} );
-		
-		this.renderer = new THREE.WebGLRenderer( { antialias: true } );
+		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true } ); // 创建渲染器
+		this.renderer.shadowMap.enabled = true; // 开启阴影
 		this.renderer.setPixelRatio( window.devicePixelRatio );
-		this.renderer.setSize( this.container.clientWidth, this.container.clientHeight);
-		this.renderer.shadowMap.enabled = true;
-		this.container.appendChild( this.renderer.domElement );
-        
-        // this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-        // this.controls.target.set(0, 150, 0);
-        // this.controls.update();
-			
-		window.addEventListener( 'resize', function(){ game.onWindowResize(); }, false );
-	}
-	
-  loadNextAnim(loader:any){
-		let anim = this.anims.pop();
-		const game = this;
-		loader.load( `${this.assetsPath}fbx/anims/${anim}.fbx`, function( object:any ){
-			if(anim != undefined) {
-        game.animations[anim as keyof typeof game.animations] = object.animations[0];
-      }
-			if (game.anims.length>0){
-				game.loadNextAnim(loader);
-			}else{
-				// delete game.anims;
-				game.action = "Idle";
-				game.animate();
-			}
-		});	
-	}
-    
-	onWindowResize() {
-		this.camera.aspect = this.container.clientWidth/this.container.clientHeight;
-		this.camera.updateProjectionMatrix();
+		this.renderer.setSize( container.clientWidth, container.clientHeight);
+		this.renderer.outputEncoding = THREE.sRGBEncoding; // 设置颜色编码格式
+		container.appendChild( this.renderer.domElement );
 
-		this.renderer.setSize( this.container.clientWidth, this.container.clientHeight );
+		//USER
+        this.root = new THREE.Group();
+        this.root.position.copy( pos );
+        this.root.rotation.set( 0, heading, 0, 'XYZ' );
+        this.game = this;
+        this.raycaster = new THREE.Raycaster();
 
-	}
+        this.scene.add(this.root);
+	    this.load();
 
-  set action(name){
-		const action = this.player.mixer.clipAction( this.animations[name as keyof typeof this.animations] );
-    	action.time = 0;
-		this.player.mixer.stopAllAction();
-		this.player.action = name;
-		this.player.actionTime = Date.now();
-        this.player.actionName = name;
-		
-		action.fadeIn(0.5);	
-		action.play();
-	}
-    
-    get action(){
-        if (this.player===undefined || this.player.actionName===undefined) return "";
-        return this.player.actionName;
+        this.tmpVec = new THREE.Vector3();
+        this.tmpQuat = new THREE.Quaternion();
+
+		this.speed = 0;
+		this.isFiring = false;
+		this.isRun = false;
+		this.ready = false;
+		this.healthPoint = 100;
+		// this.object
+        //this.initMouseHandler();
+		this.initRifleDirection();
+		this.hp = 5;
     }
-    
-  toggleAnimation(){
-      if (this.action=="Idle"){
-          this.action = "Pointing Gesture";
-      }else{
-          this.action = "Idle";
-      }
-  }
-    
-	animate() {
-		const game = this;
+
+	initRifleDirection(){
+		this.rifleDirection = {};
+
+		this.rifleDirection.idle = new THREE.Quaternion(-0.178, -0.694, 0.667, 0.203);
+		this.rifleDirection.walk = new THREE.Quaternion( 0.044, -0.772, 0.626, -0.102);
+		this.rifleDirection.firingwalk = new THREE.Quaternion(-0.034, -0.756, 0.632, -0.169);
+		this.rifleDirection.fpsFiringwalk = new THREE.Quaternion(0.005, -0.789, 0.594, -0.085);
+		this.rifleDirection.firing = new THREE.Quaternion( -0.054, -0.750, 0.633, -0.184);
+		this.rifleDirection.fpsFiring = new THREE.Quaternion(0.005, -0.789, 0.594, -0.085);
+		this.rifleDirection.run = new THREE.Quaternion( 0.015, -0.793, 0.595, -0.131);
+		this.rifleDirection.shot = new THREE.Quaternion(-0.082, -0.789, 0.594, -0.138);
+	}
+
+    set position(pos){
+        this.root.position.copy( pos );
+    }
+
+	get position(){
+		return this.root.position;
+	}
+
+	set firing(mode:any){
+		this.isFiring = mode;
+		if (mode){
+			//console.log(this.speed)
+			this.action =  (Math.abs(this.speed) === 0 ) ? "firing" : "firingwalk";
+			//console.log(this.action)
+			this.bulletTime = this.game.clock.getElapsedTime();
+		}else{
+			this.action = 'idle';
+		}
+		//console.log(this.action)
+	}
+	shoot(){
+		if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
+		// this.aim.getWorldPosition(this.tmpVec);
+		// this.aim.getWorldQuaternion(this.tmpQuat);
+		this.camera.getWorldPosition(this.tmpVec);
+		// this.root.getWorldPosition(this.tmpVec);
+		// let tempVec = new Vector3();
+		// this.camera.getWorldPosition(tempVec);
+		// this.tmpVec.y = tempVec.y;
+		// this.tmpVec.y = this.camera.position.y;
+		this.camera.getWorldQuaternion(this.tmpQuat);
+		// this.tmpQuat.set(1,0,-1,0);
+	}
+
+    // addSphere(){
+    //     const geometry = new SphereGeometry( 0.1, 8, 8 );
+    //     const material = new MeshBasicMaterial( { color: 0xFF0000 });
+    //     const mesh = new Mesh( geometry, material );
+    //     this.game.scene.add(mesh);
+	// 	this.hitPoint = mesh;
+	// 	this.hitPoint.visible = false;
+    // }
+
+    load(){
+    	const loader = new GLTFLoader( ).setPath(`${this.game.assetsPath}factory/`);
+		const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath( `${this.game.assetsPath}../libs/three137/draco/` );
+        loader.setDRACOLoader( dracoLoader );
+		const user = this;
+
+		loader.load( 'Idle.glb', function( object:any ){
+			user.anim=	object.animations[0]
+		});
+		// console.log(this.animations);
+
+        //Load a glTF resource
+		loader.load(
+			// resource URL
+			'eve2.glb',
+			// called when the resource is loaded
+			gltf => {
+				this.root.add( gltf.scene );
+                this.object = gltf.scene;
+				this.object.frustumCulled = false;
+
+                const scale = 1.2;
+                this.object.scale.set(scale, scale, scale);
+
+                this.object.traverse( (child: { isMesh: any; castShadow: boolean; name: string | string[]; }) => {
+                    if ( child.isMesh){
+                        child.castShadow = true;
+						if (child.name.includes('Rifle')) this.rifle = child;
+                    }
+                });
+				if (this.rifle){
+					const geometry = new THREE.BufferGeometry().setFromPoints( [ new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 7, 0, 0 ) ] );
+					
+        			const line = new THREE.Line( geometry );
+        			line.name = 'aim';
+
+					this.rifle.add(line);
+					line.position.set(0, 0, 0.5);
+					this.aim = line;
+					line.visible = false;
+					const muzzleloader = new GLTFLoader( ).setPath(`${this.game.assetsPath}weapons/`);
+					muzzleloader.load(
+						'muzzle_flash.glb',
+						gltf => {
+							this.muzzle = gltf.scene;
+							this.aim.add( this.muzzle);
+							this.muzzle.rotateY(-Math.PI/2);
+							this.muzzle.position.set(7, 0, 0);
+							this.muzzle.scale.set(0.9, 0.9, 0.9);		
+						}
+					);
+				}
+				// user.object.add(this.object);
+
+                this.animations = {};
+
+                gltf.animations.forEach( animation => {
+					// console.log(animation)
+                    this.animations[animation.name.toLowerCase() as keyof typeof this.animations] = animation;
+					// console.log(this.animations);
+					//console.log(animation.name.toLowerCase())
+                })
+				//this.animations['idle']=user.anim;
+				//console.log(this.animations)
+                this.mixer = new THREE.AnimationMixer(gltf.scene);
+
+                this.action = 'idle';
+
+				this.ready = true;
+
+				// this.game.startRendering();
+				this.renderer.setAnimationLoop( this.render.bind(this) );
+    		},
+			// called while loading is progressing
+			xhr => {
+				// this.loadingBar.update( 'user', xhr.loaded, xhr.total );
+			},
+			// called when loading has errors
+			err => {
+				console.error( err );
+			}
+		);
+	}
+
+    set action(name:any){
+		if (this.actionName == name.toLowerCase()) return;    
+		
+		//console.log(`User action:${name}`);
+		if(name.toLowerCase()==="run"){
+			this.isRun =true;
+		}
+		else{
+			this.isRun = false;
+		}
+
+		const clip = this.animations[name.toLowerCase() as keyof typeof this.animations];
+
+		//console.log(clip)
+		if (clip!==undefined){
+			const action = this.mixer.clipAction( clip );
+			if (name=='shot'){
+				action.clampWhenFinished = true;
+				action.setLoop( THREE.LoopOnce );
+			}
+			action.reset();
+			const nofade = this.actionName == 'shot';
+			this.actionName = name.toLowerCase();
+			action.play();
+			if (this.curAction){
+				if (nofade){
+					this.curAction.enabled = false;
+				}else{
+					this.curAction.crossFadeTo(action, 0.5);
+				}
+			}
+			this.curAction = action;
+		}
+		if (this.rifle && this.rifleDirection){
+			// console.log(this.perspective,name);
+			let q = undefined;
+			q = this.rifleDirection[name.toLowerCase() as keyof typeof this.rifleDirection];
+			
+
+			if (q!==undefined){
+				const start = new THREE.Quaternion();
+				start.copy(this.rifle.quaternion);
+				this.rifle.quaternion.copy(q);
+				this.rifle.rotateX(1.57);
+				const end = new THREE.Quaternion();
+				end.copy(this.rifle.quaternion);
+				this.rotateRifle = { start, end, time:0 };
+				this.rifle.quaternion.copy( start );
+			}
+		}
+	}
+	render() {
 		const dt = this.clock.getDelta();
 		
-		requestAnimationFrame( function(){ game.animate(); } );
-		
-		if (this.player.mixer!==undefined) this.player.mixer.update(dt);
-		
+		if(this != undefined) this.update(dt);
 		this.renderer.render( this.scene, this.camera );
-
+    }
+	update(dt:any){
+		if (this.mixer) this.mixer.update(dt);
+		if (this.rotateRifle !== undefined){
+			this.rotateRifle.time += dt;
+			if (this.rotateRifle.time > 0.5){
+				this.rifle.quaternion.copy( this.rotateRifle.end );
+				// delete this.rotateRifle;
+			}else{
+				this.rifle.quaternion.slerpQuaternions(this.rotateRifle.start, this.rotateRifle.end, this.rotateRifle.time * 2);
+			}
+		}
+		if (this.isFiring){
+			this.aim.visible = false;
+			if(this.speed===0)this.action ="firing";
+			const elapsedTime = this.game.clock.getElapsedTime() - this.bulletTime;
+			if (elapsedTime > 0.6) {
+				this.shoot();
+				this.aim.rotateX(Math.random() * Math.PI);
+				this.aim.visible = true;
+				if(this.healthPoint>0)this.healthPoint-=20;//开枪自残
+			}
+		}
+		else{
+			this.aim.visible = false;
+		}
+		if(this.healthPoint<=0){
+			// console.log("gameover")
+			this.healthPoint = 100;
+		}
+	}
+	
+	toggleAnimation() {
+		const actions_play = ["run", "walk", "firing", "firingwalk", "shot", "run"]
+		if(this.actionName =='idle') {
+			
+			this.action = actions_play[this.id]
+		}
+		else {
+			this.action = 'idle'
+		}
 	}
 }
