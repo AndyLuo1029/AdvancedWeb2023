@@ -65,6 +65,12 @@ export class SelectComponent implements AfterViewInit {
 			return
 		}
 		//check the user 
+		const status = localStorage.getItem("inGame");
+		// if(status == '1' || status == undefined) {
+		// 	window.alert("已在学习中")
+		// 	return
+		// }
+		localStorage.setItem("inGame", '1');
 		this.router.navigate(['/three']);
 	}
 }

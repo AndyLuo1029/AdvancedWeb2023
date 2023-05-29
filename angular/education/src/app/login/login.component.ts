@@ -45,6 +45,7 @@ export class LoginComponent {
             window.alert(response.message); 
             localStorage.setItem("token", response.token);
             localStorage.setItem("username", response.username);
+            localStorage.setItem("inGame", "0");
             this.router.navigate(['/home']);
           }
         }

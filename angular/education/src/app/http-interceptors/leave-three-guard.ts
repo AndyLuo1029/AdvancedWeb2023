@@ -25,6 +25,7 @@ export const leaveThreeGuard: CanDeactivateFn<ThreeJsComponent> = (
   
   of(confirmation).subscribe((flag) => {
     if(flag) {
+      localStorage.setItem("inGame", '0');
       history.pushState(null, "null", window.location.href);
       location.onPopState(() => {
         history.pushState(null, "null", window.location.href);

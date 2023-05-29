@@ -14,6 +14,7 @@ export class LogoutComponent {
   logout(): void {
     localStorage.removeItem("token");
     localStorage.removeItem("username"); 
+    localStorage.removeItem("inGame");
     this.router.navigate(['/login'])
  
   }
