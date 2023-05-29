@@ -19,6 +19,7 @@ class User{
     constructor(game, pos, heading){
 		//1 eve 2 swat
 		this.role = 1;
+		this.color = 0xf75454;
         this.root = new Group();
         this.root.position.copy( pos );
         this.root.rotation.set( 0, heading, 0, 'XYZ' );
@@ -125,7 +126,7 @@ class User{
 		// console.log(this.animations);
 		let url;
 		if(this.role ===1)url = 'eve2.glb';
-		else url ='swat-guy.glb';
+		else url ='swat-guy2.glb';
 
         //Load a glTF resource
 		loader.load(
@@ -142,13 +143,12 @@ class User{
 
                 this.object.traverse( child => {
                     if ( child.isMesh){
-						child.material.color.set(0xf75454);
+						child.material.color.set(this.color);
                         child.castShadow = true;
 						if (child.name.includes('Rifle')) this.rifle = child;
                     }
                 });
 				if (this.rifle){
-					console.log(114514,this.rifle)
 					const geometry = new BufferGeometry().setFromPoints( [ new Vector3( 0, 0, 0 ), new Vector3( 7, 0, 0 ) ] );
 					
         			const line = new Line( geometry );
