@@ -183,7 +183,7 @@ class BulletHandler{
             this.npcs.some( npc => {
                 if (npc.blink){
                     npc.dt += dt;
-                    if(npc.dt > 0.5){
+                    if(npc.dt > 0.2){
                         npc.object.traverse(o => {
                             if (o.isMesh) {
                                 o.material.color.set(0xffffff);                      
