@@ -82,10 +82,9 @@ class BulletHandler{
     update(dt){
         this.bullets.forEach( bullet => {
             let hit = false;
-            let closestDistance = Infinity;
-            const p1 = bullet.position.clone();
             let target;
-            const dist = dt * 100;
+            const p1 = bullet.position.clone();
+            const dist = dt * 30;
             //Move bullet to next position
             bullet.translateZ(-dist);
             const p3 = bullet.position.clone();
@@ -118,7 +117,7 @@ class BulletHandler{
                         if (!npc.dead){
                             const p2 = npc.position.clone();
                             p2.y += 1.5;
-                            hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 3.0, 1);
+                            hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 3.0, 0.5);
                             if (hit){
                                 target = npc;
                                 return true;
@@ -177,7 +176,6 @@ class BulletHandler{
                 if (index!==-1) this.bullets.splice(index, 1);
                 this.scene.remove(remove);
             }
-            
         }while(found);
 
         // reset material color after blink

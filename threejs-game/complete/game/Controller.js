@@ -136,7 +136,7 @@ class Controller{
         if (e.repeat !== undefined) {
             repeat = e.repeat;
         }
-        if (!repeat)  this.fire(true)
+        if (!repeat && e.button == 0)  this.fire(true)
      }
 
      mouseUp(e){
@@ -207,8 +207,6 @@ class Controller{
         //     speed = 0;
         //  }
 
-
-        
         if (Math.abs(this.move.right)>0.1){
             const right = this.right.clone().applyQuaternion(this.target.quaternion);
 
@@ -271,10 +269,6 @@ class Controller{
             this.rotate.up = 0;
             playerMoved = true;
         }
-        
-        
-        
-
 
         //console.log(playerMoved)
         if (playerMoved){
@@ -325,11 +319,9 @@ class Controller{
         console.error( 'THREE.PointerLockControls: Unable to use Pointer Lock API' );
     }
     connect() {
-        this.domElement.addEventListener('click', this.domElement.requestPointerLock); // 思考函数后面为什么要加bind(this)
-        document.addEventListener( 'pointerlockchange',
-        this.onPointerlockChange.bind(this), false );
-                document.addEventListener( 'pointerlockerror',
-        this.onPointerlockError.bind(this), false );
+        this.domElement.addEventListener('click', this.domElement.requestPointerLock); 
+        document.addEventListener( 'pointerlockchange', this.onPointerlockChange.bind(this), false );
+        document.addEventListener( 'pointerlockerror', this.onPointerlockError.bind(this), false );
     }
 }
 

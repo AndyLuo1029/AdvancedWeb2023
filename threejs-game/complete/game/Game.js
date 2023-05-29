@@ -8,6 +8,7 @@ import { User } from './User.js';
 import { Controller } from './Controller.js';
 import { BulletHandler } from './BulletHandler.js';
 import { FrontSight} from './frontSight.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 
 class Game{
@@ -59,6 +60,13 @@ class Game{
 		this.renderer.setSize( window.innerWidth, window.innerHeight );
         this.renderer.outputEncoding = THREE.sRGBEncoding; // 设置颜色编码格式
 		container.appendChild( this.renderer.domElement );
+
+		// add text renderer
+		this.labelRenderer = new CSS2DRenderer();
+		this.labelRenderer.setSize( window.innerWidth, window.innerHeight );
+		this.labelRenderer.domElement.style.position = 'absolute';
+		this.labelRenderer.domElement.style.top = '0px';
+		container.appendChild( this.labelRenderer.domElement );
 
         this.setEnvironment(); // 设置环境贴图
 
@@ -150,6 +158,7 @@ class Game{
         this.camera.aspect = window.innerWidth / window.innerHeight;
     	this.camera.updateProjectionMatrix();
     	this.renderer.setSize( window.innerWidth, window.innerHeight ); 
+		this.labelRenderer.setSIze(window.innerWidth, window.innerHeight );
     }
     
 	// 用于加载环境贴图，并设置场景的环境光照和背景色。
@@ -173,6 +182,24 @@ class Game{
 		err => {
             console.error( err.message );
         } );
+
+		// add text prompt
+		this.clickDiv = document.createElement( 'div' );
+		this.clickDiv.className = 'label';
+		this.clickDiv.textContent = 'Click to Start';
+		this.clickDiv.style.backgroundColor = 'rgba(61, 61, 61,0.75)';
+		this.clickDiv.style.height = '100%';
+		this.clickDiv.style.width = '100%';
+		this.clickDiv.style.textAlign = 'center';
+		this.clickDiv.style.lineHeight = window.innerHeight + 'px';
+		this.clickDiv.style.color = '#ffffff';
+		this.clickDiv.style.fontSize = '60px';
+
+		this.clickLabel = new CSS2DObject( this.clickDiv );
+		// this.clickLabel.center.set( 0, 1 );
+		this.camera.add( this.clickLabel );
+		this.clickLabel.position.set( 0, 0, -1 );
+		this.clickLabel.layers.set( 0 );
     }
     
 	// 加载游戏资源，包括环境、NPC 和用户等。
@@ -280,20 +307,19 @@ class Game{
 	*/
 	render() {
 		const dt = this.clock.getDelta();
-
-		if (this.fans !== undefined){
-            this.fans.forEach(fan => {
-                fan.rotateY(dt); 
-            });
-        }
-
+		if(this.controller === undefined || this.controller.isLocked === false){
+			// print hints
+			this.clickLabel.visible = true;
+		}
+		else{
+			this.clickLabel.visible = false;
+			if (this.controller !== undefined) this.controller.update(dt);	
+			if (this.user !== undefined ) this.user.update(dt);
+		}
 		if (this.npcHandler !== undefined ) this.npcHandler.update(dt);
-		if (this.user !== undefined ) this.user.update(dt);
-		if (this.controller !== undefined) this.controller.update(dt);
 		if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
-
-        this.renderer.render( this.scene, this.camera );
-
+		this.renderer.render( this.scene, this.camera );
+		this.labelRenderer.render(this.scene, this.camera);
     }
 }
 
