@@ -117,7 +117,7 @@ class BulletHandler{
                         if (!npc.dead){
                             const p2 = npc.position.clone();
                             p2.y += 1.5;
-                            hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 3.0, 1);
+                            hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 3.0, 0.5);
                             if (hit){
                                 target = npc;
                                 return true;
