@@ -12,6 +12,7 @@ update()函数每帧都会被调用，并根据接收到的输入应用必要的
 
 class Controller{
     constructor(game){
+        this.rotateAngle = 0;
         this.camera = game.camera;
         this.clock = game.clock;
         this.user = game.user;
@@ -146,7 +147,9 @@ class Controller{
      mouseMove(e){
         if(this.isLocked){
             this.rotate.right = -e.movementX*0.001;
-            this.rotate.up = e.movementY*0.001;
+            if(this.rotateAngle>=0.19&&e.movementY>0)return;
+            if(this.rotateAngle<=-0.19&&e.movementY<0)return;
+            this.rotate.up =e.movementY*0.001;
         }        
     }
 
@@ -250,6 +253,9 @@ class Controller{
 
         if(this.rotate.up!==0){   
             this.target.rotateX(this.rotate.up);
+
+            this.rotateAngle += this.rotate.up;
+            console.log(this.rotateAngle)
 
             // let rotBorder = 0;
             // if(this.perspective == 3){
