@@ -17,6 +17,8 @@ import * as THREE from '../../libs/three137/three.module.js';
 
 class User{
     constructor(game, pos, heading){
+		//1 eve 2 swat
+		this.role = 1;
         this.root = new Group();
         this.root.position.copy( pos );
         this.root.rotation.set( 0, heading, 0, 'XYZ' );
@@ -44,19 +46,22 @@ class User{
         //this.initMouseHandler();
 		this.initRifleDirection();
 		this.hp = 5;
+
     }
 
 	initRifleDirection(){
-		this.rifleDirection = {};
+		if(this.role ==1){
+			this.rifleDirection = {};
 
-		this.rifleDirection.idle = new Quaternion(-0.178, -0.694, 0.667, 0.203);
-		this.rifleDirection.walk = new Quaternion( 0.044, -0.772, 0.626, -0.102);
-		this.rifleDirection.firingwalk = new Quaternion(-0.034, -0.756, 0.632, -0.169);
-		this.rifleDirection.fpsFiringwalk = new Quaternion(0.005, -0.789, 0.594, -0.085);
-		this.rifleDirection.firing = new Quaternion( -0.054, -0.750, 0.633, -0.184);
-		this.rifleDirection.fpsFiring = new Quaternion(0.005, -0.789, 0.594, -0.085);
-		this.rifleDirection.run = new Quaternion( 0.015, -0.793, 0.595, -0.131);
-		this.rifleDirection.shot = new Quaternion(-0.082, -0.789, 0.594, -0.138);
+			this.rifleDirection.idle = new Quaternion(-0.178, -0.694, 0.667, 0.203);
+			this.rifleDirection.walk = new Quaternion( 0.044, -0.772, 0.626, -0.102);
+			this.rifleDirection.firingwalk = new Quaternion(-0.034, -0.756, 0.632, -0.169);
+			this.rifleDirection.fpsFiringwalk = new Quaternion(0.005, -0.789, 0.594, -0.085);
+			this.rifleDirection.firing = new Quaternion( -0.054, -0.750, 0.633, -0.184);
+			this.rifleDirection.fpsFiring = new Quaternion(0.005, -0.789, 0.594, -0.085);
+			this.rifleDirection.run = new Quaternion( 0.015, -0.793, 0.595, -0.131);
+			this.rifleDirection.shot = new Quaternion(-0.082, -0.789, 0.594, -0.138);
+		}
 	}
 
     set position(pos){
@@ -118,11 +123,14 @@ class User{
 			user.anim=	object.animations[0]
 		});
 		// console.log(this.animations);
+		let url;
+		if(this.role ===1)url = 'eve2.glb';
+		else url ='swat-guy.glb';
 
         //Load a glTF resource
 		loader.load(
 			// resource URL
-			'eve2.glb',
+			url,
 			// called when the resource is loaded
 			gltf => {
 				this.root.add( gltf.scene );
@@ -134,11 +142,13 @@ class User{
 
                 this.object.traverse( child => {
                     if ( child.isMesh){
+						child.material.color.set(0xf75454);
                         child.castShadow = true;
 						if (child.name.includes('Rifle')) this.rifle = child;
                     }
                 });
 				if (this.rifle){
+					console.log(114514,this.rifle)
 					const geometry = new BufferGeometry().setFromPoints( [ new Vector3( 0, 0, 0 ), new Vector3( 7, 0, 0 ) ] );
 					
         			const line = new Line( geometry );
@@ -165,7 +175,9 @@ class User{
                 this.animations = {};
 
                 gltf.animations.forEach( animation => {
-                    this.animations[animation.name.toLowerCase()] = animation;
+					if(animation.name.toLowerCase()=='walking')this.animations['walk']=animation;
+                    else this.animations[animation.name.toLowerCase()] = animation;
+
 					// console.log(this.animations);
 					//console.log(animation.name.toLowerCase())
                 })
