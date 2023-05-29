@@ -63,6 +63,21 @@ class NPC{
 		player.quaternion.copy(quaternion);
 	}
 
+	setScene1NPC(i){
+		// 1 turn right 90, 2 and 3 turn right 180
+		const player = this.object;
+
+		if(i == 1){
+			player.rotation.y = -Math.PI/2;	
+		}
+		else if(i == 2 || i == 3){
+			player.rotation.y = Math.PI;
+		}
+
+		// set action
+		this.action = 'idle';
+	}
+
 	newPath(pt){
         const player = this.object;
         

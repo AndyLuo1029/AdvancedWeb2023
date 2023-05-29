@@ -2,6 +2,7 @@ import * as THREE from '../../libs/three137/three.module.js';
 import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
 import { RGBELoader } from '../../libs/three137/RGBELoader.js';
 import { NPCHandler } from './NPCHandler.js';
+// import { NPCHandler } from '../NPCHandler.js';
 import { LoadingBar } from '../../libs/LoadingBar.js';
 import { Pathfinding } from '../../libs/pathfinding/Pathfinding.js';
 import { User } from './User.js';
@@ -26,7 +27,8 @@ class Game{
         
 		// 创建相机，并设置位置和旋转角度
 		this.camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 500 );
-		this.camera.position.set( -6, 1.8, 3 );
+		// this.camera.position.set( -6, 1.8, 3 );
+		this.camera.position.set( 21, 1.8, 5 );
 
 		let col = 0x201510;
 		this.scene = new THREE.Scene(); // 创建场景
@@ -158,7 +160,7 @@ class Game{
         this.camera.aspect = window.innerWidth / window.innerHeight;
     	this.camera.updateProjectionMatrix();
     	this.renderer.setSize( window.innerWidth, window.innerHeight ); 
-		this.labelRenderer.setSIze(window.innerWidth, window.innerHeight );
+		this.labelRenderer.setSize(window.innerWidth, window.innerHeight );
     }
     
 	// 用于加载环境贴图，并设置场景的环境光照和背景色。
@@ -206,7 +208,8 @@ class Game{
 	load(){
         this.loadEnvironment();
 		this.npcHandler = new NPCHandler(this);
-		this.user = new User(this, new THREE.Vector3( -6, 0.021, -2), 1*Math.PI);
+		// this.user = new User(this, new THREE.Vector3( -6, 0.021, -2), 1*Math.PI);
+		this.user = new User(this, new THREE.Vector3( 21, 0, 0), 1*Math.PI);
     }
 
 	// 加载环境模型及其子对象，并设置导航网格和阴影等属性。

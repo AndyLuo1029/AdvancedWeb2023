@@ -175,7 +175,8 @@ class Controller{
         if (this.move.right<-1) this.move.right = -1;
     }
 
-    update(dt=0.0167){   
+    update(dt=0.0167){ 
+        // console.log(this.user.position);  
         let playerMoved = false;
         let speed;
         this.keyHandler();
