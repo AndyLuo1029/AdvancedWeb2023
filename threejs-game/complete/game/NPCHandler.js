@@ -10,12 +10,16 @@ class NPCHandler{
         this.game = game;
 		this.loadingBar = this.game.loadingBar;
 		this.ready = false;
+		this.scene = this.game.currentScene;
 		this.scene1Points = [
-			// scene1: (21.29, 0.18, -7.44) (27.03, 0.31, -2.40) (22.82, 0.18, 5.61) (25.34, 0.18, 5.79)
-			new THREE.Vector3(21.29, 0.18, -6.44),
-			new THREE.Vector3(27.03, 0.18, -2.40),
-			new THREE.Vector3(22.82, 0.18, 5.2),
-			new THREE.Vector3(25.34, 0.18, 5.2),
+			new THREE.Vector3(27.03, 0.18, -2.40),	//A
+			new THREE.Vector3(22.82, 0.18, 5.2),	//B
+			new THREE.Vector3(21.29, 0.18, -6.44),	//C
+			new THREE.Vector3(25.90, 0.1824, -6),	//D
+			new THREE.Vector3(25.34, 0.18, 5.2), 	//E
+		];
+		this.scene1Names = [
+			"A", "B", "C", "D", "E"
 		];
 		this.scene2Points = [
 
@@ -83,14 +87,34 @@ class NPCHandler{
 		// 	}
 		// );
 
+		let currentNPCPosition, currentFunc;
+
+		if (this.scene == "scene1"){
+			currentNPCPosition = this.scene1Points;
+		}
+		else if(this.scene == "scene2"){
+			currentNPCPosition = this.scene2Points;
+		}
+		else{
+			// TODO: multi mode
+		}
+
 		// Load a GLTF resource
-		for (let i=0; i<4; i++){
+		for (let i=0; i<currentNPCPosition.length; i++){
 			loader.load(
 				// resource URL
 				`swat-guy.glb`,
 				// called when the resource is loaded
 				gltf => {
-					this.initScene1Npcs(gltf, i);
+					if (this.scene == "scene1"){
+						this.initScene1Npcs(gltf, i);
+					}
+					else if(this.scene == "scene2"){
+						this.initScene2Npcs(gltf, i);
+					}
+					else{
+						// TODO: multi mode
+					}
 					this.ready = true;
 					this.game.startRendering();
 				},
@@ -118,7 +142,7 @@ class NPCHandler{
 			if (child.isMesh){
 				child.castShadow = true;
 				child.frustumCulled = false;
-				child.visible = true; // Add this line to hide the NPC mesh
+				child.visible = true; 
 			}
 		});
 
@@ -130,14 +154,30 @@ class NPCHandler{
 			app: this.game,
 			showPath: false,
 			zone: 'factory',
-			name: 'swat-guy',
+			name: this.scene1Names[i],
 		};
 
 		const npc = new NPC(options);
 
-		npc.object.position.copy(this.getScene1Point(i));
+		npc.object.position.copy(this.scene1Points[i]);
 
-		npc.setScene1NPC(i);
+		const player = npc.object;
+
+		if(i == 0){
+			// A: rotate 90
+			player.rotation.y = -Math.PI/2;	
+		}
+		else if(i == 1 || i == 4){
+			// B and E : rotate 180
+			player.rotation.y = Math.PI;
+		}
+		else if(i == 3){
+			// D : rotate 45
+			player.rotation.y = -Math.PI/4;
+		}
+
+		// set action
+		npc.action = 'idle';
 		
 		this.npcs.push(npc)
 
@@ -182,7 +222,6 @@ class NPCHandler{
 			const npc = new NPC(options);
 
 			npc.object.position.copy(this.randomWaypoint);
-			// npc.object.position.copy(this.getScene1Point(i++));
 			// npc.object.position.copy(new THREE.Vector3(21.29, 0.18, -7.44));
 
 			npc.newPath(this.randomWaypoint);
@@ -245,10 +284,6 @@ class NPCHandler{
     get randomWaypoint(){
 		const index = Math.floor(Math.random()*this.waypoints.length);
 		return this.waypoints[index];
-	}
-
-	getScene1Point(index){
-		return this.scene1Points[index];
 	}
 
     update(dt){

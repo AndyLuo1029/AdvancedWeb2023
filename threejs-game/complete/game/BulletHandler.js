@@ -131,7 +131,7 @@ class BulletHandler{
             if (hit){
                 target.hp -= 1;
                 bullet.userData.remove = true;
-                console.log([target.id,target.hp]);
+                console.log([target.name,target.hp]);
                 this.blink(target);
                 if(target.hp<=0) target.action = 'shot';
             }else{

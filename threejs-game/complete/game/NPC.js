@@ -3,10 +3,9 @@ import * as THREE from '../../libs/three137/three.module.js';
 class NPC{
 	constructor(options){
 		const fps = options.fps || 30; //default fps
-		
-		this.name = options.name | 'NPC';
-		this.hp = 10;
-		this.id = parseInt(Math.random()*(99-10+1)+10,10);
+		this.name = options.name == undefined ? 'NPC' : options.name;
+		this.hp = 3;
+		// this.id = parseInt(Math.random()*(99-10+1)+10,10);
 		this.blink = false;
 		this.dt = 0;
 		
@@ -61,21 +60,6 @@ class NPC{
 		player.lookAt(pt);
 		this.quaternion = player.quaternion.clone();
 		player.quaternion.copy(quaternion);
-	}
-
-	setScene1NPC(i){
-		// 1 turn right 90, 2 and 3 turn right 180
-		const player = this.object;
-
-		if(i == 1){
-			player.rotation.y = -Math.PI/2;	
-		}
-		else if(i == 2 || i == 3){
-			player.rotation.y = Math.PI;
-		}
-
-		// set action
-		this.action = 'idle';
 	}
 
 	newPath(pt){

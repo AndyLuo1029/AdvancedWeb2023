@@ -255,7 +255,7 @@ class Controller{
             this.target.rotateX(this.rotate.up);
 
             this.rotateAngle += this.rotate.up;
-            console.log(this.rotateAngle)
+            // console.log(this.rotateAngle)
 
             // let rotBorder = 0;
             // if(this.perspective == 3){
