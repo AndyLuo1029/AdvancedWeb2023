@@ -86,15 +86,18 @@ class User{
 		//console.log(this.action)
 	}
 	shoot(){
+		this.perspective = this.game.controller.perspective;
 		if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
 		// this.aim.getWorldPosition(this.tmpVec);
 		// this.aim.getWorldQuaternion(this.tmpQuat);
-		this.camera.getWorldPosition(this.tmpVec);
-		// this.root.getWorldPosition(this.tmpVec);
-		// let tempVec = new Vector3();
-		// this.camera.getWorldPosition(tempVec);
-		// this.tmpVec.y = tempVec.y;
-		// this.tmpVec.y = this.camera.position.y;
+		if(this.perspective == 3){
+			this.root.getWorldPosition(this.tmpVec);
+			this.tmpVec.y += 1.5;
+		}
+		else{
+			this.camera.getWorldPosition(this.tmpVec);
+		}
+		
 		this.camera.getWorldQuaternion(this.tmpQuat);
 		// this.tmpQuat.set(1,0,-1,0);
 		this.bulletHandler.createBullet( this.tmpVec, this.tmpQuat );
@@ -170,7 +173,7 @@ class User{
 						}
 					);
 				}
-				user.object.add(this.object);
+				// user.object.add(this.object);
 
                 this.animations = {};
 
