@@ -18,7 +18,7 @@ import * as THREE from '../../libs/three137/three.module.js';
 class User{
     constructor(game, pos, heading){
 		//1 eve 2 swat
-		this.role = 1;
+		this.role = 2;
 		this.color = 0xf75454;
         this.root = new Group();
         this.root.position.copy( pos );
@@ -114,9 +114,6 @@ class User{
     }
 
     load(){
-
-
-
     	const loader = new GLTFLoader( ).setPath(`${this.game.assetsPath}factory/`);
 		const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath( '../../libs/three137/draco/' );
@@ -127,9 +124,15 @@ class User{
 			user.anim=	object.animations[0]
 		});
 		// console.log(this.animations);
-		let url;
-		if(this.role ===1)url = 'eve2.glb';
-		else url ='swat-guy2.glb';
+		let url, scale;
+		if(this.role ===1){
+			url = 'eve2.glb';
+			scale = 1.2;
+		}
+		else {
+			url ='swat-guy2.glb';
+			scale = 0.9;
+		}
 
         //Load a glTF resource
 		loader.load(
@@ -141,12 +144,11 @@ class User{
                 this.object = gltf.scene;
 				this.object.frustumCulled = false;
 
-                const scale = 1.2;
                 this.object.scale.set(scale, scale, scale);
 
                 this.object.traverse( child => {
                     if ( child.isMesh){
-						child.material.color.set(this.color);
+						// child.material.color.set(this.color);
                         child.castShadow = true;
 						if (child.name.includes('Rifle')) this.rifle = child;
                     }
