@@ -10,6 +10,7 @@ import { Controller } from './Controller.js';
 import { BulletHandler } from './BulletHandler.js';
 import { FrontSight} from './frontSight.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { CQBHandler } from './CQBHandler.js';
 
 
 class Game{
@@ -27,8 +28,8 @@ class Game{
         
 		// 创建相机，并设置位置和旋转角度
 		this.camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 500 );
-		// this.camera.position.set( -6, 1.8, 3 );
-		this.camera.position.set( 21, 1.8, 5 );
+		this.camera.position.set( -6, 1.8, 3 );
+		// this.camera.position.set( 21, 1.8, 5 );
 
 		let col = 0x201510;
 		this.scene = new THREE.Scene(); // 创建场景
@@ -208,8 +209,8 @@ class Game{
 	load(){
         this.loadEnvironment();
 		this.npcHandler = new NPCHandler(this);
-		// this.user = new User(this, new THREE.Vector3( -6, 0.021, -2), 1*Math.PI);
-		this.user = new User(this, new THREE.Vector3( 21, 0, 0), 1*Math.PI);
+		this.user = new User(this, new THREE.Vector3( -6, 0.021, -2), 1*Math.PI);
+		// this.user = new User(this, new THREE.Vector3( 21, 0, 0), 1*Math.PI);
     }
 
 	// 加载环境模型及其子对象，并设置导航网格和阴影等属性。
@@ -300,6 +301,7 @@ class Game{
 			this.controller = new Controller(this);
 			this.controller.connect();
 			this.bulletHandler = new BulletHandler(this);
+			this.CQBHandler = new CQBHandler(this);
 			this.renderer.setAnimationLoop( this.render.bind(this) );
 		}
 	}
@@ -321,6 +323,7 @@ class Game{
 		}
 		if (this.npcHandler !== undefined ) this.npcHandler.update(dt);
 		if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
+		if (this.CQBHandler !== undefined) this.CQBHandler.update(dt);
 		this.renderer.render( this.scene, this.camera );
 		this.labelRenderer.render(this.scene, this.camera);
     }
