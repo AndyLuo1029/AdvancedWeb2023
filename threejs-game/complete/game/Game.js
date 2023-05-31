@@ -16,7 +16,28 @@ import { CQBHandler } from './CQBHandler.js';
 class Game{
 	constructor(){
 		// 根据前端传入的选择，切换场景
-		this.currentScene = 'scene1';
+		this.scenes = [
+			'scene1',
+			'scene2',
+			'multiplayer'
+		];
+		this.sceneIndex = 0;
+		this.currentScene = this.scenes[this.sceneIndex];
+
+		this.startPosition = [
+			[21, 0.186, 0],
+			[-11.78609367674414, 0.13426758701522457, -23.89975828918036],
+			[-6, 0.021, -2]
+		];
+
+		this.cameraStartPosition = [
+			[21, 1.8, 5],
+			[-11.78609367674414, 1.8, -18.89975828918036],
+			[-6, 1.8, 3]
+		];
+
+		//1 eve 2 swat
+		this.userRole = 1;
 
 		// 创建场景容器
 		const container = document.createElement( 'div' );
@@ -31,8 +52,7 @@ class Game{
         
 		// 创建相机，并设置位置和旋转角度
 		this.camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 500 );
-		// this.camera.position.set( -6, 1.8, 3 );
-		this.camera.position.set( 21, 1.8, 5 );
+		this.camera.position.set(this.cameraStartPosition[this.sceneIndex][0],this.cameraStartPosition[this.sceneIndex][1],this.cameraStartPosition[this.sceneIndex][2]);
 
 		let col = 0x201510;
 		this.scene = new THREE.Scene(); // 创建场景
@@ -205,15 +225,48 @@ class Game{
 		this.camera.add( this.clickLabel );
 		this.clickLabel.position.set( 0, 0, -2 );
 		this.clickLabel.layers.set( 0 );
+
+
+		let texture1, texture2, pos1, pos2;
+		
+		// 添加场景1的图片和教学介绍文字
+		if(this.sceneIndex == 0){
+			texture1 = new THREE.TextureLoader().load( this.assetsPath + 'scene1.png' );
+			texture2 = new THREE.TextureLoader().load( this.assetsPath + 'scene1Edu.png');
+			pos1 = [18.00347353232029, 1.527311133120945, 1.1232664854307182]; // 图片位置
+			pos2 = [18.00347353232029, 1.527311133120945, -2.1232664854307182]; // 教学位置
+		}
+		// 添加场景2的图片和教学介绍文字
+		else if(this.sceneIndex == 1){
+			texture1 = new THREE.TextureLoader().load( this.assetsPath + 'scene2.png' );
+			texture2 = new THREE.TextureLoader().load( this.assetsPath + 'scene2Edu.png');
+			pos1 = [-16.974691053065559, 1.8527311133120945, -26.681701504279168];
+			pos2 = [-13.474691053065559, 1.8527311133120945, -26.681701504279168];
+		}
+
+		if(this.sceneIndex != 2){
+			// 添加图片和教学介绍文字
+			const geometry = new THREE.PlaneGeometry( 3, 3 );
+			const material1 = new THREE.MeshBasicMaterial( { map: texture1 } );
+			const material2 = new THREE.MeshBasicMaterial( { map: texture2 } );
+			const plane1 = new THREE.Mesh( geometry, material1 );
+			const plane2 = new THREE.Mesh( geometry, material2 );
+			plane1.position.set( pos1[0], pos1[1], pos1[2] );
+			plane2.position.set( pos2[0], pos2[1], pos2[2] );
+			if( this.sceneIndex == 0){
+				plane1.rotateY( Math.PI / 2 );
+				plane2.rotateY( Math.PI / 2 );
+			}
+			this.scene.add( plane1 );
+			this.scene.add( plane2 );
+		}
     }
     
 	// 加载游戏资源，包括环境、NPC 和用户等。
 	load(){
         this.loadEnvironment();
 		this.npcHandler = new NPCHandler(this);
-		// this.user = new User(this, new THREE.Vector3( -6, 0.021, -2), 1*Math.PI);
-		this.user = new User(this, new THREE.Vector3( 21, 0.186, 0), 1*Math.PI);
-		// rotate an angle
+		this.user = new User(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
     }
 
 	// 加载环境模型及其子对象，并设置导航网格和阴影等属性。
@@ -304,7 +357,7 @@ class Game{
 			this.controller = new Controller(this);
 			this.controller.connect();
 			this.bulletHandler = new BulletHandler(this);
-			this.CQBHandler = new CQBHandler(this);
+			if(this.sceneIndex != 2) this.CQBHandler = new CQBHandler(this);
 			this.renderer.setAnimationLoop( this.render.bind(this) );
 		}
 	}
@@ -319,12 +372,12 @@ class Game{
 			// print hints
 			this.clickLabel.visible = true;
 		}
-		else if(this.CQBHandler.CQBlock){
+		else if(this.CQBHandler !== undefined && this.CQBHandler.CQBlock){
 			// print CQB hints
 			if(this.CQBHandler.prompt) this.CQBHandler.prompt.visible = true;
 		}
 		else{
-			if(this.CQBHandler.prompt) this.CQBHandler.prompt.visible = false;
+			if(this.CQBHandler !== undefined && this.CQBHandler.prompt) this.CQBHandler.prompt.visible = false;
 			this.clickLabel.visible = false;
 			if (this.controller !== undefined) this.controller.update(dt);	
 			if (this.user !== undefined ) this.user.update(dt);
