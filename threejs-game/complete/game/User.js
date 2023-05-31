@@ -17,9 +17,8 @@ import * as THREE from '../../libs/three137/three.module.js';
 
 class User{
     constructor(game, pos, heading){
-		//1 eve 2 swat
-		this.role = 1;
-		this.color = 0xf75454;
+		this.role = game.userRole;
+		this.color = [0xffffff,0xf75454];
         this.root = new Group();
         this.root.position.copy( pos );
         this.root.rotation.set( 0, heading, 0, 'XYZ' );

@@ -194,7 +194,7 @@ class Controller{
     }
 
     update(dt=0.0167){ 
-        // console.log(this.user.position); 
+        console.log(this.user.position); 
         let playerMoved = false;
         let speed;
         this.keyHandler();

@@ -22,7 +22,13 @@ class NPCHandler{
 			"A", "B", "C", "D", "E"
 		];
 		this.scene2Points = [
-
+			new THREE.Vector3(-5.268219023616988, 0.18245120346546173, -23.93234793402682), //A
+			new THREE.Vector3(-3.25240100457063, 0.18245120346546173, -27.181346753886903), //B
+			new THREE.Vector3(-3.13490054474453, 0.18245120346546173, -19.197257355713894), //C
+			new THREE.Vector3(1.271559098195823, 0.18245120346546173, -19.123218580787793), //D
+		];
+		this.scene2Names = [
+			"A", "B", "C", "D"
 		];
 		this.npcs = [];
 		this.load();
@@ -87,20 +93,21 @@ class NPCHandler{
 		// 	}
 		// );
 
-		let currentNPCPosition, currentFunc;
+		let currentNPCCounts;
 
 		if (this.scene == "scene1"){
-			currentNPCPosition = this.scene1Points;
+			currentNPCCounts = this.scene1Points.length;
 		}
 		else if(this.scene == "scene2"){
-			currentNPCPosition = this.scene2Points;
+			currentNPCCounts = this.scene2Points.length;
 		}
 		else{
-			// TODO: multi mode
+			// multi mode NPC nums
+			currentNPCCounts = 4;
 		}
 
 		// Load a GLTF resource
-		for (let i=0; i<currentNPCPosition.length; i++){
+		for (let i=0; i<currentNPCCounts; i++){
 			loader.load(
 				// resource URL
 				`swat-guy.glb`,
@@ -114,6 +121,7 @@ class NPCHandler{
 					}
 					else{
 						// TODO: multi mode
+						this.initNPCs(gltf);
 					}
 					this.ready = true;
 					this.game.startRendering();
@@ -184,56 +192,79 @@ class NPCHandler{
 		this.loadingBar.visible = !this.loadingBar.loaded;
 	}
 
-	initScene2Npcs(){
+	initScene2Npcs(gltf = this.gltf, i){
+
+		const object = gltf.scene;
+
+		object.traverse(function(child){
+			if (child.isMesh){
+				child.castShadow = true;
+				child.frustumCulled = false;
+				child.visible = true; 
+			}
+		});
+
+		const options = {
+			object: object,
+			speed: 0.8,
+			animations: gltf.animations,
+			waypoints: this.waypoints,
+			app: this.game,
+			showPath: false,
+			zone: 'factory',
+			name: this.scene2Names[i],
+		};
+
+		const npc = new NPC(options);
+
+		npc.object.position.copy(this.scene2Points[i]);
+
+		const player = npc.object;
+
+		player.rotation.y = -Math.PI/2;	
+
+		// set action
+		npc.action = 'idle';
+		
+		this.npcs.push(npc)
+
+		this.loadingBar.visible = !this.loadingBar.loaded;
 
 	}
     
 	// init npcs with paths
 	initNPCs(gltf = this.gltf){
-        
-		const gltfs = [gltf];
-			
-		for(let i=0; i<3; i++) gltfs.push(this.cloneGLTF(gltf));
-
-		let i = 0;
+		this.waypoints = this.game.waypoints;
 		
-		gltfs.forEach(gltf => {
-			const object = gltf.scene;
+		const object = gltf.scene;
 
-			object.traverse(function(child){
-				if (child.isMesh){
-					child.castShadow = true;
-					child.frustumCulled = false;
-					child.visible = true; // Add this line to hide the NPC mesh
-				}
-			});
-
-			const options = {
-				object: object,
-				speed: 0.8,
-				animations: gltf.animations,
-				waypoints: this.waypoints,
-				app: this.game,
-				showPath: false,
-				zone: 'factory',
-				name: 'swat-guy',
-			};
-
-			const npc = new NPC(options);
-
-			npc.object.position.copy(this.randomWaypoint);
-			// npc.object.position.copy(new THREE.Vector3(21.29, 0.18, -7.44));
-
-			npc.newPath(this.randomWaypoint);
-			
-			this.npcs.push(npc);
-			
+		object.traverse(function(child){
+			if (child.isMesh){
+				child.castShadow = true;
+				child.frustumCulled = false;
+				child.visible = true; // Add this line to hide the NPC mesh
+			}
 		});
 
-		this.loadingBar.visible = !this.loadingBar.loaded;
-		this.ready = true;
+		const options = {
+			object: object,
+			speed: 0.8,
+			animations: gltf.animations,
+			waypoints: this.waypoints,
+			app: this.game,
+			showPath: false,
+			zone: 'factory',
+		};
 
-		this.game.startRendering();
+		const npc = new NPC(options);
+
+		npc.object.position.copy(this.randomWaypoint);
+
+		npc.newPath(this.randomWaypoint);
+		
+		this.npcs.push(npc);
+
+		this.loadingBar.visible = !this.loadingBar.loaded;
 	}
 
 	cloneGLTF(gltf){
