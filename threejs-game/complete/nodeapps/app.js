@@ -20,6 +20,7 @@ io.sockets.on('connection', function(socket){
     socket.emit('setId', { id:socket.id });
 
     socket.on('disconnect', function(){
+        console.log(`${socket.id} disconnected`)
         socket.broadcast.emit('deletePlayer', { id: socket.id });
     });
 
@@ -36,6 +37,7 @@ io.sockets.on('connection', function(socket){
     // });
 
     socket.on('update', function(data){
+        //console.log(socket.id,data.x,data.y,data.z)
         socket.userData.x = data.x;
         socket.userData.y = data.y;
         socket.userData.z = data.z;
@@ -44,15 +46,11 @@ io.sockets.on('connection', function(socket){
         socket.userData.action = data.action;
     });
     //var time =0;
-    // socket.on('chat message',  async function(data){
-    //     console.log(`chat message:${data.id} ${data.message}`);
-    //     io.to(data.id).emit('chat message', { id: socket.id, message: data.message });
-    //     time +=10;
-    //     await sleep(10000);
-    //     time -=10;
-    //     if(time ==0)
-    //         io.to(data.id).emit('chat message', { id: socket.id, message: "" });
-    // })
+    socket.on('chat message',  async function(data){
+        console.log(`chat message:${data.id} ${data.message}`);
+        //io.to(data.id).emit('chat message', { id: socket.id, message: data.message });
+        io.emit('chat message', { id: socket.id, message: data.message });
+    })
 });
 
 http.listen(8084, function(){

@@ -18,10 +18,12 @@ import {User} from "./User.js";
 class UserLocal extends User{
     constructor(game, pos, heading) {
         super(game, pos, heading);
+        this.id;
         const user = this;
         const socket = io.connect();
         socket.on('setId', function(data){
             user.id = data.id;
+            console.log(user.id);
         });
         socket.on('remoteData', function(data){
             game.remoteData = data;
@@ -49,12 +51,12 @@ class UserLocal extends User{
         // });
 
         // socket.on('chat message', function(data){
-        //     document.getElementById('chat').style.bottom = '0px';
-        //     const player = game.getRemotePlayerById(data.id);
-        //     //game.speechBubble.player = player;
-        //     game.chatSocketId = player.id;
-        //     game.activeCamera = game.cameras.chat;
-        //     //game.speechBubble.update(data.message);
+        //
+        //     // document.getElementById('chat').style.bottom = '0px';
+        //     // const player = game.getRemotePlayerById(data.id);
+        //     // //game.speechBubble.player = player;
+        //     //
+        //     // //game.speechBubble.update(data.message);
         // });
 
         // $('#msg-form').submit(function(e){
@@ -66,14 +68,19 @@ class UserLocal extends User{
         this.socket = socket;
     }
 
+    sendMessage(message){
+        this.socket.emit('chat message',{id:this.id,message:`${message}`});
+    }
     updateSocket(){
         if (this.socket !== undefined){
             //console.log(`PlayerLocal.updateSocket - rotation(${this.object.rotation.x.toFixed(1)},${this.object.rotation.y.toFixed(1)},${this.object.rotation.z.toFixed(1)})`);
+
+
             this.socket.emit('update', {
-                x: this.object.position.x,
-                y: this.object.position.y,
-                z: this.object.position.z,
-                h: this.object.rotation.y,
+                x: this.root.position.x,
+                y: this.root.position.y,
+                z: this.root.position.z,
+                h: this.root.rotation.y,
                 //pb: this.object.rotation.x,
                 action: this.action
             })
@@ -82,6 +89,7 @@ class UserLocal extends User{
     update(dt){
         super.update(dt);
         this.updateSocket();
+
     }
 
 }
