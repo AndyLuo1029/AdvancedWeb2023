@@ -11,10 +11,14 @@ import { Controller } from './Controller.js';
 import { BulletHandler } from './BulletHandler.js';
 import { FrontSight} from './frontSight.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { CQBHandler } from './CQBHandler.js';
 
 
 class Game{
 	constructor(){
+		// 根据前端传入的选择，切换场景
+		this.currentScene = 'scene1';
+
 		// 创建场景容器
 		const container = document.createElement( 'div' );
 		document.body.appendChild( container );
@@ -199,9 +203,8 @@ class Game{
 		this.clickDiv.style.fontSize = '60px';
 
 		this.clickLabel = new CSS2DObject( this.clickDiv );
-		// this.clickLabel.center.set( 0, 1 );
 		this.camera.add( this.clickLabel );
-		this.clickLabel.position.set( 0, 0, -1 );
+		this.clickLabel.position.set( 0, 0, -2 );
 		this.clickLabel.layers.set( 0 );
     }
     
@@ -210,8 +213,12 @@ class Game{
         this.loadEnvironment();
 		this.npcHandler = new NPCHandler(this);
 		// this.user = new User(this, new THREE.Vector3( -6, 0.021, -2), 1*Math.PI);
+
 		//this.user = new User(this, new THREE.Vector3( 21, 0, 0), 1*Math.PI);
-		this.user = new UserLocal(this, new THREE.Vector3( 21, 0, 0), 1*Math.PI);
+		this.user = new UserLocal(this, new THREE.Vector3( 21, 0.186, 0), 1*Math.PI);
+
+		//this.user = new User(this, new THREE.Vector3( 21, 0.186, 0), 1*Math.PI);
+
     }
 
 	// 加载环境模型及其子对象，并设置导航网格和阴影等属性。
@@ -302,6 +309,7 @@ class Game{
 			this.controller = new Controller(this);
 			this.controller.connect();
 			this.bulletHandler = new BulletHandler(this);
+			this.CQBHandler = new CQBHandler(this);
 			this.renderer.setAnimationLoop( this.render.bind(this) );
 		}
 	}
@@ -316,13 +324,19 @@ class Game{
 			// print hints
 			this.clickLabel.visible = true;
 		}
+		else if(this.CQBHandler.CQBlock){
+			// print CQB hints
+			if(this.CQBHandler.prompt) this.CQBHandler.prompt.visible = true;
+		}
 		else{
+			if(this.CQBHandler.prompt) this.CQBHandler.prompt.visible = false;
 			this.clickLabel.visible = false;
 			if (this.controller !== undefined) this.controller.update(dt);	
 			if (this.user !== undefined ) this.user.update(dt);
+			if (this.npcHandler !== undefined ) this.npcHandler.update(dt);
+			if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
 		}
-		if (this.npcHandler !== undefined ) this.npcHandler.update(dt);
-		if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
+		if (this.CQBHandler !== undefined) this.CQBHandler.update(dt);
 		this.renderer.render( this.scene, this.camera );
 		this.labelRenderer.render(this.scene, this.camera);
     }

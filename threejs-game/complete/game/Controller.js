@@ -179,7 +179,7 @@ class Controller{
     }
 
     update(dt=0.0167){ 
-        // console.log(this.user.position);  
+        // console.log(this.user.position); 
         let playerMoved = false;
         let speed;
         this.keyHandler();
@@ -255,7 +255,7 @@ class Controller{
             this.target.rotateX(this.rotate.up);
 
             this.rotateAngle += this.rotate.up;
-            console.log(this.rotateAngle)
+            // console.log(this.rotateAngle)
 
             // let rotBorder = 0;
             // if(this.perspective == 3){
