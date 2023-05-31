@@ -15,14 +15,14 @@ import { CQBHandler } from './CQBHandler.js';
 
 
 class Game{
-	constructor(){
+	constructor(map, avatar, result){
 		// 根据前端传入的选择，切换场景
 		this.scenes = [
 			'scene1',
 			'scene2',
 			'multiplayer'
 		];
-		this.sceneIndex = 0;
+		this.sceneIndex = map == undefined ? 0 : map;
 		this.currentScene = this.scenes[this.sceneIndex];
 
 		this.startPosition = [
@@ -37,8 +37,10 @@ class Game{
 			[-6, 1.8, 3]
 		];
 
-		//1 eve 2 swat
-		this.userRole = 1;
+		// 0-2: eve, 3-5: swat
+		this.userRole = avatar == undefined ? 0 : avatar;
+
+		this.result = result;
 
 		// 创建场景容器
 		const container = document.createElement( 'div' );
@@ -108,7 +110,7 @@ class Game{
 		this.raycaster = new THREE.Raycaster(); // 创建射线投射器
 		this.tmpVec = new THREE.Vector3(); // 创建临时向量
 
-		window.addEventListener( 'resize', this.resize.bind(this) ); // 监听调整窗口大小事件
+		window.addEventListener( 'resize', this.resize ); // 监听调整窗口大小事件
 	}
 
 	/*
@@ -181,7 +183,7 @@ class Game{
 	}
 	
 	// 在窗口大小发生变化时被调用，用于更新渲染器和相机的参数以适应新的大小
-    resize(){
+    resize=()=>{
         this.camera.aspect = window.innerWidth / window.innerHeight;
     	this.camera.updateProjectionMatrix();
     	this.renderer.setSize( window.innerWidth, window.innerHeight ); 

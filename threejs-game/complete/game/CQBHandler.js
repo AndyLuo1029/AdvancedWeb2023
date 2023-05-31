@@ -9,6 +9,7 @@ class CQBHandler{
         this.camera = this.game.camera;
         this.npcs = this.game.npcHandler.npcs;
         this.user = this.game.user;
+        this.result = this.game.result;
         this.config = new CQBConfig();
         // 当前是CQB教学场景1还是场景2
         this.scene = this.game.currentScene;
@@ -50,13 +51,13 @@ class CQBHandler{
         this.prompt.layers.set( 0 );
         this.prompt.visible = false;
 
-        document.addEventListener('keydown', this.keyDown.bind(this));
+        document.addEventListener('keydown', this.keyDown);
 
         this.showPoints();
     }
 
     // 检测空格按键：按空格继续
-    keyDown(e){
+    keyDown=(e)=>{
         if(e.keyCode == 32 && this.CQBlock){
             // press space to continue
             this.CQBlock = false;
@@ -139,6 +140,11 @@ class CQBHandler{
             this.read = false;
             this.promptDiv.textContent = text;
             this.positions.push(1);
+
+            if(this.result!==undefined){
+                this.result.time = 10;
+                this.result.hitrate = 0.8273;
+            }
         }
         else if(!this.CQBlock && !this.missionFinished && this.read && !this.sceneEnd){
             // 读取完任务点文字提示后，等待击杀对应目标

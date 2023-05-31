@@ -18,7 +18,7 @@ import * as THREE from '../../libs/three137/three.module.js';
 class User{
     constructor(game, pos, heading){
 		this.role = game.userRole;
-		this.color = [0xffffff,0xf75454];
+		this.colors = [0xffffff, 0xf57a3d, 0x00ccff];
         this.root = new Group();
         this.root.position.copy( pos );
         this.root.rotation.set( 0, heading, 0, 'XYZ' );
@@ -123,9 +123,36 @@ class User{
 			user.anim=	object.animations[0]
 		});
 		// console.log(this.animations);
-		let url;
-		if(this.role ===1)url = 'eve2.glb';
-		else url ='swat-guy2.glb';
+		let url, color, avatarScale;
+		if(this.role < 3){
+			url = 'eve2.glb';
+			avatarScale = 1.1;
+		}
+		else {
+			url ='swat-guy2.glb';
+			avatarScale = 0.9;
+		}
+
+		switch(this.role){
+			case 0:
+				color = this.colors[0];
+				break;
+			case 1:
+				color = this.colors[1];
+				break;
+			case 2:
+				color = this.colors[2];
+				break;
+			case 3:
+				color = this.colors[0];
+				break;
+			case 4:
+				color = this.colors[1];
+				break;
+			case 5:
+				color = this.colors[2];
+				break;
+		}
 
         //Load a glTF resource
 		loader.load(
@@ -137,12 +164,11 @@ class User{
                 this.object = gltf.scene;
 				this.object.frustumCulled = false;
 
-                const scale = 1.2;
-                this.object.scale.set(scale, scale, scale);
+                this.object.scale.set(avatarScale, avatarScale, avatarScale);
 
                 this.object.traverse( child => {
                     if ( child.isMesh){
-						child.material.color.set(this.color);
+						child.material.color.set(color);
                         child.castShadow = true;
 						if (child.name.includes('Rifle')) this.rifle = child;
                     }
@@ -169,7 +195,7 @@ class User{
 						}
 					);
 				}
-				user.object.add(this.object);
+				// user.object.add(this.object);
 
                 this.animations = {};
 

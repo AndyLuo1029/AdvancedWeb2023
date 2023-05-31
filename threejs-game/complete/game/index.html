@@ -66,8 +66,10 @@
     <script type="module">
         import { Game } from './Game.js';
 
+        let f;
+
         document.addEventListener("DOMContentLoaded", () => {
-            const game = new Game();
+            const game = new Game(0,5,f);
             window.game = game;
         });
     </script>

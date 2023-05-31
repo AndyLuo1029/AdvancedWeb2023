@@ -54,11 +54,11 @@ class Controller{
 
         this.run = false;
 
-        document.addEventListener('keydown', this.keyDown.bind(this));
-        document.addEventListener('keyup', this.keyUp.bind(this));
-        document.addEventListener('mousedown', this.mouseDown.bind(this));
-        document.addEventListener('mouseup', this.mouseUp.bind(this));
-        document.addEventListener('mousemove', this.mouseMove.bind(this));
+        document.addEventListener('keydown', this.keyDown);
+        document.addEventListener('keyup', this.keyUp);
+        document.addEventListener('mousedown', this.mouseDown);
+        document.addEventListener('mouseup', this.mouseUp);
+        document.addEventListener('mousemove', this.mouseMove);
         this.keys = {   
                         w:false, 
                         a:false, 
@@ -76,7 +76,7 @@ class Controller{
         this.isLocked = false;
     }
 
-    keyDown(e){
+    keyDown=(e)=>{
         // repeat is true when the key is held down continuously
         let repeat = false;
         if (e.repeat !== undefined) {
@@ -114,7 +114,7 @@ class Controller{
         }
     }
 
-    keyUp(e){
+    keyUp=(e)=>{
         if(!this.keys.enter){
             switch(e.keyCode){
                 case 87:
@@ -144,7 +144,7 @@ class Controller{
 
     }
 
-    mouseDown(e){
+    mouseDown=(e)=>{
         if(this.keys.enter)return;
         let repeat = false;
         if (e.repeat !== undefined) {
@@ -153,12 +153,12 @@ class Controller{
         if (!repeat && e.button == 0)  this.fire(true)
      }
 
-     mouseUp(e){
+     mouseUp=(e)=>{
          if(this.keys.enter)return;
          this.fire(false)
      }
 
-     mouseMove(e){
+     mouseMove=(e)=>{
         if(this.keys.enter)return;
         if(this.isLocked){
             this.rotate.right = -e.movementX*0.001;
@@ -194,7 +194,7 @@ class Controller{
     }
 
     update(dt=0.0167){ 
-        console.log(this.user.position); 
+        // console.log(this.user.position); 
         let playerMoved = false;
         let speed;
         this.keyHandler();
@@ -334,16 +334,16 @@ class Controller{
         }
     }
 
-    onPointerlockChange() {
+    onPointerlockChange=()=>{
         this.isLocked = document.pointerLockElement === this.domElement;
     }
-    onPointerlockError() {
+    onPointerlockError=()=>{
         console.error( 'THREE.PointerLockControls: Unable to use Pointer Lock API' );
     }
     connect() {
         this.domElement.addEventListener('click', this.domElement.requestPointerLock); 
-        document.addEventListener( 'pointerlockchange', this.onPointerlockChange.bind(this), false );
-        document.addEventListener( 'pointerlockerror', this.onPointerlockError.bind(this), false );
+        document.addEventListener( 'pointerlockchange', this.onPointerlockChange, false );
+        document.addEventListener( 'pointerlockerror', this.onPointerlockError, false );
     }
 }
 
