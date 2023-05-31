@@ -50,14 +50,14 @@ class UserLocal extends User{
         //     }
         // });
 
-        // socket.on('chat message', function(data){
-        //
-        //     // document.getElementById('chat').style.bottom = '0px';
-        //     // const player = game.getRemotePlayerById(data.id);
-        //     // //game.speechBubble.player = player;
-        //     //
-        //     // //game.speechBubble.update(data.message);
-        // });
+        socket.on('chat message', function(data){
+            console.log(data.id,data.message)
+            // document.getElementById('chat').style.bottom = '0px';
+            // const player = game.getRemotePlayerById(data.id);
+            // //game.speechBubble.player = player;
+            //
+            // //game.speechBubble.update(data.message);
+        });
 
         // $('#msg-form').submit(function(e){
         //     socket.emit('chat message', { id:game.chatSocketId, message:$('#m').val() });
@@ -68,8 +68,18 @@ class UserLocal extends User{
         this.socket = socket;
     }
 
-    sendMessage(message){
-        this.socket.emit('chat message',{id:this.id,message:`${message}`});
+    sendMessage(flag){
+        const message = document.getElementById('message');
+        if(flag){
+            // message.removeAttribute('disabled')
+            // message.focus();
+        }
+        else {
+            this.socket.emit('chat message',{id:this.id,message:`${message.value}`});
+            //message.setAttribute('disabled','disabled');
+        }
+
+
     }
     updateSocket(){
         if (this.socket !== undefined){

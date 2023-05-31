@@ -66,6 +66,7 @@ class Controller{
                         s:false,
                         v:false,
                         shift:false,
+                        enter:false
                         //space:false,
                         // mousedown:false,
                         //mouseorigin:{x:0, y:0}
@@ -81,6 +82,13 @@ class Controller{
         if (e.repeat !== undefined) {
             repeat = e.repeat;
         }
+        if(e.keyCode ===13){
+            this.keys.enter = !this.keys.enter;
+            this.user.sendMessage(this.keys.enter);
+            return;
+        }
+        if(this.keys.enter)return;
+
         switch(e.keyCode){
             case 87:
                 this.keys.w = true;
@@ -102,37 +110,42 @@ class Controller{
                 this.keys.v =true;
                 this.perspective = (this.perspective ==3)? 1:3;
                 break;
+
         }
     }
 
     keyUp(e){
-        switch(e.keyCode){
-            case 87:
-                this.keys.w = false;
-                if (!this.keys.s) this.move.up = 0;
-                break;
-            case 65:
-                this.keys.a = false;
-                if (!this.keys.d) this.move.right = 0;
-                break;
-            case 83:
-                this.keys.s = false;
-                if (!this.keys.w) this.move.up = 0;
-                break;
-            case 68:
-                this.keys.d = false;
-                if (!this.keys.a) this.move.right = 0;
-                break;
-            case 16:
-                this.keys.shift =false;
-                break;
-            case 86:
-                this.keys.v =false;
-                break;
+        if(!this.keys.enter){
+            switch(e.keyCode){
+                case 87:
+                    this.keys.w = false;
+                    if (!this.keys.s) this.move.up = 0;
+                    break;
+                case 65:
+                    this.keys.a = false;
+                    if (!this.keys.d) this.move.right = 0;
+                    break;
+                case 83:
+                    this.keys.s = false;
+                    if (!this.keys.w) this.move.up = 0;
+                    break;
+                case 68:
+                    this.keys.d = false;
+                    if (!this.keys.a) this.move.right = 0;
+                    break;
+                case 16:
+                    this.keys.shift =false;
+                    break;
+                case 86:
+                    this.keys.v =false;
+                    break;
+            }
         }
+
     }
 
     mouseDown(e){
+        if(this.keys.enter)return;
         let repeat = false;
         if (e.repeat !== undefined) {
             repeat = e.repeat;
@@ -141,10 +154,12 @@ class Controller{
      }
 
      mouseUp(e){
+         if(this.keys.enter)return;
          this.fire(false)
      }
 
      mouseMove(e){
+        if(this.keys.enter)return;
         if(this.isLocked){
             this.rotate.right = -e.movementX*0.001;
             if(this.rotateAngle>=0.19&&e.movementY>0)return;

@@ -41,14 +41,33 @@
 </head>
 
 <body>
+
+
     <script type="module">
         import { Game } from './Game.js';
 
         document.addEventListener("DOMContentLoaded", () => {
-            const game = new Game(); 
+            const game = new Game();
             window.game = game;
         });
     </script>
+    <input type ='text' id = "message" style="position:fixed;bottom:0;">
+    <script>
+        var message = document.getElementById('message');
+        message.setAttribute('disabled','disabled');
+        document.addEventListener('keypress',function(e){
+            if(e.key ==='Enter'&&message.disabled){
+                message.removeAttribute('disabled')
+                message.focus();
+            }
+            else if (e.key ==='Enter'&&!message.disabled){
+                message.value="";
+                message.setAttribute('disabled','disabled')
+            }
+
+        })
+    </script>
 </body>
+
 
 </html>
