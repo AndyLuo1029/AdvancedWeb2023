@@ -6,6 +6,7 @@ import { NPCHandler } from './NPCHandler.js';
 import { LoadingBar } from '../../libs/LoadingBar.js';
 import { Pathfinding } from '../../libs/pathfinding/Pathfinding.js';
 import { User } from './User.js';
+import {UserLocal} from './UserLocal.js'
 import { Controller } from './Controller.js';
 import { BulletHandler } from './BulletHandler.js';
 import { FrontSight} from './frontSight.js';
@@ -209,7 +210,8 @@ class Game{
         this.loadEnvironment();
 		this.npcHandler = new NPCHandler(this);
 		// this.user = new User(this, new THREE.Vector3( -6, 0.021, -2), 1*Math.PI);
-		this.user = new User(this, new THREE.Vector3( 21, 0, 0), 1*Math.PI);
+		//this.user = new User(this, new THREE.Vector3( 21, 0, 0), 1*Math.PI);
+		this.user = new UserLocal(this, new THREE.Vector3( 21, 0, 0), 1*Math.PI);
     }
 
 	// 加载环境模型及其子对象，并设置导航网格和阴影等属性。
