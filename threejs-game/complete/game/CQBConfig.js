@@ -2,31 +2,56 @@ import * as THREE from '../../libs/three137/three.module.js';
 
 class CQBConfig{
     constructor(){
+        // 每轮游戏每个任务点的文字提示
         this.text = {
             'scene1':{
                 '1st':{
-                    0:"prompt 1-1",
-                    1:"prompt 1-2",
-                    2:"prompt 1-3"
+                    0:"scene1 round1 prompt 1: kill A, 按空格继续",
+                    1:"scene1 round1 prompt 2: kill B, 按空格继续",
+                    2:"scene1 round1 prompt 3: round1 end, 按空格继续"
                 },
                 '2nd':{
-                    0:"prompt 2-1",
-                    1:"prompt 2-2",
+                    0:"scene1 round2 prompt 1: kill C, 按空格继续",
+                    1:"scene1 round2 prompt 2: round2 end, 按空格继续",
                 },
                 '3rd':{
-                    0:"prompt 3-1",
-                    1:"prompt 3-2",
+                    0:"scene1 round3 prompt 1: goto next mission point, 按空格继续",
+                    1:"scene1 round3 prompt 2: kill E, 按空格继续",
                 },
                 '4th':{
-                    0:"prompt 4-1",
-                    1:"prompt 4-2",
+                    0:"scene1 round4 prompt 1: goto next mission point, 按空格继续",
+                    1:"scene1 round4 prompt 2: kill D, 按空格继续",
                 }
             },
             'scene2':{
             },
-            'end':'训练结束，您的数据已返回服务器，您可以随时离开该页面并在用户后台查看您的数据。\n按空格继续。',
+            'end':'训练结束，您的数据已返回服务器，您可以随时离开该页面并在用户后台查看您的数据。按空格继续。',
         };
 
+        // 每轮游戏每个任务点的击杀目标（NPC的名字对应NPC数组里的下标）
+        this.targets = {
+            'scene1':{
+                '1st':{
+                    0:0,
+                    1:1,
+                },
+                '2nd':{
+                    0:2,
+                },
+                '3rd':{
+                    0:undefined, // undefined 表示当前任务点不需要玩家击杀NPC
+                    1:4,
+                },
+                '4th':{
+                    0:undefined,
+                    1:3,
+                }
+            },
+            'scene2':{
+            },
+        }
+
+        // 每轮游戏每个任务点的位置
         this.missionPoints = {
             'scene1':{
                 '1st':{
@@ -49,10 +74,45 @@ class CQBConfig{
             }
         };
 
+        // 两个场景的玩家初始化位置
         this.startPosition = {
             'scene1':new THREE.Vector3(21, 0.186, 0),
             'scene2':new THREE.Vector3(-5.7286011280456215, 0.015784740447998047, -7.691993105828407),
         };
+
+        // 每轮NPC存活死亡情况（根据CQB），false代表存活，true代表死亡
+        this.NPCstatus = {
+            'scene1':{
+                '1st':{
+                    'A':false,
+                    'B':false,
+                    'C':false,
+                    'D':false,
+                    'E':false,
+                },
+                '2nd':{
+                    'A':true,
+                    'B':true,
+                    'C':false,
+                    'D':false,
+                    'E':false,
+                },
+                '3rd':{
+                    'A':true,
+                    'B':true,
+                    'C':true,
+                    'D':false,
+                    'E':false,
+                },
+                '4th':{
+                    'A':true,
+                    'B':true,
+                    'C':true,
+                    'D':false,
+                    'E':true,
+                }
+            }
+        }
 
     }
 }

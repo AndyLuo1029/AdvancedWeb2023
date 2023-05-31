@@ -10,19 +10,31 @@ class CQBHandler{
         this.npcs = this.game.npcHandler.npcs;
         this.user = this.game.user;
         this.config = new CQBConfig();
+        // 当前是CQB教学场景1还是场景2
         this.scene = this.game.currentScene;
+        // 所有可能的回合（X号位）
         this.rounds = ['1st','2nd','3rd','4th'];
+        // 当前是几号位
         this.round = '1st';
+        // 下标指示变量
         this.pointIndex = 0;
+        // 显示任务文字提示的锁
         this.CQBlock = false;
+        // 显示任务点的objects（荧光绿圆形）的数组
         this.dots = [];
-        this.end = false;
+        // 当前场景（不是回合）任务是否已全部完成
+        this.sceneEnd = false;
+        // 当前任务点的任务是否完成
+        this.missionFinished = false;
+        // 是否已阅读当前任务的文字提示
+        this.read = false;
 
+        // 根据场景1出生点调整了一下玩家朝向
         if(this.scene == 'scene1'){
             this.user.root.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -Math.PI/2);
         }
 
-        // add text prompt
+        // 任务文字提示
 		this.promptDiv = document.createElement( 'div' );
 		this.promptDiv.style.backgroundColor = 'rgba(107, 122, 143, 0.5)';
 		this.promptDiv.style.height = '25%';
@@ -35,7 +47,6 @@ class CQBHandler{
         this.promptDiv.style.borderWidth = '5px';
         this.promptDiv.style.borderStyle = 'solid';
         this.promptDiv.style.borderColor = 'rgba(14, 39, 102, 0.5)';
-        // this.promptDiv.textContent = "Test prompts 233333 lalalalal 23233";
         this.prompt = new CSS2DObject( this.promptDiv );
         this.camera.add( this.prompt );
         this.prompt.position.set( 0, 0, -1 );
@@ -47,31 +58,21 @@ class CQBHandler{
         this.showPoints();
     }
 
+    // 检测空格按键：按空格继续
     keyDown(e){
         if(e.keyCode == 32 && this.CQBlock){
             // press space to continue
             this.CQBlock = false;
-            // delete according point and position
-            this.dots.some(dot =>{
-                if(this.atPosition(dot.position)){
-                    this.game.scene.remove(dot);
-                    this.dots.splice(this.dots.indexOf(dot),1);
-                }
-            });
-            // 删除当前走到的点位
-            this.positions.some(point =>{
-                if(this.atPosition(point)){
-                    this.positions.splice(this.positions.indexOf(point),1);
-                }
-            });
+            this.read = true;
         }
     }
 
+    // 判断玩家位置是否在当前任务点
     atPosition(position){
         return this.user.position.distanceTo(position) < 0.5;
     }
 
-    // display mission point on the map
+    // 可视化任务点
     showPoints(){
         const geometry = new THREE.CircleGeometry( 0.5, 32 ); 
         const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ); 
@@ -81,10 +82,16 @@ class CQBHandler{
             dot.position.copy(point);
             dot.rotateX(-Math.PI/2);
             this.game.scene.add( dot ); 
-            this.dots.push(dot);    
+            this.dots.push(dot);
+            // 初始设置当前轮次所有点不可见
+            dot.visible = false;
         });
+
+        // 只显示任务点1
+        this.dots[0].visible = true;
     }
 
+    // 更新回合，如1号位任务全部完成，则更新为2号位
     updateRound(){
         // 当前回合已结束，判断是否还有下一回合
         if(this.round != '4th'){
@@ -95,34 +102,74 @@ class CQBHandler{
             this.pointIndex = 0;
             this.positions = Object.values(this.config.missionPoints[this.scene][this.round]);
             this.showPoints();
+            // 更新NPC状态
+            this.npcs.forEach(npc =>{
+                npc.dead = this.config.NPCstatus[this.scene][this.round][npc.name];
+                if(npc.dead) npc.action = 'shot';
+                else {
+                    npc.action = 'idle';
+                    npc.hp = 3;
+                }
+            });
             // 更新user位置
             this.user.position.copy(this.config.startPosition[this.scene]);
         }
         else{
             // 整个场景结束
-            this.end = true;
-            console.log('end');
+            this.sceneEnd = true;
+            // console.log('end');
         }
     }
 
+    // 逐帧判断更新函数
     update(dt){
-        if(this.positions.length == 0 && !this.end){
+        if(this.positions.length == 0 && !this.sceneEnd){
+            // 回合结束但场景未结束
             this.updateRound();
         }
-        // 根据user position 判断是否到下一个任务点，然后展示相应的文字提示
-        else if(!this.end && this.positions.length > 0 && this.atPosition(this.positions[0]) && !this.CQBlock){
+        else if(!this.sceneEnd && this.positions.length > 0 && this.atPosition(this.positions[0]) && !this.CQBlock && !this.read){
+            // 到达当前任务点，显示文字提示
             const text = this.config.text[this.scene][this.round][this.pointIndex];
-            this.pointIndex++;
-            // show prompt and lock the mouse
             this.CQBlock = true;
             this.promptDiv.textContent = text;
         }
-        else if(this.end && this.positions.length == 0 && !this.CQBlock){
-            console.log('end2');
+        else if(this.sceneEnd && this.positions.length == 0 && !this.CQBlock){
+            // 整个场景的教学都结束，显示结束文字
             const text = this.config.text['end'];
             this.CQBlock = true;
+            this.missionFinished = false;
+            this.read = false;
             this.promptDiv.textContent = text;
             this.positions.push(1);
+        }
+        else if(!this.CQBlock && !this.missionFinished && this.read && !this.sceneEnd){
+            // 读取完任务点文字提示后，等待击杀对应目标
+            let target = this.config.targets[this.scene][this.round][this.pointIndex];
+            // if(target!=undefined) console.log(this.npcs[target].name);
+            if(target!=undefined && this.npcs[target].dead){
+                this.missionFinished = true;
+            }
+            else if(target == undefined){
+                // 无目标，直接更新任务点
+                this.missionFinished = true;
+            }
+        }
+
+        // 完成了当前任务
+        if(this.missionFinished){
+            // delete according point and position
+            this.game.scene.remove(this.dots[0]);
+            this.dots.splice(0,1);
+            // 删除当前走到的点位
+            this.positions.splice(0,1);
+
+            // 如果不是本轮最后一个任务，显示下一个任务点
+            if(this.positions.length > 0 && !this.sceneEnd){
+                this.dots[0].visible = true;
+                this.pointIndex++;
+            }
+            this.read = false;
+            this.missionFinished = false;
         }
     }
 }
