@@ -52,11 +52,17 @@ class UserLocal extends User{
 
         socket.on('chat message', function(data){
             console.log(data.id,data.message)
-            // document.getElementById('chat').style.bottom = '0px';
-            // const player = game.getRemotePlayerById(data.id);
-            // //game.speechBubble.player = player;
-            //
-            // //game.speechBubble.update(data.message);
+
+            let pre_message=document.getElementById("pre_message")
+            let message_container = document.createElement("div")
+            message_container.className = "message_container";
+            let messageElement = document.createElement("div")
+            messageElement.className = "message";
+            messageElement.innerText =`${data.id}:${data.message}`;
+            console.log(messageElement,message_container,pre_message)
+            message_container.appendChild(messageElement);
+            pre_message.appendChild(message_container);
+            pre_message.scrollTop =pre_message.scrollHeight;
         });
 
         // $('#msg-form').submit(function(e){
