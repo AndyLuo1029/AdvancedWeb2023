@@ -38,6 +38,66 @@ export class SelectComponent implements AfterViewInit {
 		{id:1, selected:false, name:"CQB"},
 		{id:2, selected:false, name:"PVE"},
 	]
+	clearThree(obj:any){
+		// console.log(obj)
+		while(obj.children.length > 0){ 
+		  this.clearThree(obj.children[0])
+		  obj.remove(obj.children[0]);
+		}
+		if(obj.geometry) obj.geometry.dispose()
+	  
+		if(obj.material){ 
+		  //in case of map, bumpMap, normalMap, envMap ...
+		  Object.keys(obj.material).forEach(prop => {
+			if(!obj.material[prop])
+			  return         
+			if(typeof obj.material[prop].dispose === 'function')                                  
+			  obj.material[prop].dispose()                                                        
+		  })
+		  obj.material.dispose()
+		}
+	}
+	dispose( object3D: THREE.Object3D )
+	{
+		// Dispose children first
+		for ( let childIndex = 0; childIndex < object3D.children.length; ++childIndex )
+		{
+			this.dispose( object3D.children[childIndex] );
+		}
+
+		object3D.children = [];
+
+		if ( object3D instanceof THREE.Mesh )
+		{
+			// Geometry
+			object3D.geometry.dispose();
+
+			// Material(s)
+			if ( object3D.material )
+			{
+				if(object3D.material.matirials) {
+					for ( let matIndex = 0; matIndex < object3D.material.materials.length; ++matIndex )
+					{
+						object3D.material.materials[matIndex].dispose();
+						object3D.material.materials[matIndex] = null;
+					}
+					object3D.material.materials = [];
+				}	
+			}
+
+			if ( object3D.material.dispose )
+			{
+				object3D.material.dispose();
+				object3D.material = null;
+			}
+		}
+
+		// Remove from parent
+		if ( object3D.parent )
+			object3D.parent.remove( object3D );
+	//@ts-ignore
+		object3D = null;
+	}
 	onSelect(index:any) {
 		for( let ch of this.characters) {
 			ch.selected = false;

@@ -68,7 +68,7 @@ class Game{
 		this.raycaster = new THREE.Raycaster(); // 创建射线投射器
 		this.tmpVec = new THREE.Vector3(); // 创建临时向量
 
-		window.addEventListener( 'resize', this.resize.bind(this) ); // 监听调整窗口大小事件
+		window.addEventListener( 'resize', this.resize ); // 监听调整窗口大小事件
 	}
 
 	/*
@@ -141,7 +141,7 @@ class Game{
 	}
 	
 	// 在窗口大小发生变化时被调用，用于更新渲染器和相机的参数以适应新的大小
-    resize(){
+    resize = () => {
         this.camera.aspect = window.innerWidth / window.innerHeight;
     	this.camera.updateProjectionMatrix();
     	this.renderer.setSize( window.innerWidth, window.innerHeight ); 
@@ -268,6 +268,7 @@ class Game{
 		}
 	}
     stopRendering() {
+		window.removeEventListener( 'resize', this.resize );
 		this.renderer.setAnimationLoop(null );
 		this.gameFinish = null
 		this.user = null
@@ -280,7 +281,7 @@ class Game{
 			  child.geometry.dispose();
 			}
 			child = null;
-		  });
+		});
 	   
 		  // 场景中的参数释放清理或者置空等
 		  this.renderer.forceContextLoss();

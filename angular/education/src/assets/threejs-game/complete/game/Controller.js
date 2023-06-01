@@ -133,7 +133,7 @@ class Controller{
         this.touchController.fireBtn.style.display = mode ? 'block' : 'none';
     }
 
-    keyDown = (e)=>{
+    keyDown = (e)=> {
         //console.log('keyCode:' + e.keyCode);
         let repeat = false;
         if (e.repeat !== undefined) {
@@ -141,7 +141,7 @@ class Controller{
         }
         switch(e.keyCode){
             case 87:
-                this.game.gameFinish(1);
+                this.game.gameFinish({time:12,hitrate:90.5});
                 this.keys.w = true;
                 break;
             case 65:
