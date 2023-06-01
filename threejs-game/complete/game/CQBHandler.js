@@ -53,10 +53,50 @@ class CQBHandler{
         this.prompt.layers.set( 0 );
         this.prompt.visible = false;
 
+        this.pathFinished = false;
+
         document.addEventListener('keydown', this.keyDown.bind(this));
 
         this.showPoints();
     }
+
+    addPath() {
+        console.log("addPath"); // for debug
+        const pathMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 , linewidth: 100});
+        this.pathPoints = [...this.positions];
+        console.log(this.pathPoints);
+
+        this.pointsToUse = [this.game.user.position, this.pathPoints[0]];
+        this.pathGeometry = new THREE.BufferGeometry().setFromPoints(this.pointsToUse);
+        this.pathLine = new THREE.Line(this.pathGeometry, pathMaterial);
+        this.game.scene.add(this.pathLine);
+    
+        this.currentWaypointIndex = 0;
+        
+    }
+      
+    
+
+	updatePath() {
+		if (this.currentWaypointIndex < this.pathPoints.length) {
+		  const currentPoint = this.pathPoints[this.currentWaypointIndex];
+
+		  if (this.missionFinished) {
+			
+			if (this.currentWaypointIndex == this.pathPoints.length - 1) {
+			  console.log("你已经到达最后一个目标点，引导线取消"); // for debug
+			  this.pathLine.geometry.dispose();
+			  this.game.scene.remove(this.pathLine);
+			  this.pathFinished = true;
+			  return;
+			}
+			this.currentWaypointIndex++;
+			console.log("下一个目标在数组中的序号" + this.currentWaypointIndex); // for debug
+			this.pointsToUse = [this.user.position, this.pathPoints[this.currentWaypointIndex]];
+			// 线的绘制更新在update()中进行
+		  }
+		} 
+	}
 
     // 检测空格按键：按空格继续
     keyDown(e){
@@ -89,6 +129,8 @@ class CQBHandler{
 
         // 只显示任务点1
         this.dots[0].visible = true;
+        // 添加引导线
+        this.addPath(); 
     }
 
     // 更新回合，如1号位任务全部完成，则更新为2号位
@@ -123,6 +165,8 @@ class CQBHandler{
 
     // 逐帧判断更新函数
     update(dt){
+        this.pathLine.geometry.dispose();
+		this.pathLine.geometry = new THREE.BufferGeometry().setFromPoints(this.pointsToUse);
         if(this.positions.length == 0 && !this.sceneEnd){
             // 回合结束但场景未结束
             this.updateRound();
@@ -157,6 +201,8 @@ class CQBHandler{
 
         // 完成了当前任务
         if(this.missionFinished){
+            // 每完成一个任务点更新引导线
+            this.updatePath();
             // delete according point and position
             this.game.scene.remove(this.dots[0]);
             this.dots.splice(0,1);
