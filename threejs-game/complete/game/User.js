@@ -16,7 +16,9 @@ import * as THREE from '../../libs/three137/three.module.js';
 
 
 class User{
-    constructor(game, pos, heading){
+	id;
+    constructor(game, pos, heading,id){
+
 		this.role = game.userRole;
 		this.colors = [0xffffff, 0xf57a3d, 0x00ccff];
         this.root = new Group();
@@ -24,6 +26,8 @@ class User{
         this.root.rotation.set( 0, heading, 0, 'XYZ' );
 
         this.game = game;
+		if(id!=undefined)
+			this.id = id;
 
         this.camera = game.camera;
         this.raycaster = new Raycaster();
@@ -46,6 +50,7 @@ class User{
         //this.initMouseHandler();
 		this.initRifleDirection();
 		this.hp = 5;
+
 
     }
 
@@ -110,7 +115,6 @@ class User{
     }
 
     load(){
-
 
 
     	const loader = new GLTFLoader( ).setPath(`${this.game.assetsPath}factory/`);
@@ -215,6 +219,7 @@ class User{
 				this.ready = true;
 
 				this.game.startRendering();
+
     		},
 			// called while loading is progressing
 			xhr => {
@@ -224,6 +229,7 @@ class User{
 			err => {
 				console.error( err );
 			}
+
 		);
 	}
 
@@ -294,6 +300,8 @@ class User{
 		//this.healthPoint-=bullet.damage;
 	}
 	update(dt){
+
+
 		this.perspective = this.game.controller.perspective;
 		if (this.mixer) this.mixer.update(dt);
 		if (this.rotateRifle !== undefined){

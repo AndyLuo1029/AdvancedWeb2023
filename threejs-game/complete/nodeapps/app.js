@@ -14,7 +14,7 @@ app.get('/',function(req, res) {
 
 
 io.sockets.on('connection', function(socket){
-    socket.userData = { x:21, y:0, z:0, heading:1*Math.PI };//Default values;
+    socket.userData = { x:21, y:0.186, z:0, heading:1*Math.PI ,action:"idle"};//Default values;
 
     console.log(`${socket.id} connected`);
     socket.emit('setId', { id:socket.id });
@@ -58,11 +58,16 @@ http.listen(8084, function(){
 });
 
 setInterval(function(){
+
     const nsp = io.of('/');
+    //console.log( io.sockets.sockets);
+    //console.log(io.sockets.sockets)
     let pack = [];
 
-    for(let id in io.sockets.sockets){
-        const socket = nsp.connected[id];
+    for(let cs of io.sockets.sockets){
+        // console.log(id)
+        // const socket = nsp.connected[id];
+        const socket = cs[1];
         //Only push sockets that have been initialised
         //if (socket.userData.model!==undefined){
             pack.push({
@@ -78,5 +83,9 @@ setInterval(function(){
             });
         //}
     }
-    if (pack.length>0) io.emit('remoteData', pack);
+
+
+    if (pack.length>0) {
+        io.emit('remoteData', pack);
+    }
 }, 40);
