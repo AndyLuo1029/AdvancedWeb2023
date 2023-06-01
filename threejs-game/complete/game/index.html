@@ -77,21 +77,7 @@
         <div type ='text' id = "pre_message" class = "chat_container"></div>
         <input type ='text' id = "message" width="200px">
     </div>
-    <script>
-        var message = document.getElementById('message');
-        message.setAttribute('disabled','disabled');
-        document.addEventListener('keypress',function(e){
-            if(e.key ==='Enter'&&message.disabled){
-                message.removeAttribute('disabled')
-                message.focus();
-            }
-            else if (e.key ==='Enter'&&!message.disabled){
-                message.value="";
-                message.setAttribute('disabled','disabled')
-            }
 
-        })
-    </script>
 </body>
 
 

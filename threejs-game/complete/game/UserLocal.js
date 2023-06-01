@@ -66,6 +66,7 @@ class UserLocal extends User{
             pre_message.scrollTop =pre_message.scrollHeight;
         });
 
+        socket.emit('chat message',{id:this.id,message:`connected`});
         // $('#msg-form').submit(function(e){
         //     socket.emit('chat message', { id:game.chatSocketId, message:$('#m').val() });
         //     $('#m').val('');
@@ -78,12 +79,14 @@ class UserLocal extends User{
     sendMessage(flag){
         const message = document.getElementById('message');
         if(flag){
-            // message.removeAttribute('disabled')
-            // message.focus();
+            message.removeAttribute('disabled')
+            message.focus();
         }
         else {
-            this.socket.emit('chat message',{id:this.id,message:`${message.value}`});
-            //message.setAttribute('disabled','disabled');
+            if(message.value!=="")
+                this.socket.emit('chat message',{id:this.id,message:`${message.value}`});
+            message.value="";
+            message.setAttribute('disabled','disabled');
         }
 
 
