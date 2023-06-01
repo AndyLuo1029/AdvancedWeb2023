@@ -17,9 +17,8 @@ import * as THREE from '../../libs/three137/three.module.js';
 
 class User{
     constructor(game, pos, heading){
-		//1 eve 2 swat
-		this.role = 2;
-		this.color = 0xf75454;
+		this.role = game.userRole;
+		this.colors = [0xffffff, 0xf57a3d, 0x00ccff];
         this.root = new Group();
         this.root.position.copy( pos );
         this.root.rotation.set( 0, heading, 0, 'XYZ' );
@@ -86,18 +85,15 @@ class User{
 		//console.log(this.action)
 	}
 	shoot(){
-		this.perspective = this.game.controller.perspective;
 		if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
 		// this.aim.getWorldPosition(this.tmpVec);
 		// this.aim.getWorldQuaternion(this.tmpQuat);
-		if(this.perspective == 3){
-			this.root.getWorldPosition(this.tmpVec);
-			this.tmpVec.y += 1.5;
-		}
-		else{
-			this.camera.getWorldPosition(this.tmpVec);
-		}
-		
+		this.camera.getWorldPosition(this.tmpVec);
+		// this.root.getWorldPosition(this.tmpVec);
+		// let tempVec = new Vector3();
+		// this.camera.getWorldPosition(tempVec);
+		// this.tmpVec.y = tempVec.y;
+		// this.tmpVec.y = this.camera.position.y;
 		this.camera.getWorldQuaternion(this.tmpQuat);
 		// this.tmpQuat.set(1,0,-1,0);
 		this.bulletHandler.createBullet( this.tmpVec, this.tmpQuat );
@@ -114,6 +110,9 @@ class User{
     }
 
     load(){
+
+
+
     	const loader = new GLTFLoader( ).setPath(`${this.game.assetsPath}factory/`);
 		const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath( '../../libs/three137/draco/' );
@@ -124,14 +123,35 @@ class User{
 			user.anim=	object.animations[0]
 		});
 		// console.log(this.animations);
-		let url, scale;
-		if(this.role ===1){
+		let url, color, avatarScale;
+		if(this.role < 3){
 			url = 'eve2.glb';
-			scale = 1.2;
+			avatarScale = 1.1;
 		}
 		else {
 			url ='swat-guy2.glb';
-			scale = 0.9;
+			avatarScale = 0.9;
+		}
+
+		switch(this.role){
+			case 0:
+				color = this.colors[0];
+				break;
+			case 1:
+				color = this.colors[1];
+				break;
+			case 2:
+				color = this.colors[2];
+				break;
+			case 3:
+				color = this.colors[0];
+				break;
+			case 4:
+				color = this.colors[1];
+				break;
+			case 5:
+				color = this.colors[2];
+				break;
 		}
 
         //Load a glTF resource
@@ -144,11 +164,11 @@ class User{
                 this.object = gltf.scene;
 				this.object.frustumCulled = false;
 
-                this.object.scale.set(scale, scale, scale);
+                this.object.scale.set(avatarScale, avatarScale, avatarScale);
 
                 this.object.traverse( child => {
                     if ( child.isMesh){
-						// child.material.color.set(this.color);
+						child.material.color.set(color);
                         child.castShadow = true;
 						if (child.name.includes('Rifle')) this.rifle = child;
                     }

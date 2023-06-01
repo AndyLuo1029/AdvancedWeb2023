@@ -9,6 +9,7 @@ class CQBHandler{
         this.camera = this.game.camera;
         this.npcs = this.game.npcHandler.npcs;
         this.user = this.game.user;
+        this.result = this.game.result;
         this.config = new CQBConfig();
         // 当前是CQB教学场景1还是场景2
         this.scene = this.game.currentScene;
@@ -28,11 +29,8 @@ class CQBHandler{
         this.missionFinished = false;
         // 是否已阅读当前任务的文字提示
         this.read = false;
-
-        // 根据场景1出生点调整了一下玩家朝向
-        if(this.scene == 'scene1'){
-            this.user.root.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -Math.PI/2);
-        }
+        // 当前回合（x号位的流程）是否完成
+        this.roundFinished = false;
 
         // 任务文字提示
 		this.promptDiv = document.createElement( 'div' );
@@ -53,9 +51,7 @@ class CQBHandler{
         this.prompt.layers.set( 0 );
         this.prompt.visible = false;
 
-        this.pathFinished = false;
-
-        document.addEventListener('keydown', this.keyDown.bind(this));
+        document.addEventListener('keydown', this.keyDown);
 
         this.showPoints();
     }
@@ -99,7 +95,7 @@ class CQBHandler{
 	}
 
     // 检测空格按键：按空格继续
-    keyDown(e){
+    keyDown=(e)=>{
         if(e.keyCode == 32 && this.CQBlock){
             // press space to continue
             this.CQBlock = false;
@@ -167,9 +163,11 @@ class CQBHandler{
     update(dt){
         this.pathLine.geometry.dispose();
 		this.pathLine.geometry = new THREE.BufferGeometry().setFromPoints(this.pointsToUse);
-        if(this.positions.length == 0 && !this.sceneEnd){
+        
+        if(this.roundFinished && !this.sceneEnd){
             // 回合结束但场景未结束
             this.updateRound();
+            this.roundFinished = false;
         }
         else if(!this.sceneEnd && this.positions.length > 0 && this.atPosition(this.positions[0]) && !this.CQBlock && !this.read){
             // 到达当前任务点，显示文字提示
@@ -179,12 +177,17 @@ class CQBHandler{
         }
         else if(this.sceneEnd && this.positions.length == 0 && !this.CQBlock){
             // 整个场景的教学都结束，显示结束文字
-            const text = this.config.text['end'];
+            const text = this.config.text[this.scene]['end'];
             this.CQBlock = true;
             this.missionFinished = false;
             this.read = false;
             this.promptDiv.textContent = text;
             this.positions.push(1);
+
+            if(this.result!==undefined){
+                this.result.time = 10;
+                this.result.hitrate = 0.8273;
+            }
         }
         else if(!this.CQBlock && !this.missionFinished && this.read && !this.sceneEnd){
             // 读取完任务点文字提示后，等待击杀对应目标
@@ -213,6 +216,10 @@ class CQBHandler{
             if(this.positions.length > 0 && !this.sceneEnd){
                 this.dots[0].visible = true;
                 this.pointIndex++;
+            }
+            else{
+                // 回合完成
+                this.roundFinished = true;
             }
             this.read = false;
             this.missionFinished = false;
