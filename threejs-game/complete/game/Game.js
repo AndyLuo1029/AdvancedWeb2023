@@ -12,6 +12,7 @@ import { BulletHandler } from './BulletHandler.js';
 import { FrontSight} from './frontSight.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { CQBHandler } from './CQBHandler.js';
+import {Vector3} from "../../libs/three137/three.module.js";
 
 
 class Game{
@@ -42,6 +43,12 @@ class Game{
 
 		this.result = result;
 
+		//socketio传的数据
+		this.remoteData=[];
+		//得到的远程玩家
+		this.remoteUsers =[];
+		//初始化player 需要加载完才能进入remoteUsers
+		this.initialisingPlayers = [];
 		// 创建场景容器
 		const container = document.createElement( 'div' );
 		document.body.appendChild( container );
@@ -270,6 +277,8 @@ class Game{
         this.loadEnvironment();
 		this.npcHandler = new NPCHandler(this);
 		this.user = new UserLocal(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
+
+		//new User(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
 		// this.user = new User(this, new THREE.Vector3(this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]) , 1*Math.PI);
     }
 
@@ -373,6 +382,9 @@ class Game{
 	*/
 	render() {
 		const dt = this.clock.getDelta();
+
+		this.updateRemoteUsers(dt);
+
 		if(this.controller === undefined || this.controller.isLocked === false){
 			// print hints
 			this.clickLabel.visible = true;
@@ -393,6 +405,57 @@ class Game{
 		this.renderer.render( this.scene, this.camera );
 		this.labelRenderer.render(this.scene, this.camera);
     }
+
+	updateRemoteUsers(dt) {
+		const game = this;
+		const remoteUsers = [];
+		if (this.remoteData===undefined || this.remoteData.length == 0) return;
+
+		this.remoteData.forEach( function(data){
+			if (game.user.id !== data.id){
+				// //Is this player being initialised?
+				let iplayer;
+				game.initialisingPlayers.forEach( function(user){
+					if (user.id === data.id) iplayer = user;
+				});
+				//If not being initialised check the remotePlayers array
+				if (iplayer===undefined){
+					//console.log(114514)
+					let r_user;
+					//console.log(game.remoteUsers===undefined)
+					game.remoteUsers.forEach( function(user){
+						//console.log(user)
+						if (!user===undefined && user.id === data.id) r_user = user;
+					});
+					if (r_user===undefined){
+						//console.log("Init")
+						//Initialise player
+						let user = new User( game, new Vector3(data.x,data.y,data.z),data.heading,data.id )
+						game.initialisingPlayers.push(user);
+					}else{
+						//Player exists
+						remoteUsers.push(r_user);
+					}
+				}
+			}
+		});
+
+		//console.log(remoteUsers)
+		if(remoteUsers.length!==0)
+			this.remoteUsers =this.remoteUsers.concat(remoteUsers);
+		this.initialisingPlayers.forEach(function(user){
+			if(!game.remoteUsers.includes(user))
+				game.remoteUsers.push(user);
+		})
+
+
+		//this.getIniPlayers();
+		//console.log(this.remoteUsers);
+		//
+		//console.log(this.remoteUsers);
+		this.remoteUsers.forEach(function(user){ if(user.ready)user.update( dt ); });
+	}
+
 }
 
 export { Game };

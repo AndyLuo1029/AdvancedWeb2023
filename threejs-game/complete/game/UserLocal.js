@@ -18,7 +18,7 @@ import {User} from "./User.js";
 class UserLocal extends User{
     constructor(game, pos, heading) {
         super(game, pos, heading);
-        this.id;
+
         const user = this;
         const socket = io.connect();
         socket.on('setId', function(data){
@@ -26,6 +26,7 @@ class UserLocal extends User{
             console.log(user.id);
         });
         socket.on('remoteData', function(data){
+            //console.log(data);
             game.remoteData = data;
         });
         // socket.on('deletePlayer', function(data){
@@ -65,6 +66,7 @@ class UserLocal extends User{
             pre_message.scrollTop =pre_message.scrollHeight;
         });
 
+        socket.emit('chat message',{id:this.id,message:`connected`});
         // $('#msg-form').submit(function(e){
         //     socket.emit('chat message', { id:game.chatSocketId, message:$('#m').val() });
         //     $('#m').val('');
@@ -77,12 +79,14 @@ class UserLocal extends User{
     sendMessage(flag){
         const message = document.getElementById('message');
         if(flag){
-            // message.removeAttribute('disabled')
-            // message.focus();
+            message.removeAttribute('disabled')
+            message.focus();
         }
         else {
-            this.socket.emit('chat message',{id:this.id,message:`${message.value}`});
-            //message.setAttribute('disabled','disabled');
+            if(message.value!=="")
+                this.socket.emit('chat message',{id:this.id,message:`${message.value}`});
+            message.value="";
+            message.setAttribute('disabled','disabled');
         }
 
 
@@ -91,14 +95,13 @@ class UserLocal extends User{
         if (this.socket !== undefined){
             //console.log(`PlayerLocal.updateSocket - rotation(${this.object.rotation.x.toFixed(1)},${this.object.rotation.y.toFixed(1)},${this.object.rotation.z.toFixed(1)})`);
 
-
             this.socket.emit('update', {
                 x: this.root.position.x,
                 y: this.root.position.y,
                 z: this.root.position.z,
-                h: this.root.rotation.y,
+                h: this.root.rotation.x,
                 //pb: this.object.rotation.x,
-                action: this.action
+                action: this.actionName
             })
         }
     }

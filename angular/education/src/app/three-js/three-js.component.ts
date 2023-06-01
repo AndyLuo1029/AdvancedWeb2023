@@ -1,16 +1,17 @@
 import { Component, HostListener, Input, NgZone, OnInit, SimpleChange, SimpleChanges } from '@angular/core';
-// import * as THREE from 'three';
-// const THREEJS = require('THREEJS')
-// import Game from '../../assets/js/game.js'
 import { Game } from './../../assets/threejs-game/complete/game/Game.js';
 import { SocketService } from '../service/socket.service';
 import { Router } from '@angular/router';
+import { Global } from '../global';
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { catchError } from 'rxjs';
+import { BackErrorHandler } from '../http-interceptors/back-error-handler';
 // import * as io from 'socket.io-client';
 @Component({
   selector: 'app-three-js',
   templateUrl: './three-js.component.html',
   styleUrls: ['./three-js.component.css'],
-  providers: [{provide: SocketService}]
+  providers: [{provide: SocketService}, {provide: BackErrorHandler}]
 })
 // @HostListener('window:beforeunload', ['$event'])
 export class ThreeJsComponent implements OnInit{
@@ -21,8 +22,13 @@ export class ThreeJsComponent implements OnInit{
 	public finish:number;
 	private socket: any;
 	private game: any;
-
-	constructor(private ngZone:NgZone, private wsService: SocketService, private router: Router) {
+	private url = Global.backURL+"/user/addData";
+	constructor(
+		public http:HttpClient, 
+		private ngZone:NgZone, 
+		private wsService: SocketService, 
+		private router: Router,
+		private handler:BackErrorHandler) {
 		this.finish = 0;
 		// this.socket = wsService.connect("localhost:2002");
 		// console.log(this.socket)
@@ -53,6 +59,21 @@ export class ThreeJsComponent implements OnInit{
 	// 	// changes.prop contains the old and the new value...
 	// 	console.log(changes)
 	//   }
+	updateData(time:number, hitrate:number) {
+		const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
+		this.http.post(this.url, 
+			{
+			  username:localStorage.getItem("username"),
+			  time: time,
+			  hitrate: hitrate
+			}, httpOptions)
+		  .pipe(catchError(this.handler.handleError))
+		  .subscribe((response:any) => { 
+			if(response.code == 401) {
+			  window.alert(response.message); 
+			}
+		  });
+	}
 	ngOnInit(): void {
 		
 	}
@@ -70,6 +91,7 @@ export class ThreeJsComponent implements OnInit{
 		this.game = new Game((result:any)=> {
 			// console.log(result)
 			this.finish = 1;
+			this.updateData(result.time, result.hitrate);
 			this.router.navigate(['/home'],{ replaceUrl: true });
 		}); 
 	
