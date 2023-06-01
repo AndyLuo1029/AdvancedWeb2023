@@ -56,23 +56,41 @@ class CQBHandler{
         this.showPoints();
     }
 
+    
+    // 添加引导路线
     addPath() {
         console.log("addPath"); // for debug
-        const pathMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 , linewidth: 100});
-        this.pathPoints = [...this.positions];
-        console.log(this.pathPoints);
 
+        this.pathPoints = [...this.positions];
+        console.log(this.pathPoints); // for debug
         this.pointsToUse = [this.game.user.position, this.pathPoints[0]];
-        this.pathGeometry = new THREE.BufferGeometry().setFromPoints(this.pointsToUse);
-        this.pathLine = new THREE.Line(this.pathGeometry, pathMaterial);
+        const curve = new THREE.CatmullRomCurve3(this.pointsToUse);
+
+        const textureLoader = new THREE.TextureLoader();
+        const map = textureLoader.load('../../assets/path_texture.png');
+        // 使用 TubeGeometry 创建管道几何体
+        const tubeBufferGeometry = new THREE.TubeBufferGeometry(curve, 64, 0.3, 16, false);
+        
+        const pathMaterial = new THREE.MeshBasicMaterial({ 
+            map: map, 
+            side: THREE.DoubleSide,
+            transparent: true
+          });
+        
+        pathMaterial.map.repeat.set(4, 3); // 将纹理水平和垂直方向上重复3次
+        pathMaterial.map.wrapS = THREE.RepeatWrapping; // 在水平方向上重复纹理
+        pathMaterial.map.wrapT = THREE.RepeatWrapping; // 在垂直方向上重复纹理
+        pathMaterial.map.magFilter = THREE.LinearFilter; // 纹理放大过滤
+
+        this.pathLine = new THREE.Mesh(tubeBufferGeometry, pathMaterial);
+        
         this.game.scene.add(this.pathLine);
     
         this.currentWaypointIndex = 0;
         
     }
       
-    
-
+    // 更新引导路线
 	updatePath() {
 		if (this.currentWaypointIndex < this.pathPoints.length) {
 		  const currentPoint = this.pathPoints[this.currentWaypointIndex];
@@ -111,7 +129,13 @@ class CQBHandler{
     // 可视化任务点
     showPoints(){
         const geometry = new THREE.CircleGeometry( 0.5, 32 ); 
-        const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ); 
+        const color = new THREE.Color(0x00b894); // 定义颜色为柔和绿色
+        const material = new THREE.MeshBasicMaterial({
+        color: color, // 设置材质颜色
+        opacity: 0.5,
+        });
+
+          
         this.positions = Object.values(this.config.missionPoints[this.scene][this.round]);
         this.positions.forEach(point =>{
             let dot = new THREE.Mesh( geometry, material );
@@ -161,8 +185,12 @@ class CQBHandler{
 
     // 逐帧判断更新函数
     update(dt){
+        const curve = new THREE.CatmullRomCurve3(this.pointsToUse);
+        
+        // 使用 TubeGeometry 创建管道几何体
+        const tubeBufferGeometry = new THREE.TubeBufferGeometry(curve, 64, 0.1, 16, false);
         this.pathLine.geometry.dispose();
-		this.pathLine.geometry = new THREE.BufferGeometry().setFromPoints(this.pointsToUse);
+		this.pathLine.geometry = tubeBufferGeometry;
         
         if(this.roundFinished && !this.sceneEnd){
             // 回合结束但场景未结束
