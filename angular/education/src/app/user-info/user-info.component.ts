@@ -51,7 +51,7 @@ export class UserInfoComponent {
     barChart.setOption(this.options);
   }
   getBackData() {
-    this.empty = false
+    // this.empty = false
     let url = Global.backURL + "/user/data";
     let username = localStorage.getItem("username")
     const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
@@ -74,6 +74,7 @@ export class UserInfoComponent {
           }
           else {
             // console.log(response)
+            this.empty = false
             for(let i in response) {
               this.dataSource.push({
                 position: String(parseInt(i)+1),
@@ -83,8 +84,12 @@ export class UserInfoComponent {
               })
               this.time.push(response[i].time);
             }
-            this.initChart();
-            this.getChartData();
+            setTimeout( ()=>{ //延时加载echarts初始化函数
+              this.initChart();
+              this.getChartData();
+            },100)
+        
+            
             this.getTableData();
           }
         }
@@ -149,7 +154,7 @@ export class UserInfoComponent {
     timeSum /= success;
     let passrate = (success/length*100).toFixed(1)+'(通过率)'
     this.dataSource.push({position: '总计(平均)', hitrate: parseFloat(hitSum.toFixed(3)), time: timeSum.toFixed(2), date:passrate})
-    this.userTable.renderRows()
+    // this.userTable.renderRows()
     console.log(this.dataSource)
   }
 }

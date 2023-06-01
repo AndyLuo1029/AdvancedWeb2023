@@ -6,18 +6,24 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 import { GridHelper } from 'three';
 import { animation } from '@angular/animations';
 import { Router } from '@angular/router';
+import { Global } from '../global';
+import { color } from 'echarts';
 @Component({
   selector: 'app-select',
   templateUrl: './select.component.html',
-  styleUrls: ['./select.component.css']
+  styleUrls: ['./select.component.css'],
+  
 })
 export class SelectComponent implements AfterViewInit {
 
-	constructor(private el: ElementRef, public router:Router) {}
+	constructor(private el: ElementRef, public router:Router) {
+		// this.resources = new Set();
+	}
 
 	private users:User[] = [];
 	private lastSelect:number = -1;
 	private lastSelectMap:number = -1;
+	
 	ngAfterViewInit() {    
 		for(let i = 0; i < 6; i++) {
 			// if(i > 1) break;
@@ -26,23 +32,31 @@ export class SelectComponent implements AfterViewInit {
 		}
 
 	}
+
 	ngOnDestroy() {
 		for(let i = 0; i < 6; i++) {
-			this.users[i].renderer.setAnimationLoop(null );
+			this.users[i].renderer.setAnimationLoop(null);
+			this.users[i].renderer.clear();
+			this.users[i].renderer.dispose();
+			//@ts-ignore
+			this.users[i].renderer = null;
+			this.users[i].dispose_();
+			// console.log(this.users[i].scene)
 		}
 		
 	}
 	characters = [
-		{id:1, selected:false, name:"BeachBabe"},
-		{id:2, selected:false, name:"BusinessMan"},
-		{id:3, selected:false, name:"Doctor"},
-		{id:4, selected:false, name:"Policeman"},
-		{id:5, selected:false, name:"Robber"},
-		{id:6, selected:false, name:"BeachBabe"},
+		{id:1, selected:false, name:"猎狐者Foxhunter", para:0},
+		{id:2, selected:false, name:"复仇女神Nemesis", para:1},
+		{id:3, selected:false, name:"审判者Inquisitor", para:2},
+		{id:4, selected:false, name:"斯沃特Swart", para:3},
+		{id:5, selected:false, name:"飞虎队Flying Tiger", para:4},
+		{id:6, selected:false, name:"赛斯Sise", para:5},
 	]
 	maps = [
-		{id:1, selected:false, name:"CQB"},
-		{id:2, selected:false, name:"PVE"},
+		{id:1, selected:false, name:"CQB场景1",para:0},
+		{id:2, selected:false, name:"CQB场景2",para:1},
+		{id:3, selected:false, name:"PVE多人",para:2},
 	]
 	onSelect(index:any) {
 		for( let ch of this.characters) {
@@ -51,6 +65,7 @@ export class SelectComponent implements AfterViewInit {
 		if(this.lastSelect != -1) {
 			this.users[this.lastSelect].toggleAnimation();
 		}
+		// this.clearThree(this.users[index].scene);
 		this.lastSelect = index
 		this.users[index].toggleAnimation();
 		this.characters[index].selected = true;
@@ -77,6 +92,8 @@ export class SelectComponent implements AfterViewInit {
 		// 	return
 		// }
 		localStorage.setItem("inGame", '1');
+		Global.skin_choice = this.characters[this.lastSelect].para;
+		Global.map_choice = this.maps[this.lastSelectMap].para;
 		this.router.navigate(['/three']);
 	}
 }
@@ -98,6 +115,69 @@ interface Animations {
 	// 'Pointing Gesture'?: any;
 }
 class User{
+	track(resource:any) {
+		if (!resource) {
+			return resource;
+		}
+  
+		// handle children and when material is an array of materials or
+		// uniform is array of textures
+		if (Array.isArray(resource)) {
+			resource.forEach(resource => this.track(resource));
+			return resource;
+		}
+  
+		if (resource.dispose || resource instanceof THREE.Object3D) {
+			this.resources.add(resource);
+		}
+		if (resource instanceof THREE.Object3D) {
+			//@ts-ignore
+			this.track(resource.geometry);
+			//@ts-ignore
+			this.track(resource.material);
+			this.track(resource.children);
+		} else if (resource instanceof THREE.Material) {
+			// We have to check if there are any textures on the material
+			for (const value of Object.values(resource)) {
+				if (value instanceof THREE.Texture) {
+					this.track(value);
+				}
+			}
+			// We also have to check if any uniforms reference textures or arrays of textures
+			//@ts-ignore
+			if (resource.uniforms) {
+				//@ts-ignore
+				for (const value of Object.values(resource.uniforms)) {
+					if (value) {
+						//@ts-ignore
+						const uniformValue = value.value;
+						if (uniformValue instanceof THREE.Texture ||
+							Array.isArray(uniformValue)) {
+							this.track(uniformValue);
+						}
+					}
+				}
+			}
+		}
+		return resource;
+	}
+	untrack(resource:any) {
+		this.resources.delete(resource);
+	}
+	dispose_() {
+		for (const resource of this.resources) {
+			if (resource instanceof THREE.Object3D) {
+				if (resource.parent) {
+					resource.parent.remove(resource);
+				}
+			}
+			if (resource.dispose) {
+				resource.dispose();
+			}
+		}
+		this.resources.clear();
+	}
+	resources: Set<any>;
 	camera: THREE.PerspectiveCamera;
 	scene: THREE.Scene;
 	light: THREE.DirectionalLight;
@@ -132,33 +212,45 @@ class User{
 	assetsPath: string;
 	clock: THREE.Clock;
 	id: number;
+	skin: string;
+	female: boolean;
+	color: number[];
     constructor(skin:String, id:number, el:any){
+		this.resources = new Set();
+		this.color = [0xffffff,0xf57a3d,0x00ccff,0xffffff,0xf57a3d,0x00ccff]
+		this.female = id < 3
+		if(this.female) {
+			this.skin = "eve2.glb"
+		}
+		else {
+			this.skin = "swat-guy2.glb"
+		}
 		this.id = id
-		const pos = new THREE.Vector3( -6, 0.021, -2);
+		const pos = this.track(new THREE.Vector3( 0, 0, 0));
 		const heading = 1*Math.PI;
 		let domID = 'scene-container-' + id ;
 		const container = el.nativeElement.querySelector('#'+domID);
 		
 		this.assetsPath = '../../assets/threejs-game/assets/';
 
-		this.clock = new THREE.Clock(); // 用于计算时间差
+		this.clock = this.track(new THREE.Clock()); // 用于计算时间差
 		// 创建相机，并设置位置和旋转角度
-		this.camera = new THREE.PerspectiveCamera( 40, container.clientWidth/container.clientHeight, 0.1, 500 );
+		this.camera = this.track(new THREE.PerspectiveCamera( 40, container.clientWidth/container.clientHeight, 0.1, 500 ));
 		// this.camera.position.set( -6, 1.8, 3 );
-		this.camera.position.set( -7, 1.4, -4.5 );
-		const target = new THREE.Vector3( -6, 0.8, -2);
+		this.camera.position.set( -1, 1.4, -3 );
+		const target = this.track(new THREE.Vector3( 0, 0.8, 0));
 		this.camera.lookAt(target);
-		let col = 0xada1a1;
-		this.scene = new THREE.Scene(); // 创建场景
-		this.scene.background = new THREE.Color( col ); // 设置背景颜色
-		this.scene.fog = new THREE.Fog( col, 100, 200 ); // 添加雾效
+		let col = 0x7592af;
+		this.scene =this.track( new THREE.Scene()); // 创建场景
+		this.scene.background = this.track(new THREE.Color( col )); // 设置背景颜色
+		this.scene.fog = this.track(new THREE.Fog( col, 100, 200 )); // 添加雾效
 
-		const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1); // 创建环境光
+		const ambient = this.track(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1)); // 创建环境光
 		this.scene.add(ambient);
 
-		const light = new THREE.DirectionalLight(); // 创建平行光
-		light.position.set( 4, 20, 20 );
-		light.target.position.set(-2, 0, 0);
+		const light = this.track(new THREE.DirectionalLight()); // 创建平行光
+		light.position.set( 10, 20, -20 );
+		light.target.position.set(0, 0, 0);
 		light.castShadow = true; // 开启阴影
 
 		// 设置灯光的阴影属性
@@ -175,31 +267,31 @@ class User{
 		this.light = light;
 		// ground
 
-		var mesh = new THREE.Mesh( new THREE.PlaneGeometry( 100, 100 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
+		var mesh = this.track(new THREE.Mesh( new THREE.PlaneGeometry( 200, 20 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) ));
 		mesh.rotation.x = - Math.PI / 2;
 		//mesh.position.y = -100;
 		mesh.receiveShadow = true;
 		this.scene.add( mesh );
 
-		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true } ); // 创建渲染器
+		this.renderer = this.track(new THREE.WebGLRenderer({ antialias: true, alpha: true } )); // 创建渲染器
 		this.renderer.shadowMap.enabled = true; // 开启阴影
 		this.renderer.setPixelRatio( window.devicePixelRatio );
 		this.renderer.setSize( container.clientWidth, container.clientHeight);
-		this.renderer.outputEncoding = THREE.sRGBEncoding; // 设置颜色编码格式
+		// this.renderer.outputEncoding = THREE.sRGBEncoding; // 设置颜色编码格式
 		container.appendChild( this.renderer.domElement );
 
 		//USER
-        this.root = new THREE.Group();
+        this.root = this.track(new THREE.Group());
         this.root.position.copy( pos );
         this.root.rotation.set( 0, heading, 0, 'XYZ' );
         this.game = this;
-        this.raycaster = new THREE.Raycaster();
+        this.raycaster = this.track(new THREE.Raycaster());
 
         this.scene.add(this.root);
 	    this.load();
 
-        this.tmpVec = new THREE.Vector3();
-        this.tmpQuat = new THREE.Quaternion();
+        this.tmpVec = this.track(new THREE.Vector3());
+        this.tmpQuat = this.track(new THREE.Quaternion());
 
 		this.speed = 0;
 		this.isFiring = false;
@@ -208,21 +300,23 @@ class User{
 		this.healthPoint = 100;
 		// this.object
         //this.initMouseHandler();
-		this.initRifleDirection();
+		if(this.female) {
+			this.initRifleDirection();
+		}
 		this.hp = 5;
     }
 
-	initRifleDirection(){
+	initRifleDirection() {
 		this.rifleDirection = {};
 
-		this.rifleDirection.idle = new THREE.Quaternion(-0.178, -0.694, 0.667, 0.203);
-		this.rifleDirection.walk = new THREE.Quaternion( 0.044, -0.772, 0.626, -0.102);
-		this.rifleDirection.firingwalk = new THREE.Quaternion(-0.034, -0.756, 0.632, -0.169);
-		this.rifleDirection.fpsFiringwalk = new THREE.Quaternion(0.005, -0.789, 0.594, -0.085);
-		this.rifleDirection.firing = new THREE.Quaternion( -0.054, -0.750, 0.633, -0.184);
-		this.rifleDirection.fpsFiring = new THREE.Quaternion(0.005, -0.789, 0.594, -0.085);
-		this.rifleDirection.run = new THREE.Quaternion( 0.015, -0.793, 0.595, -0.131);
-		this.rifleDirection.shot = new THREE.Quaternion(-0.082, -0.789, 0.594, -0.138);
+		this.rifleDirection.idle =this.track( new THREE.Quaternion(-0.178, -0.694, 0.667, 0.203));
+		this.rifleDirection.walk =this.track( new THREE.Quaternion( 0.044, -0.772, 0.626, -0.102));
+		this.rifleDirection.firingwalk = this.track(new THREE.Quaternion(-0.034, -0.756, 0.632, -0.169));
+		this.rifleDirection.fpsFiringwalk =this.track( new THREE.Quaternion(0.005, -0.789, 0.594, -0.085));
+		this.rifleDirection.firing = this.track(new THREE.Quaternion( -0.054, -0.750, 0.633, -0.184));
+		this.rifleDirection.fpsFiring = this.track(new THREE.Quaternion(0.005, -0.789, 0.594, -0.085));
+		this.rifleDirection.run = this.track(new THREE.Quaternion( 0.015, -0.793, 0.595, -0.131));
+		this.rifleDirection.shot =this.track(new THREE.Quaternion(-0.082, -0.789, 0.594, -0.138));
 	}
 
     set position(pos){
@@ -233,31 +327,31 @@ class User{
 		return this.root.position;
 	}
 
-	set firing(mode:any){
-		this.isFiring = mode;
-		if (mode){
-			//console.log(this.speed)
-			this.action =  (Math.abs(this.speed) === 0 ) ? "firing" : "firingwalk";
-			//console.log(this.action)
-			this.bulletTime = this.game.clock.getElapsedTime();
-		}else{
-			this.action = 'idle';
-		}
-		//console.log(this.action)
-	}
-	shoot(){
-		if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
-		// this.aim.getWorldPosition(this.tmpVec);
-		// this.aim.getWorldQuaternion(this.tmpQuat);
-		this.camera.getWorldPosition(this.tmpVec);
-		// this.root.getWorldPosition(this.tmpVec);
-		// let tempVec = new Vector3();
-		// this.camera.getWorldPosition(tempVec);
-		// this.tmpVec.y = tempVec.y;
-		// this.tmpVec.y = this.camera.position.y;
-		this.camera.getWorldQuaternion(this.tmpQuat);
-		// this.tmpQuat.set(1,0,-1,0);
-	}
+	// set firing(mode:any){
+	// 	this.isFiring = mode;
+	// 	if (mode){
+	// 		//console.log(this.speed)
+	// 		this.action =  (Math.abs(this.speed) === 0 ) ? "firing" : "firingwalk";
+	// 		//console.log(this.action)
+	// 		this.bulletTime = this.game.clock.getElapsedTime();
+	// 	}else{
+	// 		this.action = 'idle';
+	// 	}
+	// 	//console.log(this.action)
+	// }
+	// shoot(){
+	// 	if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
+	// 	// this.aim.getWorldPosition(this.tmpVec);
+	// 	// this.aim.getWorldQuaternion(this.tmpQuat);
+	// 	this.camera.getWorldPosition(this.tmpVec);
+	// 	// this.root.getWorldPosition(this.tmpVec);
+	// 	// let tempVec = new Vector3();
+	// 	// this.camera.getWorldPosition(tempVec);
+	// 	// this.tmpVec.y = tempVec.y;
+	// 	// this.tmpVec.y = this.camera.position.y;
+	// 	this.camera.getWorldQuaternion(this.tmpQuat);
+	// 	// this.tmpQuat.set(1,0,-1,0);
+	// }
 
     // addSphere(){
     //     const geometry = new SphereGeometry( 0.1, 8, 8 );
@@ -269,8 +363,8 @@ class User{
     // }
 
     load(){
-    	const loader = new GLTFLoader( ).setPath(`${this.game.assetsPath}factory/`);
-		const dracoLoader = new DRACOLoader();
+    	const loader = this.track(new GLTFLoader( ).setPath(`${this.game.assetsPath}factory/`));
+		const dracoLoader =this.track( new DRACOLoader());
         dracoLoader.setDecoderPath( `${this.game.assetsPath}../libs/three137/draco/` );
         loader.setDRACOLoader( dracoLoader );
 		const user = this;
@@ -283,44 +377,51 @@ class User{
         //Load a glTF resource
 		loader.load(
 			// resource URL
-			'eve2.glb',
-			// called when the resource is loaded
-			gltf => {
+			this.skin,
+			(			// called when the resource is loaded
+			gltf: { scene: THREE.Object3D<THREE.Event> | THREE.AnimationObjectGroup; animations: any[]; }) => {
 				this.root.add( gltf.scene );
                 this.object = gltf.scene;
 				this.object.frustumCulled = false;
 
-                const scale = 1.2;
+				let scale = 1;
+                if(this.female) {
+					scale = 1.2;
+				}
                 this.object.scale.set(scale, scale, scale);
-
-                this.object.traverse( (child: { isMesh: any; castShadow: boolean; name: string | string[]; }) => {
+				console.log(this.object)
+                this.object.traverse( (child: { isMesh: any; castShadow: boolean; name: string | string[]; material: any }) => {
                     if ( child.isMesh){
+						
                         child.castShadow = true;
 						if (child.name.includes('Rifle')) this.rifle = child;
                     }
+					if( child.name == "Mesh") {
+						child.material.color.set(this.color[this.id]);
+					}
                 });
-				if (this.rifle){
-					const geometry = new THREE.BufferGeometry().setFromPoints( [ new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 7, 0, 0 ) ] );
+				// if (this.rifle){
+				// 	const geometry = new THREE.BufferGeometry().setFromPoints( [ new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 7, 0, 0 ) ] );
 					
-        			const line = new THREE.Line( geometry );
-        			line.name = 'aim';
+        		// 	const line = new THREE.Line( geometry );
+        		// 	line.name = 'aim';
 
-					this.rifle.add(line);
-					line.position.set(0, 0, 0.5);
-					this.aim = line;
-					line.visible = false;
-					const muzzleloader = new GLTFLoader( ).setPath(`${this.game.assetsPath}weapons/`);
-					muzzleloader.load(
-						'muzzle_flash.glb',
-						gltf => {
-							this.muzzle = gltf.scene;
-							this.aim.add( this.muzzle);
-							this.muzzle.rotateY(-Math.PI/2);
-							this.muzzle.position.set(7, 0, 0);
-							this.muzzle.scale.set(0.9, 0.9, 0.9);		
-						}
-					);
-				}
+				// 	this.rifle.add(line);
+				// 	line.position.set(0, 0, 0.5);
+				// 	this.aim = line;
+				// 	line.visible = false;
+					// const muzzleloader = new GLTFLoader( ).setPath(`${this.game.assetsPath}weapons/`);
+					// muzzleloader.load(
+					// 	'muzzle_flash.glb',
+					// 	gltf => {
+					// 		this.muzzle = gltf.scene;
+					// 		this.aim.add( this.muzzle);
+					// 		this.muzzle.rotateY(-Math.PI/2);
+					// 		this.muzzle.position.set(7, 0, 0);
+					// 		this.muzzle.scale.set(0.9, 0.9, 0.9);		
+					// 	}
+					// );
+				// }
 				// user.object.add(this.object);
 
                 this.animations = {};
@@ -343,14 +444,15 @@ class User{
 				this.renderer.setAnimationLoop( this.render.bind(this) );
     		},
 			// called while loading is progressing
-			xhr => {
-				// this.loadingBar.update( 'user', xhr.loaded, xhr.total );
-			},
-			// called when loading has errors
-			err => {
-				console.error( err );
-			}
+			// xhr => {
+			// 	// this.loadingBar.update( 'user', xhr.loaded, xhr.total );
+			// },
+			// // called when loading has errors
+			// err => {
+			// 	console.error( err );
+			// }
 		);
+	
 	}
 
     set action(name:any){
@@ -393,11 +495,11 @@ class User{
 			
 
 			if (q!==undefined){
-				const start = new THREE.Quaternion();
+				const start = this.track(new THREE.Quaternion());
 				start.copy(this.rifle.quaternion);
 				this.rifle.quaternion.copy(q);
 				this.rifle.rotateX(1.57);
-				const end = new THREE.Quaternion();
+				const end = this.track(new THREE.Quaternion());
 				end.copy(this.rifle.quaternion);
 				this.rotateRifle = { start, end, time:0 };
 				this.rifle.quaternion.copy( start );
@@ -421,28 +523,28 @@ class User{
 				this.rifle.quaternion.slerpQuaternions(this.rotateRifle.start, this.rotateRifle.end, this.rotateRifle.time * 2);
 			}
 		}
-		if (this.isFiring){
-			this.aim.visible = false;
-			if(this.speed===0)this.action ="firing";
-			const elapsedTime = this.game.clock.getElapsedTime() - this.bulletTime;
-			if (elapsedTime > 0.6) {
-				this.shoot();
-				this.aim.rotateX(Math.random() * Math.PI);
-				this.aim.visible = true;
-				if(this.healthPoint>0)this.healthPoint-=20;//开枪自残
-			}
-		}
-		else{
-			this.aim.visible = false;
-		}
-		if(this.healthPoint<=0){
-			// console.log("gameover")
-			this.healthPoint = 100;
-		}
+		// if (this.isFiring){
+		// 	this.aim.visible = false;
+		// 	if(this.speed===0)this.action ="firing";
+		// 	const elapsedTime = this.game.clock.getElapsedTime() - this.bulletTime;
+		// 	if (elapsedTime > 0.6) {
+		// 		this.shoot();
+		// 		this.aim.rotateX(Math.random() * Math.PI);
+		// 		this.aim.visible = true;
+		// 		if(this.healthPoint>0)this.healthPoint-=20;//开枪自残
+		// 	}
+		// }
+		// else{
+		// 	this.aim.visible = false;
+		// }
+		// if(this.healthPoint<=0){
+		// 	// console.log("gameover")
+		// 	this.healthPoint = 100;
+		// }
 	}
 	
 	toggleAnimation() {
-		const actions_play = ["run", "walk", "firing", "firingwalk", "shot", "run"]
+		const actions_play = ["run", "walk", "firing", "firingwalk", "shot", "walking"]
 		if(this.actionName =='idle') {
 			
 			this.action = actions_play[this.id]
