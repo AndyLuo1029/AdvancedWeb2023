@@ -21,6 +21,7 @@ class UserLocal extends User{
 
         const user = this;
         const socket = io.connect();
+        // const socket = game.socket;
         socket.on('setId', function(data){
             user.id = data.id;
             console.log(user.id);
