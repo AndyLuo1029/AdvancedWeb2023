@@ -121,6 +121,11 @@ class Game{
 		this.tmpVec = new THREE.Vector3(); // 创建临时向量
 
 		window.addEventListener( 'resize', this.resize ); // 监听调整窗口大小事件
+
+		if(this.sceneIndex != 2){
+			let t = document.getElementById('container');//选取id为test的元素
+			t.style.display = 'none';	// 隐藏选择的元素
+		}
 	}
 
 	/*
@@ -384,7 +389,7 @@ class Game{
 		this.gametime = parseInt(this.CQBHandler.sceneTime);
 		this.hitrate = ((this.user.hitCount / this.user.shootCount) * 100);
 		this.hitrate = Math.round(this.hitrate*1000)/1000;
-		console.log(this.gametime, this.hitrate);
+		// console.log(this.gametime, this.hitrate);
 		// 删除所有eventListener
 		this.renderer.setAnimationLoop(null);
 
@@ -503,7 +508,8 @@ class Game{
 					if (r_user===undefined){
 						//console.log("Init")
 						//Initialise player
-						let user = new User( game, new Vector3(data.x,data.y,data.z),1*Math.PI,data.id )
+						let user = new User( game, new Vector3(data.x,data.y,data.z),1*Math.PI,data.id, data.model )
+						// console.log(data);
 						game.initialisingPlayers.push(user);
 					}else{
 						//Player exists

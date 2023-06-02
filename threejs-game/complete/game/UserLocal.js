@@ -1,18 +1,3 @@
-import { Group,
-    Object3D,
-    Vector3,
-    Quaternion,
-    Raycaster,
-    AnimationMixer,
-    SphereGeometry,
-    MeshBasicMaterial,
-    Mesh,
-    BufferGeometry,
-    Line
-} from '../../libs/three137/three.module.js';
-import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
-import { DRACOLoader } from '../../libs/three137/DRACOLoader.js';
-import * as THREE from '../../libs/three137/three.module.js';
 import {User} from "./User.js";
 
 class UserLocal extends User{
@@ -24,8 +9,9 @@ class UserLocal extends User{
         // const socket = game.socket;
         socket.on('setId', function(data){
             user.id = data.id;
-            console.log(user.id);
+            // console.log(user.id);
             socket.emit('chat message',{id:user.id,message:`connected`});
+            socket.emit('init', game.userRole);
         });
         socket.on('remoteData', function(data){
             //console.log(data);
@@ -41,10 +27,22 @@ class UserLocal extends User{
             if (users.length>0){
                 let index = game.remoteUsers.indexOf(users[0]);
                 if (index!=-1){
-                    // console.log(index)
-                    // console.log(game.remoteUsers)
+                    
                     game.remoteUsers.splice( index, 1 );
-                    //console.log(game.remoteUsers)
+
+                    let object = users[0].object;
+                    let root = users[0].root;
+
+                    // sb的 ID删不掉，就在这
+                    for ( let children of object.children ) {
+                        object.remove( children );
+                    }
+
+                    for ( let croot of root.children){
+                        root.remove(croot);
+                    }
+            
+                    game.scene.remove(users[0].object);
                     game.scene.remove(users[0].root);
                     socket.emit('chat message',{id:data.id,message:`disconnected`});
                 }
@@ -59,7 +57,7 @@ class UserLocal extends User{
         });
 
         socket.on('chat message', function(data){
-            console.log(data.id,data.message)
+            // console.log(data.id,data.message)
 
             let pre_message=document.getElementById("pre_message")
             let message_container = document.createElement("div")
