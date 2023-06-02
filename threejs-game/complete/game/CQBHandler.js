@@ -1,6 +1,7 @@
 import * as THREE from '../../libs/three137/three.module.js';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { CQBConfig } from './CQBConfig.js';
+import { DoubleSide } from 'three';
 
 
 class CQBHandler{
@@ -9,7 +10,6 @@ class CQBHandler{
         this.camera = this.game.camera;
         this.npcs = this.game.npcHandler.npcs;
         this.user = this.game.user;
-        this.result = this.game.result;
         this.config = new CQBConfig();
         // 当前是CQB教学场景1还是场景2
         this.scene = this.game.currentScene;
@@ -23,8 +23,14 @@ class CQBHandler{
         this.CQBlock = false;
         // 显示任务点的objects（荧光绿圆形）的数组
         this.dots = [];
+        // 是否已开始当前场景的任务，判断开始计时时间
+        this.sceneStart = false;
+        // 用户完成场景的用时
+        this.sceneTime = 0;
         // 当前场景（不是回合）任务是否已全部完成
-        this.sceneEnd = false;
+        this.sceneEnd = this.game.sceneEnd;
+        // 是否能退出当前场景
+        this.canExit = false;
         // 当前任务点的任务是否完成
         this.missionFinished = false;
         // 是否已阅读当前任务的文字提示
@@ -59,10 +65,10 @@ class CQBHandler{
     
     // 添加引导路线
     addPath() {
-        console.log("addPath"); // for debug
+        // console.log("addPath"); // for debug
 
         this.pathPoints = [...this.positions];
-        console.log(this.pathPoints); // for debug
+        // console.log(this.pathPoints); // for debug
         this.pointsToUse = [this.game.user.position, this.pathPoints[0]];
         const curve = new THREE.CatmullRomCurve3(this.pointsToUse);
 
@@ -98,14 +104,14 @@ class CQBHandler{
 		  if (this.missionFinished) {
 			
 			if (this.currentWaypointIndex == this.pathPoints.length - 1) {
-			  console.log("你已经到达最后一个目标点，引导线取消"); // for debug
+			//   console.log("你已经到达最后一个目标点，引导线取消"); // for debug
 			  this.pathLine.geometry.dispose();
 			  this.game.scene.remove(this.pathLine);
 			  this.pathFinished = true;
 			  return;
 			}
 			this.currentWaypointIndex++;
-			console.log("下一个目标在数组中的序号" + this.currentWaypointIndex); // for debug
+			// console.log("下一个目标在数组中的序号" + this.currentWaypointIndex); // for debug
 			this.pointsToUse = [this.user.position, this.pathPoints[this.currentWaypointIndex]];
 			// 线的绘制更新在update()中进行
 		  }
@@ -118,6 +124,10 @@ class CQBHandler{
             // press space to continue
             this.CQBlock = false;
             this.read = true;
+            if(this.sceneEnd) {
+                this.canExit = true;
+                this.game.sceneEnd = true;
+            }
         }
     }
 
@@ -128,19 +138,17 @@ class CQBHandler{
 
     // 可视化任务点
     showPoints(){
-        const geometry = new THREE.CircleGeometry( 0.5, 32 ); 
-        const color = new THREE.Color(0x00b894); // 定义颜色为柔和绿色
-        const material = new THREE.MeshBasicMaterial({
-        color: color, // 设置材质颜色
-        opacity: 0.5,
-        });
+        const geometry = new THREE.PlaneGeometry( 1, 1 );
+        const texture = new THREE.TextureLoader().load( this.game.assetsPath + 'missionpoint.png' );
+        const material = new THREE.MeshBasicMaterial( { map: texture , side:THREE.DoubleSide, transparent: true} );
 
-          
         this.positions = Object.values(this.config.missionPoints[this.scene][this.round]);
         this.positions.forEach(point =>{
             let dot = new THREE.Mesh( geometry, material );
             dot.position.copy(point);
+            dot.position.y += 0.1;
             dot.rotateX(-Math.PI/2);
+            dot.rotateZ(-Math.PI/2);
             this.game.scene.add( dot ); 
             this.dots.push(dot);
             // 初始设置当前轮次所有点不可见
@@ -180,6 +188,8 @@ class CQBHandler{
             // 整个场景结束
             this.sceneEnd = true;
             // console.log('end');
+            this.sceneTime = this.clock.getElapsedTime();
+            this.clock.stop();
         }
     }
 
@@ -202,6 +212,14 @@ class CQBHandler{
             const text = this.config.text[this.scene][this.round][this.pointIndex];
             this.CQBlock = true;
             this.promptDiv.textContent = text;
+
+            // sceneStart == false 说明还没有开始计时，开始计时
+            if(this.sceneStart == false){
+                this.sceneStart = true;
+                this.clock = new THREE.Clock();
+                this.clock.start();
+                // console.log('start');
+            }
         }
         else if(this.sceneEnd && this.positions.length == 0 && !this.CQBlock){
             // 整个场景的教学都结束，显示结束文字
@@ -211,13 +229,6 @@ class CQBHandler{
             this.read = false;
             this.promptDiv.textContent = text;
             this.positions.push(1);
-
-            if(this.result!==undefined){
-                this.result({
-                    time:10,
-                    hitrate:90.23
-                });
-            }
         }
         else if(!this.CQBlock && !this.missionFinished && this.read && !this.sceneEnd){
             // 读取完任务点文字提示后，等待击杀对应目标

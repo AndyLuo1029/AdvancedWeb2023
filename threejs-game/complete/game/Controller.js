@@ -109,6 +109,11 @@ class Controller{
             case 86:
                 this.keys.v =true;
                 this.perspective = (this.perspective ==3)? 1:3;
+                
+                // for debug, press v to quit the game immediately
+                // this.game.sceneEnd = true;
+                // this.game.CQBHandler.canExit = true;
+
                 break;
 
         }
