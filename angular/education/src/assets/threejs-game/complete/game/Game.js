@@ -2,31 +2,60 @@ import * as THREE from '../../libs/three137/three.module.js';
 import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
 import { RGBELoader } from '../../libs/three137/RGBELoader.js';
 import { NPCHandler } from './NPCHandler.js';
+// import { NPCHandler } from '../NPCHandler.js';
 import { LoadingBar } from '../../libs/LoadingBar.js';
 import { Pathfinding } from '../../libs/pathfinding/Pathfinding.js';
 import { User } from './User.js';
+import {UserLocal} from './UserLocal.js'
 import { Controller } from './Controller.js';
-import {BulletHandler} from './BulletHandler.js';
+import { BulletHandler } from './BulletHandler.js';
+import { FrontSight} from './frontSight.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { CQBHandler } from './CQBHandler.js';
+
 
 class Game{
-	constructor(gameFinish){
+	constructor(map, avatar, socket, result){
+		this.socket = socket;
+		// 根据前端传入的选择，切换场景
+		this.scenes = [
+			'scene1',
+			'scene2',
+			'multiplayer'
+		];
+		this.sceneIndex = map == undefined ? 0 : map;
+		this.currentScene = this.scenes[this.sceneIndex];
+
+		this.startPosition = [
+			[21, 0.186, 0],
+			[-11.78609367674414, 0.13426758701522457, -23.89975828918036],
+			[-6, 0.021, -2]
+		];
+
+		this.cameraStartPosition = [
+			[21, 1.8, 5],
+			[-11.78609367674414, 1.8, -18.89975828918036],
+			[-6, 1.8, 3]
+		];
+
+		// 0-2: eve, 3-5: swat
+		this.userRole = avatar == undefined ? 0 : avatar;
+
+		this.result = result;
+
 		// 创建场景容器
-		this.gameFinish = gameFinish;
-		// gameFinish();
 		const container = document.getElementById( 'three' );
-		// document.body.appendChild( container );
 
 		this.clock = new THREE.Clock(); // 用于计算时间差
 
         this.loadingBar = new LoadingBar(); // 加载状态界面
         this.loadingBar.visible = false; // 初始不可见
 
-		this.assetsPath = './assets/threejs-game/assets/'; // 资源路径
-        
+		// this.assetsPath = '../../assets/'; // 资源路径
+        this.assetsPath = './assets/threejs-game/assets/';
 		// 创建相机，并设置位置和旋转角度
-		this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 500 );
-		this.camera.position.set( -10.6, 1.6, -3.5 );
-		this.camera.rotation.y = -Math.PI*0.6;
+		this.camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 500 );
+		this.camera.position.set(this.cameraStartPosition[this.sceneIndex][0],this.cameraStartPosition[this.sceneIndex][1],this.cameraStartPosition[this.sceneIndex][2]);
 
 		let col = 0x201510;
 		this.scene = new THREE.Scene(); // 创建场景
@@ -61,9 +90,22 @@ class Game{
         this.renderer.outputEncoding = THREE.sRGBEncoding; // 设置颜色编码格式
 		container.appendChild( this.renderer.domElement );
 
+		// add text renderer
+		this.labelRenderer = new CSS2DRenderer();
+		this.labelRenderer.setSize( window.innerWidth, window.innerHeight );
+		this.labelRenderer.domElement.style.position = 'absolute';
+		this.labelRenderer.domElement.style.top = '0px';
+		container.appendChild( this.labelRenderer.domElement );
+
         this.setEnvironment(); // 设置环境贴图
 
 		this.load(); // 加载模型和角色
+
+		// add frontSight to camera
+		const frontSight = new FrontSight(THREE);
+		this.camera.add(frontSight.frontSight);
+		this.camera.add(frontSight.frontSightRing);
+		this.scene.add(this.camera); // 将相机添加到场景中
 
 		this.raycaster = new THREE.Raycaster(); // 创建射线投射器
 		this.tmpVec = new THREE.Vector3(); // 创建临时向量
@@ -141,10 +183,11 @@ class Game{
 	}
 	
 	// 在窗口大小发生变化时被调用，用于更新渲染器和相机的参数以适应新的大小
-    resize = () => {
+    resize=()=>{
         this.camera.aspect = window.innerWidth / window.innerHeight;
     	this.camera.updateProjectionMatrix();
     	this.renderer.setSize( window.innerWidth, window.innerHeight ); 
+		this.labelRenderer.setSize(window.innerWidth, window.innerHeight );
     }
     
 	// 用于加载环境贴图，并设置场景的环境光照和背景色。
@@ -168,13 +211,66 @@ class Game{
 		err => {
             console.error( err.message );
         } );
+
+		// add text prompt
+		this.clickDiv = document.createElement( 'div' );
+		this.clickDiv.className = 'label';
+		this.clickDiv.textContent = 'Click to Start';
+		this.clickDiv.style.backgroundColor = 'rgba(61, 61, 61,0.75)';
+		this.clickDiv.style.height = '100%';
+		this.clickDiv.style.width = '100%';
+		this.clickDiv.style.textAlign = 'center';
+		this.clickDiv.style.lineHeight = window.innerHeight + 'px';
+		this.clickDiv.style.color = '#ffffff';
+		this.clickDiv.style.fontSize = '60px';
+
+		this.clickLabel = new CSS2DObject( this.clickDiv );
+		this.camera.add( this.clickLabel );
+		this.clickLabel.position.set( 0, 0, -2 );
+		this.clickLabel.layers.set( 0 );
+
+
+		let texture1, texture2, pos1, pos2;
+		
+		// 添加场景1的图片和教学介绍文字
+		if(this.sceneIndex == 0){
+			texture1 = new THREE.TextureLoader().load( this.assetsPath + 'scene1.png' );
+			texture2 = new THREE.TextureLoader().load( this.assetsPath + 'scene1Edu.png');
+			pos1 = [18.00347353232029, 1.527311133120945, 1.1232664854307182]; // 图片位置
+			pos2 = [18.00347353232029, 1.527311133120945, -2.1232664854307182]; // 教学位置
+		}
+		// 添加场景2的图片和教学介绍文字
+		else if(this.sceneIndex == 1){
+			texture1 = new THREE.TextureLoader().load( this.assetsPath + 'scene2.png' );
+			texture2 = new THREE.TextureLoader().load( this.assetsPath + 'scene2Edu.png');
+			pos1 = [-16.974691053065559, 1.8527311133120945, -26.681701504279168];
+			pos2 = [-13.474691053065559, 1.8527311133120945, -26.681701504279168];
+		}
+
+		if(this.sceneIndex != 2){
+			// 添加图片和教学介绍文字
+			const geometry = new THREE.PlaneGeometry( 3, 3 );
+			const material1 = new THREE.MeshBasicMaterial( { map: texture1 } );
+			const material2 = new THREE.MeshBasicMaterial( { map: texture2 } );
+			const plane1 = new THREE.Mesh( geometry, material1 );
+			const plane2 = new THREE.Mesh( geometry, material2 );
+			plane1.position.set( pos1[0], pos1[1], pos1[2] );
+			plane2.position.set( pos2[0], pos2[1], pos2[2] );
+			if( this.sceneIndex == 0){
+				plane1.rotateY( Math.PI / 2 );
+				plane2.rotateY( Math.PI / 2 );
+			}
+			this.scene.add( plane1 );
+			this.scene.add( plane2 );
+		}
     }
     
 	// 加载游戏资源，包括环境、NPC 和用户等。
 	load(){
         this.loadEnvironment();
 		this.npcHandler = new NPCHandler(this);
-		this.user = new User(this, new THREE.Vector3( -5.97, 0.021, -1.49), 1.57);
+		this.user = new UserLocal(this.socket, this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
+		// this.user = new User(this, new THREE.Vector3(this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]) , 1*Math.PI);
     }
 
 	// 加载环境模型及其子对象，并设置导航网格和阴影等属性。
@@ -263,16 +359,18 @@ class Game{
 	startRendering(){
 		if (this.npcHandler.ready && this.user.ready && this.bulletHandler == undefined){
 			this.controller = new Controller(this);
+			this.controller.connect();
 			this.bulletHandler = new BulletHandler(this);
+			if(this.sceneIndex != 2) this.CQBHandler = new CQBHandler(this);
 			this.renderer.setAnimationLoop( this.render.bind(this) );
 		}
 	}
-    stopRendering() {
+	stopRendering() {
 		window.removeEventListener( 'resize', this.resize );
-		this.renderer.setAnimationLoop(null );
+		this.renderer.setAnimationLoop(null);
 		this.gameFinish = null
 		this.user = null
-		this.controller.clear();
+		// this.controller.clear();
 		this.scene.traverse((child) => {
 			if (child.material) {
 			  child.material.dispose();
@@ -282,38 +380,43 @@ class Game{
 			}
 			child = null;
 		});
-	   
-		  // 场景中的参数释放清理或者置空等
-		  this.renderer.forceContextLoss();
-		  this.renderer.dispose();
-		  this.scene.clear();
-		  this.flows = [];
-		  this.scene = null;
-		  this.camera = null;
-		  this.controls = null;
-
-		  this.renderer = null;
+	
+		// 场景中的参数释放清理或者置空等
+		this.renderer.forceContextLoss();
+		this.renderer.dispose();
+		this.scene.clear();
+		this.flows = [];
+		this.scene = null;
+		this.camera = null;
+		this.controls = null;
+		this.renderer = null;
 	}
-	/* 该函数在每一帧被调用，用于更新游戏中的各个对象并进行渲染。
+	/* 
+	该函数在每一帧被调用，用于更新游戏中的各个对象并进行渲染。
 	具体而言，它会计算时间差值 dt，并分别调用 NPC、用户、控制器和子弹管理器的 update 函数来更新它们的状态。
 	然后，它会调用渲染器的 render 函数，将场景渲染到屏幕上。
 	*/
 	render() {
 		const dt = this.clock.getDelta();
-
-		if (this.fans !== undefined){
-            this.fans.forEach(fan => {
-                fan.rotateY(dt); 
-            });
-        }
-
-		if (this.npcHandler !== undefined ) this.npcHandler.update(dt);
-		if (this.user !== undefined ) this.user.update(dt);
-		if (this.controller !== undefined) this.controller.update(dt);
-		if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
-
-        this.renderer.render( this.scene, this.camera );
-
+		if(this.controller === undefined || this.controller.isLocked === false){
+			// print hints
+			this.clickLabel.visible = true;
+		}
+		else if(this.CQBHandler !== undefined && this.CQBHandler.CQBlock){
+			// print CQB hints
+			if(this.CQBHandler.prompt) this.CQBHandler.prompt.visible = true;
+		}
+		else{
+			if(this.CQBHandler !== undefined && this.CQBHandler.prompt) this.CQBHandler.prompt.visible = false;
+			this.clickLabel.visible = false;
+			if (this.controller !== undefined) this.controller.update(dt);	
+			if (this.user !== undefined ) this.user.update(dt);
+			if (this.npcHandler !== undefined ) this.npcHandler.update(dt);
+			if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
+		}
+		if (this.CQBHandler !== undefined) this.CQBHandler.update(dt);
+		this.renderer.render( this.scene, this.camera );
+		this.labelRenderer.render(this.scene, this.camera);
     }
 }
 

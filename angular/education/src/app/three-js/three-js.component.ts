@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, NgZone, OnInit, SimpleChange, SimpleChanges } from '@angular/core';
+import { Component, HostListener, Input, NgZone, OnInit, SimpleChange, SimpleChanges, ViewEncapsulation } from '@angular/core';
 import { Game } from './../../assets/threejs-game/complete/game/Game.js';
 import { SocketService } from '../service/socket.service';
 import { Router } from '@angular/router';
@@ -11,7 +11,8 @@ import { BackErrorHandler } from '../http-interceptors/back-error-handler';
   selector: 'app-three-js',
   templateUrl: './three-js.component.html',
   styleUrls: ['./three-js.component.css'],
-  providers: [{provide: SocketService}, {provide: BackErrorHandler}]
+  providers: [{provide: SocketService}, {provide: BackErrorHandler}],
+  encapsulation: ViewEncapsulation.None,
 })
 // @HostListener('window:beforeunload', ['$event'])
 export class ThreeJsComponent implements OnInit{
@@ -19,6 +20,8 @@ export class ThreeJsComponent implements OnInit{
 	onBeforeUnload() {
 		return false;
 	}
+	private map:number;
+	private skin:number;
 	public finish:number;
 	private socket: any;
 	private game: any;
@@ -28,15 +31,18 @@ export class ThreeJsComponent implements OnInit{
 		private ngZone:NgZone, 
 		private wsService: SocketService, 
 		private router: Router,
-		private handler:BackErrorHandler) {
-		this.finish = 0;
-		// this.socket = wsService.connect("localhost:2002");
+		private handler:BackErrorHandler) 
+		{
+			this.finish = 0;
+			this.map = Global.map_choice;
+			this.skin = Global.skin_choice;
+			this.socket = wsService.connect("localhost:8084");
 		// console.log(this.socket)
 		// this.socket.on('setId', function(data:any){
 		// 	console.log(data)
 		// });
 		// this.sendMessage();
-	}
+		}
     // loadScript(url: string) {
 	// 	const body = <HTMLDivElement> document.body;
 	// 	const script = document.createElement('script');
@@ -88,13 +94,13 @@ export class ThreeJsComponent implements OnInit{
 		// 	const game = new Game(this.socket);
 		// });
 		// console.log("here")
-		this.game = new Game((result:any)=> {
+		this.game = new Game(this.map, this.skin, this.socket, (result:any)=> {
 			// console.log(result)
 			this.finish = 1;
 			this.updateData(result.time, result.hitrate);
 			this.router.navigate(['/home'],{ replaceUrl: true });
 		}); 
-	
+
 	}
 }
 

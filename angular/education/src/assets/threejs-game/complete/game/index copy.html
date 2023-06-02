@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!--favicon -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="apple-touch-icon" sizes="180x180" href="../../css/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../css/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../../css/favicon/favicon-16x16.png">
+  <link rel="manifest" href="../../css/favicon/site.webmanifest">
+  <link rel="mask-icon" href="../../css/favicon/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+    
+  <style>
+      body{
+          margin: 0;
+      }
+      .chat_container{
+          display:flex;
+          flex-direction: column;
+          height:150px;
+          overflow-y:scroll;
+      }
+      .message_container{
+          display:flex;
+          align-items:center;
+          align-self:flex-end;
+          margin:10px;
+      }
+      .message{
+          background-color:#eee;
+          font-size: 8px;
+          padding:10px;
+          border-radius: 10px;
+          width:200px;
+          overflow-wrap:break-word;
+      }
+  </style>
+
+  <title>CQB Web3D Training</title>
+
+  <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+
+    <script type="importmap">
+    {
+        "imports": {
+        "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/"
+        }
+    }
+    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src= "../../libs/three137/three.module.js"></script>
+    <script src= "../../libs/three137/GLTFLoader.js"></script>
+    <script src="../../libs/three137/DRACOLoader.js"></script>
+    <script src="../../libs/Toon3d.js"></script>
+</head>
+
+<body>
+
+
+    <script type="module">
+        import { Game } from './Game.js';
+
+        let f;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const game = new Game(0,5,f);
+            window.game = game;
+        });
+    </script>
+    <div id = "container" style="position:fixed;bottom:0;">
+        <div type ='text' id = "pre_message" class = "chat_container"></div>
+        <input type ='text' id = "message" width="200px">
+    </div>
+    <script>
+        var message = document.getElementById('message');
+        message.setAttribute('disabled','disabled');
+        document.addEventListener('keypress',function(e){
+            if(e.key ==='Enter'&&message.disabled){
+                message.removeAttribute('disabled')
+                message.focus();
+            }
+            else if (e.key ==='Enter'&&!message.disabled){
+                message.value="";
+                message.setAttribute('disabled','disabled')
+            }
+
+        })
+    </script>
+</body>
+
+
+</html>

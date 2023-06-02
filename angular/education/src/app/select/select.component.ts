@@ -389,7 +389,7 @@ class User{
 					scale = 1.2;
 				}
                 this.object.scale.set(scale, scale, scale);
-				console.log(this.object)
+				// console.log(this.object)
                 this.object.traverse( (child: { isMesh: any; castShadow: boolean; name: string | string[]; material: any }) => {
                     if ( child.isMesh){
 						

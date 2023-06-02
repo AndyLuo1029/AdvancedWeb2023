@@ -1,10 +1,31 @@
 import * as THREE from '../../libs/three137/three.module.js';
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 class NPC{
 	constructor(options){
 		const fps = options.fps || 30; //default fps
-		
-		this.name = options.name | 'NPC';
+		this.name = options.name == undefined ? 'NPC' : options.name;
+		this.hp = 3;
+		// this.id = parseInt(Math.random()*(99-10+1)+10,10);
+
+		// add name to npc when name is not default
+		if (this.name != 'NPC'){
+			this.nameDiv = document.createElement('div');
+			this.nameDiv.textContent = this.name;
+			this.nameDiv.style.color = 'rgb(255, 0, 0)';
+			this.nameDiv.style.fontSize = '50px';
+			this.nameDiv.style.textAlign = 'center';
+			this.nameDiv.style.width = '100px';
+			this.nameDiv.style.height = '100px';
+			this.nameDiv.style.lineHeight = '100px';
+			this.nameObject = new CSS2DObject(this.nameDiv);
+			options.object.add(this.nameObject);
+			this.nameObject.position.set(0, 2, 0);
+			this.nameObject.layers.set(0);
+		}
+
+		this.blink = false;
+		this.dt = 0;
 		
 		this.animations = {};	
 		
@@ -24,7 +45,7 @@ class NPC{
         this.speed = options.speed;
         this.app = options.app;
 
-		this.visible = options.visible !== undefined ? options.visible : false; // 设置默认不可见
+		this.visible = options.visible !== undefined ? options.visible : true; // 设置默认不可见
 
         
         if (options.app.pathfinder){
@@ -166,6 +187,10 @@ class NPC{
 	}
 
 	update(dt){
+		if(this.nameObject != undefined){
+			if(this.dead) this.nameObject.visible = false;
+			else this.nameObject.visible = true;
+		}
 		const speed = this.speed;
 		const player = this.object;
 		

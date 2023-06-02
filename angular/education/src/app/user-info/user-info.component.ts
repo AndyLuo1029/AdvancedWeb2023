@@ -80,7 +80,7 @@ export class UserInfoComponent {
                 position: String(parseInt(i)+1),
                 hitrate: response[i].hitrate,
                 time:response[i].time,
-                date:new Date(response[i].date).toJSON().replace(/T|Z|(\.\d{3})/g," ").trim()
+                date:new Date(response[i].date).toLocaleString().replace(/T|Z|(\.\d{3})/g," ").trim()
               })
               this.time.push(response[i].time);
             }

@@ -41,6 +41,7 @@
 .scene-containers {
     height: 400px;
     width: 270px;
+    color: rgb(88, 134, 174);
 }
 #scene-container {
     height: 400px;

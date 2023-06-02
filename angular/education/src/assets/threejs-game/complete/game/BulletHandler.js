@@ -7,6 +7,7 @@ import {
         Quaternion
     } from '../../libs/three137/three.module.js';
 import { sphereIntersectsCylinder } from '../../libs/Collisions.js';
+import * as THREE from '../../libs/three137/three.module.js';
 
 /*
 子弹处理类 BulletHandler，用于处理游戏中的子弹对象。
@@ -31,7 +32,7 @@ class BulletHandler{
         this.scene = game.scene;
         const geometry = new CylinderGeometry(0.01, 0.01, 0.08);
         geometry.rotateX( Math.PI/2 );
-        geometry.rotateY( Math.PI/2 );
+        // geometry.rotateY( Math.PI/2 );
         const material = new MeshBasicMaterial();
         this.bullet = new Mesh(geometry, material);
 
@@ -40,11 +41,21 @@ class BulletHandler{
         this.npcs = this.game.npcHandler.npcs;
         
         this.user = this.game.user;
+        this.haveBlink = 0;
 
         this.forward = new Vector3( 0, 0, -1 );
         this.xAxis = new Vector3( 1, 0, 0 );
         this.tmpVec3 = new Vector3();
         this.tmpQuat = new Quaternion();
+        const audioLoader = new THREE.AudioLoader();
+		this.audioLoader = audioLoader;
+        const listener = new THREE.AudioListener();
+        this.listener = listener;
+        this.raycaster = new THREE.Raycaster(); // 创建射线投射器
+        this.rVec3 = new THREE.Vector3(); // raycaster vec
+        this.rPosition = new THREE.Vector3(); // raycaster pos
+        this.factoryIntersects = [];
+        this.fI = 0;
     }
 
     createBullet( pos, quat, user=false){
@@ -54,24 +65,48 @@ class BulletHandler{
         bullet.userData.targetType = (user) ? 1 : 2;
         bullet.userData.distance = 0;
         this.scene.add(bullet);
+        bullet.visible = true;
         this.bullets.push(bullet);
+
+        
+        // add audio
+        const listener = this.listener;
+        this.audioLoader.load( `${this.game.assetsPath}weapons/shot.wav`, function ( buffer ) {
+            const audio = new THREE.PositionalAudio( listener );
+            audio.setBuffer( buffer );
+            audio.play();
+        } );
+        
     }
 
     update(dt){
         this.bullets.forEach( bullet => {
             let hit = false;
-            const p1 = bullet.position.clone();
             let target;
-            const dist = dt * 15;
+            const p1 = bullet.position.clone();
+            const dist = dt * 30;
             //Move bullet to next position
-            bullet.translateX(dist);
+            bullet.translateZ(-dist);
             const p3 = bullet.position.clone();
+            // p3 is the next position of the bullet, check whether there is factrory children in the way
+            // create a raycaster from bullet and calculate whether intersect with factory children
+            this.rPosition = bullet.position.clone();
+            this.rVec3 = p3.clone().sub(p1);
+
+            this.raycaster.set(this.rPosition, this.rVec3);
+
+            // make the raycaster visible
+            // this.game.scene.add(new THREE.ArrowHelper(this.raycaster.ray.direction, this.raycaster.ray.origin, 10, 0xff0000) );
+
+            // 穿小模不穿大模
+            // if won't intersect factory children, then the bullet is valid, goto further check
             bullet.position.copy(p1);
             const iterations = 1;
             const p = this.tmpVec3;
-
+        
             for(let i=1; i<=iterations; i++){
                 p.lerpVectors(p1, p3, i/iterations);
+                // console.log(bullet.userData);
                 if (bullet.userData.targetType==1){
                     const p2 = this.user.position.clone();
                     p2.y += 1.2;
@@ -92,16 +127,39 @@ class BulletHandler{
                 }
                 if (hit) break;
             }
-
+            
             if (hit){
-                target.action = 'shot';
+                target.hp -= 1;
                 bullet.userData.remove = true;
+                console.log([target.name,target.hp]);
+                this.blink(target);
+                if(target.hp<=0) target.action = 'shot';
             }else{
-                bullet.translateX(dist);
-                bullet.rotateX(dt * 0.3);
-                bullet.userData.distance += dist;
-                bullet.userData.remove = (bullet.userData.distance > 50);
+                // when not hit, get the factory children intersect distance
+                this.factoryIntersects = this.raycaster.intersectObjects(this.game.factory.children, true);        
+                if (this.factoryIntersects.length>0){
+                    // get the first intersect object
+                    this.fI = this.factoryIntersects[0].distance;
+                }
+                else{
+                    this.fI = Infinity;
+                }
+
+                if( this.fI > dist ){
+                    bullet.translateZ(-dist);
+                    // bullet.rotateX(-dt * 0.03);
+                    bullet.userData.distance += dist;
+                    bullet.userData.remove = (bullet.userData.distance > 50);
+                }
+                else {
+                    // else if intersect factory children before npcs, then the bullet is invalid, remove it
+                    bullet.userData.remove = true;
+                }
             }
+
+            // reset fI, factoryIntersects
+            this.fI = 0;
+            this.factoryIntersects = [];           
         });
 
         let found = false;
@@ -118,8 +176,38 @@ class BulletHandler{
                 if (index!==-1) this.bullets.splice(index, 1);
                 this.scene.remove(remove);
             }
-            
         }while(found);
+
+        // reset material color after blink
+        if(this.haveBlink > 0){
+            this.npcs.some( npc => {
+                if (npc.blink){
+                    npc.dt += dt;
+                    if(npc.dt > 0.2){
+                        npc.object.traverse(o => {
+                            if (o.isMesh) {
+                                o.material.color.set(0xffffff);                      
+                            }
+                        });
+                        npc.blink = false;
+                        this.haveBlink -= 1;
+                        npc.dt = 0;
+                    }
+                }
+            })
+        }
+        // if(this.bullets.length>0) console.log(this.bullets[0].userdata);
+        // console.log(this.bullets.length);
+    }
+
+    blink(target){
+        target.object.traverse(o => {
+            if (o.isMesh) {
+                o.material.color.set(0xf75454);                      
+            }
+          });
+        target.blink = true;
+        this.haveBlink += 1;
     }
 }
 
