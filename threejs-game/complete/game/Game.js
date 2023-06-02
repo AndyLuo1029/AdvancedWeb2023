@@ -503,7 +503,7 @@ class Game{
 					if (r_user===undefined){
 						//console.log("Init")
 						//Initialise player
-						let user = new User( game, new Vector3(data.x,data.y,data.z),data.heading,data.id )
+						let user = new User( game, new Vector3(data.x,data.y,data.z),1*Math.PI,data.id )
 						game.initialisingPlayers.push(user);
 					}else{
 						//Player exists

@@ -106,7 +106,7 @@ class UserLocal extends User{
                 x: this.root.position.x,
                 y: this.root.position.y,
                 z: this.root.position.z,
-                h: this.root.rotation.x,
+                rotate: {x:this.root.rotation.x,y:this.root.rotation.y,z:this.root.rotation.z},
                 //pb: this.object.rotation.x,
                 action: this.actionName
             })
@@ -114,6 +114,7 @@ class UserLocal extends User{
     }
     update(dt){
         super.update(dt);
+        //onsole.log(this.root.rotation)
         this.updateSocket();
 
     }

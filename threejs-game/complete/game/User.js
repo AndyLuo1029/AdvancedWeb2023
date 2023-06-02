@@ -238,9 +238,12 @@ class User{
 	}
 
     set action(name){
-		if (this.actionName == name.toLowerCase()) return;    
-		
-		//console.log(`User action:${name}`);
+		this.setAction(name);
+	}
+	setAction(name){
+		if (this.actionName == name.toLowerCase()) return;
+
+		console.log(`User action:${this.id}${name}`);
 		if(name.toLowerCase()==="run"){
 			this.isRun =true;
 		}
@@ -281,7 +284,7 @@ class User{
 				else if(name == 'firing'){
 					q = this.rifleDirection['fpsFiring'];
 					// console.log("fpsFiring");
-				}	
+				}
 			}
 			else{
 				q = this.rifleDirection[name.toLowerCase()];
@@ -336,16 +339,28 @@ class User{
 			this.healthPoint = 100;
 		}
 
-		if (this.game.remoteData.length>0&&this.game.user!==this){
+		if (this.game.remoteData.length>0&&this.game.user!==this&&this.ready){
 			//let found = false;
 			for(let data of this.game.remoteData){
 				if (data.id != this.id) continue;
 				//Found the player
 				//console.log(data.id)
+				//const dy =this.root.rotation.y-data.heading;
 				this.root.position.set( data.x, data.y, data.z );
-				//const euler = new THREE.Euler(data.pb, data.heading, data.pb);
+
+				console.log(data.rotate)
+				//this.root.rotation = data.rotate
+				// console.log(data.heading)
+				// console.log(dy)
+				//this.root.rotation.y = data.heading;
+				//console.log(this.root)
+				 this.root.rotation.set( data.rotate.x, data.rotate.y, data.rotate.z, 'XYZ' );
+				//this.root.rotateOnWorldAxis(new Vector3(0, 1, 0), dy);
+				//const euler = new THREE.Euler(0, data.heading, 0);
 				//this.object.quaternion.setFromEuler( euler );
-				//this.action = data.action;
+				//this.actionName = data.action;
+				this.setAction(data.action);
+				//console.log(this.actionName)
 				//found = true;
 			}
 		}

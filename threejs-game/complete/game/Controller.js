@@ -266,7 +266,8 @@ class Controller{
         if(this.rotate.right!==0){
             // const theta = dt * (this.rotate.right - 0.1);
             // this.target.rotateY(theta);
-            this.target.rotateOnWorldAxis(this.yAxis, this.rotate.right);
+             this.target.rotateOnWorldAxis(this.yAxis, this.rotate.right);
+            //this.target.rotation.y -= this.rotate.right
             this.rotate.right = 0;
             playerMoved = true;
         }

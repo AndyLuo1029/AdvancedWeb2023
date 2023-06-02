@@ -41,8 +41,7 @@ io.sockets.on('connection', function(socket){
         socket.userData.x = data.x;
         socket.userData.y = data.y;
         socket.userData.z = data.z;
-        socket.userData.heading = data.h;
-        //socket.userData.pb = data.pb,
+        socket.userData.rotate = data.rotate;
         socket.userData.action = data.action;
     });
     //var time =0;
@@ -77,7 +76,7 @@ setInterval(function(){
                 x: socket.userData.x,
                 y: socket.userData.y,
                 z: socket.userData.z,
-                heading: socket.userData.heading,
+                rotate: socket.userData.rotate,
                 //pb: socket.userData.pb,
                 action: socket.userData.action
             });
