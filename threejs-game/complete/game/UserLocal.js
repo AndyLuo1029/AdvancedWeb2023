@@ -24,7 +24,7 @@ class UserLocal extends User{
         // const socket = game.socket;
         socket.on('setId', function(data){
             user.id = data.id;
-            console.log(user.id);
+            // console.log(user.id);
         });
         socket.on('remoteData', function(data){
             //console.log(data);
@@ -53,7 +53,7 @@ class UserLocal extends User{
         // });
 
         socket.on('chat message', function(data){
-            console.log(data.id,data.message)
+            // console.log(data.id,data.message)
 
             let pre_message=document.getElementById("pre_message")
             let message_container = document.createElement("div")
@@ -61,7 +61,7 @@ class UserLocal extends User{
             let messageElement = document.createElement("div")
             messageElement.className = "message";
             messageElement.innerText =`${data.id}:${data.message}`;
-            console.log(messageElement,message_container,pre_message)
+            // console.log(messageElement,message_container,pre_message)
             message_container.appendChild(messageElement);
             pre_message.appendChild(message_container);
             pre_message.scrollTop =pre_message.scrollHeight;
