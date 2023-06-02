@@ -185,8 +185,10 @@ class CQBHandler{
             this.positions.push(1);
 
             if(this.result!==undefined){
-                this.result.time = 10;
-                this.result.hitrate = 0.8273;
+                this.result({
+                    time:10,
+                    hitrate:90.23
+                });
             }
         }
         else if(!this.CQBlock && !this.missionFinished && this.read && !this.sceneEnd){

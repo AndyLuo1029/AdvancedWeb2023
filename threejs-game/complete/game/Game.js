@@ -15,7 +15,7 @@ import { CQBHandler } from './CQBHandler.js';
 
 
 class Game{
-	constructor(map, avatar, result){
+	constructor(map, avatar, socket, result){
 		// 根据前端传入的选择，切换场景
 		this.scenes = [
 			'scene1',
@@ -24,6 +24,7 @@ class Game{
 		];
 		this.sceneIndex = map == undefined ? 0 : map;
 		this.currentScene = this.scenes[this.sceneIndex];
+		this.socket = socket;
 
 		this.startPosition = [
 			[21, 0.186, 0],
