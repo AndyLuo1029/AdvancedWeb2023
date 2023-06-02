@@ -348,13 +348,14 @@ class User{
 				//const dy =this.root.rotation.y-data.heading;
 				this.root.position.set( data.x, data.y, data.z );
 
-				console.log(data.rotate)
+				//console.log(data.rotate)
 				//this.root.rotation = data.rotate
 				// console.log(data.heading)
 				// console.log(dy)
 				//this.root.rotation.y = data.heading;
 				//console.log(this.root)
-				 this.root.rotation.set( data.rotate.x, data.rotate.y, data.rotate.z, 'XYZ' );
+				if(data.hasOwnProperty('rotate')&&data.rotate.hasOwnProperty('x'))
+				 	this.root.rotation.set( data.rotate.x, data.rotate.y, data.rotate.z, 'XYZ' );
 				//this.root.rotateOnWorldAxis(new Vector3(0, 1, 0), dy);
 				//const euler = new THREE.Euler(0, data.heading, 0);
 				//this.object.quaternion.setFromEuler( euler );
