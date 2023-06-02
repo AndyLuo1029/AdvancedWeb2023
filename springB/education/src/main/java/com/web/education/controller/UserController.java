@@ -1,11 +1,14 @@
 package com.web.education.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.web.education.mapper.UserMapper;
 import com.web.education.mybatis.SqlSessionLoader;
+import com.web.education.pojo.Cqb;
 import com.web.education.pojo.User;
 import com.web.education.request.UserLoginRequest;
 import com.web.education.request.UserRegisterRequest;
 import com.web.education.response.ErrorResponse;
+import com.web.education.response.UserInfoResponse;
 import com.web.education.response.UserLoginResponse;
 import com.web.education.response.UserRegisterResponse;
 import com.web.education.util.JwtUtil;
@@ -64,5 +67,21 @@ public class UserController {
         } else {
             return new ErrorResponse("用户名不存在", 400);
         }
+    }
+
+    @CrossOrigin(origins = "*")
+    @PostMapping(value = "/info")
+    public @ResponseBody Object info(@RequestBody String username) throws IOException {
+        QueryWrapper<User> wrapper=new QueryWrapper<>();
+        wrapper.eq("username",username);
+        List<User> userList =uMapper.selectList(wrapper);
+
+        if (userList.size() > 0) {
+            return new UserInfoResponse(userList.get(0).getUsername(), userList.get(0).getEmail());
+        }
+        else {
+            return new ErrorResponse("用户不存在", 401);
+        }
+
     }
 }
