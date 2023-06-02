@@ -25,32 +25,38 @@ class UserLocal extends User{
         socket.on('setId', function(data){
             user.id = data.id;
             console.log(user.id);
+            socket.emit('chat message',{id:user.id,message:`connected`});
         });
         socket.on('remoteData', function(data){
             //console.log(data);
             game.remoteData = data;
         });
-        // socket.on('deletePlayer', function(data){
-        //     const players = game.remotePlayers.filter(function(player){
-        //         if (player.id == data.id){
-        //             return player;
-        //         }
-        //     });
-        //     if (players.length>0){
-        //         let index = game.remotePlayers.indexOf(players[0]);
-        //         if (index!=-1){
-        //             game.remotePlayers.splice( index, 1 );
-        //             game.scene.remove(players[0].object);
-        //         }
-        //     }else{
-        //         index = game.initialisingPlayers.indexOf(data.id);
-        //         if (index!=-1){
-        //             const player = game.initialisingPlayers[index];
-        //             player.deleted = true;
-        //             game.initialisingPlayers.splice(index, 1);
-        //         }
-        //     }
-        // });
+        socket.on('deletePlayer', function(data){
+            const users = game.remoteUsers.filter(function(user){
+                if (user.id == data.id){
+                    return user;
+                }
+            });
+
+            if (users.length>0){
+                let index = game.remoteUsers.indexOf(users[0]);
+                if (index!=-1){
+                    // console.log(index)
+                    // console.log(game.remoteUsers)
+                    game.remoteUsers.splice( index, 1 );
+                    //console.log(game.remoteUsers)
+                    game.scene.remove(users[0].root);
+                    socket.emit('chat message',{id:data.id,message:`disconnected`});
+                }
+            }else{
+                // index = game.initialisingPlayers.indexOf(data.id);
+                // if (index!=-1){
+                //     const player = game.initialisingPlayers[index];
+                //     player.deleted = true;
+                //     game.initialisingPlayers.splice(index, 1);
+                // }
+            }
+        });
 
         socket.on('chat message', function(data){
             console.log(data.id,data.message)
@@ -61,13 +67,13 @@ class UserLocal extends User{
             let messageElement = document.createElement("div")
             messageElement.className = "message";
             messageElement.innerText =`${data.id}:${data.message}`;
-            console.log(messageElement,message_container,pre_message)
+            //console.log(messageElement,message_container,pre_message)
             message_container.appendChild(messageElement);
             pre_message.appendChild(message_container);
             pre_message.scrollTop =pre_message.scrollHeight;
         });
 
-        socket.emit('chat message',{id:this.id,message:`connected`});
+
         // $('#msg-form').submit(function(e){
         //     socket.emit('chat message', { id:game.chatSocketId, message:$('#m').val() });
         //     $('#m').val('');
