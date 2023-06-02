@@ -24,6 +24,7 @@ export class UserInfoComponent {
   @ViewChild(MatTable) userTable!: MatTable<any>;
   constructor(public http:HttpClient, private router: Router, private handler:BackErrorHandler) {}
   ngOnInit() {    
+    this.getUserData();
     this.getBackData();
     // if(!this.empty) {
     //   this.initChart();
@@ -32,6 +33,9 @@ export class UserInfoComponent {
     // }
   }
   public empty = true;
+  public user_empty = true;
+  public email = "";
+  public username = "";
   public options = {};
   dataSource :UserTableElement[] = [];
   displayedColumns: string[] = ['position', 'hitrate', 'time', 'date'];
@@ -50,6 +54,26 @@ export class UserInfoComponent {
     let barChart = ec.init(document.getElementById('userChart'));
     barChart.setOption(this.options);
   }
+  getUserData() {
+    // this.empty = false
+    let url = Global.backURL + "/info";
+    let username = localStorage.getItem("username")
+    const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
+  
+    this.http.post(url, username, httpOptions)
+      .subscribe((response:any) => { 
+
+        console.log(response)
+        if(response.code == 401) {
+          window.alert(response.message);
+        }
+        else {
+          this.user_empty = false;
+          this.username = response.username;
+          this.email = response.email ? response.email : "暂无";
+        }
+      });
+  }
   getBackData() {
     // this.empty = false
     let url = Global.backURL + "/user/data";
@@ -62,7 +86,7 @@ export class UserInfoComponent {
         return this.handler.handleError(error)
       }))
       .subscribe((response:any) => { 
-        console.log(response)
+        // console.log(response)
         if(response.code == 400) {
           window.alert(response.message); 
           this.empty = true
@@ -155,6 +179,6 @@ export class UserInfoComponent {
     let passrate = (success/length*100).toFixed(1)+'(通过率)'
     this.dataSource.push({position: '总计(平均)', hitrate: parseFloat(hitSum.toFixed(3)), time: timeSum.toFixed(2), date:passrate})
     // this.userTable.renderRows()
-    console.log(this.dataSource)
+    // console.log(this.dataSource)
   }
 }

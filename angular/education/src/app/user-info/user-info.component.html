@@ -1,3 +1,13 @@
+<h1> 个人信息 </h1>
+<div class="user-info" *ngIf="!user_empty">
+  <mat-list>
+    <mat-list-item> 用户名: {{username}} </mat-list-item>
+    <mat-divider></mat-divider>
+    <mat-list-item> 邮箱: {{email}} </mat-list-item>
+  </mat-list>
+</div>
+<h1> 学习数据 </h1>
+
 <div class="user-data" *ngIf="!empty">
     <div echarts [options]="options" id ="userChart" >测试图表</div>
     <div class="user-table">
