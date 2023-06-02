@@ -60,9 +60,9 @@ export class SelectComponent implements AfterViewInit {
 		{id:6, selected:false, name:"赛斯Sise", para:5},
 	]
 	maps = [
-		{id:1, selected:false, name:"CQB场景1",para:0},
-		{id:2, selected:false, name:"CQB场景2",para:1},
-		{id:3, selected:false, name:"PVE多人",para:2},
+		{id:1, selected:false, name:"CQB场景1",src:"../../assets/images/maps/scene1_shot.png",para:0},
+		{id:2, selected:false, name:"CQB场景2",src:"../../assets/images/maps/scene2_shot.png",para:1},
+		{id:3, selected:false, name:"PVE多人",src:"../../assets/images/maps/multiplayer.png",para:2},
 	]
 	onSelect(index:any) {
 		for( let ch of this.characters) {
