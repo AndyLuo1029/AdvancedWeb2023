@@ -14,8 +14,8 @@ app.get('/',function(req, res) {
 
 
 io.sockets.on('connection', function(socket){
-    socket.userData = { x:21, y:0.186, z:0, heading:1*Math.PI ,action:"idle"};//Default values;
-
+    socket.userData = { x:-6, y:0.021, z:-2, heading:1*Math.PI ,action:"idle"};//Default values;
+    //-6, 0.021, -2
     console.log(`${socket.id} connected`);
     socket.emit('setId', { id:socket.id });
 

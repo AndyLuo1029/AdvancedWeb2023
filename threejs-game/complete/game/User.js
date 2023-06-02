@@ -335,6 +335,20 @@ class User{
 			// console.log("gameover")
 			this.healthPoint = 100;
 		}
+
+		if (this.game.remoteData.length>0&&this.game.user!==this){
+			//let found = false;
+			for(let data of this.game.remoteData){
+				if (data.id != this.id) continue;
+				//Found the player
+				//console.log(data.id)
+				this.root.position.set( data.x, data.y, data.z );
+				//const euler = new THREE.Euler(data.pb, data.heading, data.pb);
+				//this.object.quaternion.setFromEuler( euler );
+				//this.action = data.action;
+				//found = true;
+			}
+		}
 	}
 }
 

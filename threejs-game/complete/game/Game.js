@@ -481,6 +481,9 @@ class Game{
 		const remoteUsers = [];
 		if (this.remoteData===undefined || this.remoteData.length == 0) return;
 
+		// console.log(this.remoteData);
+		// console.log(this.initialisingPlayers);
+		// console.log(this.remoteUsers);
 		this.remoteData.forEach( function(data){
 			if (game.user.id !== data.id){
 				// //Is this player being initialised?
