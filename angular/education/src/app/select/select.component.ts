@@ -18,16 +18,22 @@ export class SelectComponent implements AfterViewInit {
 
 	constructor(private el: ElementRef, public router:Router) {
 		// this.resources = new Set();
+		for(let i = 0; i < 6; i++) {
+			this.loading[i] = true;
+		}
 	}
 
 	private users:User[] = [];
 	private lastSelect:number = -1;
 	private lastSelectMap:number = -1;
-	
+	public loading:boolean[] = [];
+	private finish = (i:number) => {
+		this.loading[i] = false;
+	}
 	ngAfterViewInit() {    
 		for(let i = 0; i < 6; i++) {
 			// if(i > 1) break;
-			const user = new User(this.characters[i].name, i, this.el);
+			const user = new User(i, this.el,this.finish);
 			this.users.push(user) 
 		}
 
@@ -115,6 +121,7 @@ interface Animations {
 	// 'Pointing Gesture'?: any;
 }
 class User{
+	finish: (i: number) => void;
 	track(resource:any) {
 		if (!resource) {
 			return resource;
@@ -192,9 +199,7 @@ class User{
 	isFiring: boolean;
 	isRun: boolean;
 	ready: boolean;
-	healthPoint: number;
 	object: any;
-	hp: number;
 	rifleDirection!: RifleDirection;
 	bulletTime: any;
 	bulletHandler: undefined;
@@ -215,8 +220,9 @@ class User{
 	skin: string;
 	female: boolean;
 	color: number[];
-    constructor(skin:String, id:number, el:any){
+    constructor(id:number, el:any, finish: (i: number) => void){
 		this.resources = new Set();
+		this.finish = finish;
 		this.color = [0xffffff,0xf57a3d,0x00ccff,0xffffff,0xf57a3d,0x00ccff]
 		this.female = id < 3
 		if(this.female) {
@@ -297,13 +303,12 @@ class User{
 		this.isFiring = false;
 		this.isRun = false;
 		this.ready = false;
-		this.healthPoint = 100;
 		// this.object
         //this.initMouseHandler();
 		if(this.female) {
 			this.initRifleDirection();
 		}
-		this.hp = 5;
+		// this.loading[id] = false;
     }
 
 	initRifleDirection() {
@@ -378,8 +383,7 @@ class User{
 		loader.load(
 			// resource URL
 			this.skin,
-			(			// called when the resource is loaded
-			gltf: { scene: THREE.Object3D<THREE.Event> | THREE.AnimationObjectGroup; animations: any[]; }) => {
+			(gltf: { scene: THREE.Object3D<THREE.Event> | THREE.AnimationObjectGroup; animations: any[]; }) => {
 				this.root.add( gltf.scene );
                 this.object = gltf.scene;
 				this.object.frustumCulled = false;
@@ -442,6 +446,7 @@ class User{
 
 				// this.game.startRendering();
 				this.renderer.setAnimationLoop( this.render.bind(this) );
+				this.finish(this.id);
     		},
 			// called while loading is progressing
 			// xhr => {
