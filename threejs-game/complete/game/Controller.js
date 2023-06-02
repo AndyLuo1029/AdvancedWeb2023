@@ -82,7 +82,8 @@ class Controller{
         if (e.repeat !== undefined) {
             repeat = e.repeat;
         }
-        if(e.keyCode ===13){
+        if(e.keyCode ===13 && this.game.sceneIndex == 2){
+            console.log('in enter');
             this.keys.enter = !this.keys.enter;
             this.user.sendMessage(this.keys.enter);
             return;

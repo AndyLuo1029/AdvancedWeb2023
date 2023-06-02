@@ -14,10 +14,13 @@ app.get('/',function(req, res) {
 
 
 io.sockets.on('connection', function(socket){
-    socket.userData = { x:-6, y:0.021, z:-2, heading:1*Math.PI ,action:"idle"};//Default values;
     //-6, 0.021, -2
     console.log(`${socket.id} connected`);
     socket.emit('setId', { id:socket.id });
+
+    socket.on('init', function(model){
+        socket.userData = { x:-6, y:0.021, z:-2, heading:1*Math.PI ,action:"idle", model:model};//Default values;
+    });
 
     socket.on('disconnect', function(){
         console.log(`${socket.id} disconnected`)
@@ -38,11 +41,13 @@ io.sockets.on('connection', function(socket){
 
     socket.on('update', function(data){
         //console.log(socket.id,data.x,data.y,data.z)
-        socket.userData.x = data.x;
-        socket.userData.y = data.y;
-        socket.userData.z = data.z;
-        socket.userData.rotate = data.rotate;
-        socket.userData.action = data.action;
+        if(socket.userData != undefined){
+            socket.userData.x = data.x;
+            socket.userData.y = data.y;
+            socket.userData.z = data.z;
+            socket.userData.rotate = data.rotate;
+            socket.userData.action = data.action;
+        }
     });
     //var time =0;
     socket.on('chat message',  async function(data){
@@ -68,7 +73,7 @@ setInterval(function(){
         // const socket = nsp.connected[id];
         const socket = cs[1];
         //Only push sockets that have been initialised
-        //if (socket.userData.model!==undefined){
+        if (socket.userData!==undefined){
             pack.push({
                 id: socket.id,
                 // model: socket.userData.model,
@@ -78,9 +83,10 @@ setInterval(function(){
                 z: socket.userData.z,
                 rotate: socket.userData.rotate,
                 //pb: socket.userData.pb,
-                action: socket.userData.action
+                action: socket.userData.action,
+                model: socket.userData.model
             });
-        //}
+        }
     }
 
 

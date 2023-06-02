@@ -13,13 +13,13 @@ import { Group,
 import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
 import { DRACOLoader } from '../../libs/three137/DRACOLoader.js';
 import * as THREE from '../../libs/three137/three.module.js';
-
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 class User{
-	id;
-    constructor(game, pos, heading,id){
+    constructor(game, pos, heading,id, model){
 
 		this.role = game.userRole;
+		if(model != undefined) this.role = model; // 远程用户选择不同模型
 		this.colors = [0xffffff, 0xf57a3d, 0x00ccff];
         this.root = new Group();
         this.root.position.copy( pos );
@@ -29,8 +29,19 @@ class User{
 		this.hitCount = 0;
 
         this.game = game;
-		if(id!=undefined)
+
+		if(id!=undefined){
 			this.id = id;
+			this.nameDiv = document.createElement('div');
+			this.nameDiv.textContent = this.id;
+			this.nameDiv.style.color = 'white';
+			this.nameDiv.style.fontSize = '10px';
+			this.nameDiv.style.textAlign = 'center';
+			this.nameDiv.style.width = '100px';
+			this.nameDiv.style.height = '100px';
+			this.nameDiv.style.lineHeight = '100px';
+			this.nameObject = new CSS2DObject(this.nameDiv);
+		}
 
         this.camera = game.camera;
         this.raycaster = new Raycaster();
@@ -58,7 +69,7 @@ class User{
     }
 
 	initRifleDirection(){
-		if(this.role ==1){
+		if(this.role <3){
 			this.rifleDirection = {};
 
 			this.rifleDirection.idle = new Quaternion(-0.178, -0.694, 0.667, 0.203);
@@ -205,6 +216,12 @@ class User{
 				}
 				// user.object.add(this.object);
 
+				if(this.nameObject!=undefined){
+					this.object.add(this.nameObject);
+					this.nameObject.position.set(0, 1.8, 0);
+					this.nameObject.layers.set(0);
+				}
+
                 this.animations = {};
 
                 gltf.animations.forEach( animation => {
@@ -243,7 +260,7 @@ class User{
 	setAction(name){
 		if (this.actionName == name.toLowerCase()) return;
 
-		console.log(`User action:${this.id}${name}`);
+		// console.log(`User action:${this.id}${name}`);
 		if(name.toLowerCase()==="run"){
 			this.isRun =true;
 		}
