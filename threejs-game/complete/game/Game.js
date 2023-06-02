@@ -2,7 +2,6 @@ import * as THREE from '../../libs/three137/three.module.js';
 import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
 import { RGBELoader } from '../../libs/three137/RGBELoader.js';
 import { NPCHandler } from './NPCHandler.js';
-// import { NPCHandler } from '../NPCHandler.js';
 import { LoadingBar } from '../../libs/LoadingBar.js';
 import { Pathfinding } from '../../libs/pathfinding/Pathfinding.js';
 import { User } from './User.js';
@@ -26,6 +25,9 @@ class Game{
 		this.sceneIndex = map == undefined ? 0 : map;
 		this.currentScene = this.scenes[this.sceneIndex];
 		this.socket = socket;
+		this.sceneEnd = false;
+		this.gametime = 0;
+		this.hitrate = 0;
 
 		this.startPosition = [
 			[21, 0.186, 0],
@@ -376,15 +378,82 @@ class Game{
 		}
 	}
 
+	// 在游戏结束时释放资源，取消eventListener
+	stopRendering() {
+		// console.log('in stopRendering');
+		this.gametime = parseInt(this.CQBHandler.sceneTime);
+		this.hitrate = ((this.user.hitCount / this.user.shootCount) * 100);
+		this.hitrate = Math.round(this.hitrate*1000)/1000;
+		console.log(this.gametime, this.hitrate);
+		// 删除所有eventListener
+		this.renderer.setAnimationLoop(null);
+
+		// controller
+		document.removeEventListener('keydown', this.controller.keyDown);
+        document.removeEventListener('keyup', this.controller.keyUp);
+        document.removeEventListener('mousedown', this.controller.mouseDown);
+        document.removeEventListener('mouseup', this.controller.mouseUp);
+        document.removeEventListener('mousemove', this.controller.mouseMove);
+		this.controller.domElement.removeEventListener('click', this.controller.domElement.requestPointerLock); 
+        document.removeEventListener( 'pointerlockchange', this.controller.onPointerlockChange );
+        document.removeEventListener( 'pointerlockerror', this.controller.onPointerlockError );
+
+		// CQBHandler
+		document.removeEventListener('keydown', this.CQBHandler.keyDown);
+
+		// game
+		window.removeEventListener( 'resize', this.resize );
+
+		// npchandler
+		// this.renderer.domElement.removeEventListener( 'click', this.npcHandler.raycast);
+
+		// 释放资源
+		this.user = null
+		// this.controller.clear();
+		this.scene.traverse((child) => {
+			if (child.material) {
+			  child.material.dispose();
+			}
+			if (child.geometry) {
+			  child.geometry.dispose();
+			}
+			child = null;
+		})
+		this.renderer.forceContextLoss();
+		this.renderer.dispose();
+		this.scene.clear();
+		this.scene = null;
+		this.camera = null;
+		this.renderer = null;
+
+		// 调用函数返回数据
+		if(this.result!=undefined){
+			this.result({
+				time:this.gametime,
+				hitrate:this.hitrate
+			});
+		}
+		else console.log('result is undefined');
+	}
+
 	/* 
 	该函数在每一帧被调用，用于更新游戏中的各个对象并进行渲染。
 	具体而言，它会计算时间差值 dt，并分别调用 NPC、用户、控制器和子弹管理器的 update 函数来更新它们的状态。
 	然后，它会调用渲染器的 render 函数，将场景渲染到屏幕上。
 	*/
 	render() {
+		if( this.sceneEnd && this.CQBHandler !== undefined && this.CQBHandler.canExit){
+			// 已经阅读完游戏结束提示，可以退出游戏
+			this.stopRendering();
+			// console.log('quit game');
+			return;
+		}
+		
 		const dt = this.clock.getDelta();
 
-		this.updateRemoteUsers(dt);
+		if(this.sceneIndex == 2){
+			this.updateRemoteUsers(dt);
+		}
 
 		if(this.controller === undefined || this.controller.isLocked === false){
 			// print hints
