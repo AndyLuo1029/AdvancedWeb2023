@@ -217,7 +217,8 @@ class User{
 				// user.object.add(this.object);
 
 				if(this.nameObject!=undefined){
-					this.object.add(this.nameObject);
+					//this.object.add(this.nameObject);
+					this.root.add(this.nameObject);
 					this.nameObject.position.set(0, 1.8, 0);
 					this.nameObject.layers.set(0);
 				}

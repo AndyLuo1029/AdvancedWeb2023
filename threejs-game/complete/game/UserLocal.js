@@ -1,4 +1,17 @@
 import {User} from "./User.js";
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { Group,
+    Object3D,
+    Vector3,
+    Quaternion,
+    Raycaster,
+    AnimationMixer,
+    SphereGeometry,
+    MeshBasicMaterial,
+    Mesh,
+    BufferGeometry,
+    Line
+} from '../../libs/three137/three.module.js';
 
 class UserLocal extends User{
     constructor(game, pos, heading) {
@@ -30,19 +43,27 @@ class UserLocal extends User{
                     
                     game.remoteUsers.splice( index, 1 );
 
-                    let object = users[0].object;
+
                     let root = users[0].root;
-
-                    // sb的 ID删不掉，就在这
-                    for ( let children of object.children ) {
-                        object.remove( children );
-                    }
-
+                    //
+                    // let object = users[0].object;
+                    // // sb的 ID删不掉，就在这
+                    // for ( let children of object.children ) {
+                    //     object.remove( children );
+                    // }
+                    // console.log(root.children);
+                    // console.log(root.children[0]);
+                    // console.log(root.children[1]);
                     for ( let croot of root.children){
-                        root.remove(croot);
+                        //console.log(croot)
+                        if(croot instanceof Group)
+                        {
+                            //console.log(croot)
+                            continue;}
+                         root.remove(croot);
                     }
             
-                    game.scene.remove(users[0].object);
+                    //game.scene.remove(users[0].object);
                     game.scene.remove(users[0].root);
                     socket.emit('chat message',{id:data.id,message:`disconnected`});
                 }
