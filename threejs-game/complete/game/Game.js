@@ -15,7 +15,7 @@ import {Vector3} from "../../libs/three137/three.module.js";
 
 
 class Game{
-	constructor(map, avatar, socket, result){
+	constructor(username, map, avatar, socket, result){
 		// 根据前端传入的选择，切换场景
 		this.scenes = [
 			'scene1',
@@ -385,13 +385,10 @@ class Game{
 
 	// 在游戏结束时释放资源，取消eventListener
 	stopRendering() {
-		// console.log('in stopRendering');
-		this.gametime = parseInt(this.CQBHandler.sceneTime);
-		this.hitrate = ((this.user.hitCount / this.user.shootCount) * 100);
-		this.hitrate = Math.round(this.hitrate*1000)/1000;
-		// console.log(this.gametime, this.hitrate);
 		// 删除所有eventListener
 		this.renderer.setAnimationLoop(null);
+
+		document.exitPointerLock();
 
 		// controller
 		document.removeEventListener('keydown', this.controller.keyDown);
@@ -430,15 +427,6 @@ class Game{
 		this.scene = null;
 		this.camera = null;
 		this.renderer = null;
-
-		// 调用函数返回数据
-		if(this.result!=undefined){
-			this.result({
-				time:this.gametime,
-				hitrate:this.hitrate
-			});
-		}
-		else console.log('result is undefined');
 	}
 
 	/* 
@@ -449,8 +437,19 @@ class Game{
 	render() {
 		if( this.sceneEnd && this.CQBHandler !== undefined && this.CQBHandler.canExit){
 			// 已经阅读完游戏结束提示，可以退出游戏
-			this.stopRendering();
+			// this.stopRendering();
 			// console.log('quit game');
+			this.gametime = parseInt(this.CQBHandler.sceneTime);
+			this.hitrate = ((this.user.hitCount / this.user.shootCount) * 100);
+			this.hitrate = Math.round(this.hitrate*1000)/1000;
+			// 调用函数返回数据
+			if(this.result!=undefined){
+				this.result({
+					time:this.gametime,
+					hitrate:this.hitrate
+				});
+			}
+			else console.log('result is undefined');
 			return;
 		}
 		
