@@ -8,7 +8,6 @@ import { User } from './User.js';
 import {UserLocal} from './UserLocal.js'
 import { Controller } from './Controller.js';
 import { BulletHandler } from './BulletHandler.js';
-import { FrontSight} from './frontSight.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { CQBHandler } from './CQBHandler.js';
 import {Vector3} from "../../libs/three137/three.module.js";
@@ -111,10 +110,16 @@ class Game{
 
 		this.load(); // 加载模型和角色
 
-		// add frontSight to camera
-		const frontSight = new FrontSight(THREE);
-		this.camera.add(frontSight.frontSight);
-		this.camera.add(frontSight.frontSightRing);
+		// 添加准星
+		const frontSightGeometry = new THREE.CircleGeometry(0.002);
+        const frontSightRingGeometry = new THREE.RingGeometry(0.005, 0.007, 32);
+        const frontSightMaterial = new THREE.MeshBasicMaterial({color: 0x1aff00});
+        const frontSight = new THREE.Mesh(frontSightGeometry, frontSightMaterial);
+        const frontSightRing = new THREE.Mesh(frontSightRingGeometry, frontSightMaterial);
+        frontSight.position.set(0, 0, -1);
+        frontSightRing.position.set(0, 0, -1);
+		this.camera.add(frontSight);
+		this.camera.add(frontSightRing);
 		this.scene.add(this.camera); // 将相机添加到场景中
 
 		this.raycaster = new THREE.Raycaster(); // 创建射线投射器
