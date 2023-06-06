@@ -45,6 +45,7 @@ class CQBHandler{
 		this.promptDiv.style.width = '80%';
         this.promptDiv.style.color = 'white';
 		this.promptDiv.style.fontSize = '30px';
+        this.promptDiv.style.lineHeight = 'normal';
         this.promptDiv.style.marginTop = window.innerHeight * 0.35 + 'px';
         this.promptDiv.style.padding = '10px';
         this.promptDiv.style.borderRadius = '10px';
@@ -73,7 +74,7 @@ class CQBHandler{
         const curve = new THREE.CatmullRomCurve3(this.pointsToUse);
 
         const textureLoader = new THREE.TextureLoader();
-        const map = textureLoader.load('../../assets/path_texture.png');
+        const map = textureLoader.load(this.game.assetsPath + 'path_texture.png');
         // 使用 TubeGeometry 创建管道几何体
         const tubeBufferGeometry = new THREE.TubeBufferGeometry(curve, 64, 0.3, 16, false);
         
