@@ -129,9 +129,10 @@ class BulletHandler{
             }
             
             if (hit){
+                this.user.hitCount++;
                 target.hp -= 1;
                 bullet.userData.remove = true;
-                console.log([target.name,target.hp]);
+                // console.log([target.name,target.hp]);
                 this.blink(target);
                 if(target.hp<=0) target.action = 'shot';
             }else{
@@ -183,7 +184,7 @@ class BulletHandler{
             this.npcs.some( npc => {
                 if (npc.blink){
                     npc.dt += dt;
-                    if(npc.dt > 0.2){
+                    if(npc.dt > 0.1){
                         npc.object.traverse(o => {
                             if (o.isMesh) {
                                 o.material.color.set(0xffffff);                      
@@ -196,8 +197,6 @@ class BulletHandler{
                 }
             })
         }
-        // if(this.bullets.length>0) console.log(this.bullets[0].userdata);
-        // console.log(this.bullets.length);
     }
 
     blink(target){

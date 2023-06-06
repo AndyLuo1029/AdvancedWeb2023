@@ -82,7 +82,8 @@ class Controller{
         if (e.repeat !== undefined) {
             repeat = e.repeat;
         }
-        if(e.keyCode ===13){
+        if(e.keyCode ===13 && this.game.sceneIndex == 2){
+            console.log('in enter');
             this.keys.enter = !this.keys.enter;
             this.user.sendMessage(this.keys.enter);
             return;
@@ -109,6 +110,11 @@ class Controller{
             case 86:
                 this.keys.v =true;
                 this.perspective = (this.perspective ==3)? 1:3;
+                
+                // for debug, press v to quit the game immediately
+                // this.game.sceneEnd = true;
+                // this.game.CQBHandler.canExit = true;
+
                 break;
 
         }
@@ -261,7 +267,8 @@ class Controller{
         if(this.rotate.right!==0){
             // const theta = dt * (this.rotate.right - 0.1);
             // this.target.rotateY(theta);
-            this.target.rotateOnWorldAxis(this.yAxis, this.rotate.right);
+             this.target.rotateOnWorldAxis(this.yAxis, this.rotate.right);
+            //this.target.rotation.y -= this.rotate.right
             this.rotate.right = 0;
             playerMoved = true;
         }

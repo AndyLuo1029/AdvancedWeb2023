@@ -13,17 +13,35 @@ import { Group,
 import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
 import { DRACOLoader } from '../../libs/three137/DRACOLoader.js';
 import * as THREE from '../../libs/three137/three.module.js';
-
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 class User{
-    constructor(game, pos, heading){
+    constructor(game, pos, heading,id, model){
+
 		this.role = game.userRole;
+		if(model != undefined) this.role = model; // 远程用户选择不同模型
 		this.colors = [0xffffff, 0xf57a3d, 0x00ccff];
         this.root = new Group();
         this.root.position.copy( pos );
         this.root.rotation.set( 0, heading, 0, 'XYZ' );
 
+		this.shootCount = 0;
+		this.hitCount = 0;
+
         this.game = game;
+
+		if(id!=undefined){
+			this.id = id;
+			this.nameDiv = document.createElement('div');
+			this.nameDiv.textContent = this.id;
+			this.nameDiv.style.color = 'white';
+			this.nameDiv.style.fontSize = '10px';
+			this.nameDiv.style.textAlign = 'center';
+			this.nameDiv.style.width = '100px';
+			this.nameDiv.style.height = '100px';
+			this.nameDiv.style.lineHeight = '100px';
+			this.nameObject = new CSS2DObject(this.nameDiv);
+		}
 
         this.camera = game.camera;
         this.raycaster = new Raycaster();
@@ -47,10 +65,11 @@ class User{
 		this.initRifleDirection();
 		this.hp = 5;
 
+
     }
 
 	initRifleDirection(){
-		if(this.role ==1){
+		if(this.role <3){
 			this.rifleDirection = {};
 
 			this.rifleDirection.idle = new Quaternion(-0.178, -0.694, 0.667, 0.203);
@@ -84,20 +103,21 @@ class User{
 		}
 		//console.log(this.action)
 	}
+	
 	shoot(){
+		this.perspective = this.game.controller.perspective;
 		if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
-		// this.aim.getWorldPosition(this.tmpVec);
-		// this.aim.getWorldQuaternion(this.tmpQuat);
-		this.camera.getWorldPosition(this.tmpVec);
-		// this.root.getWorldPosition(this.tmpVec);
-		// let tempVec = new Vector3();
-		// this.camera.getWorldPosition(tempVec);
-		// this.tmpVec.y = tempVec.y;
-		// this.tmpVec.y = this.camera.position.y;
+		if(this.perspective == 3){
+			this.root.getWorldPosition(this.tmpVec);
+			this.tmpVec.y += 1.5;
+		}
+		else{
+			this.camera.getWorldPosition(this.tmpVec);
+		}
 		this.camera.getWorldQuaternion(this.tmpQuat);
-		// this.tmpQuat.set(1,0,-1,0);
 		this.bulletHandler.createBullet( this.tmpVec, this.tmpQuat );
 		this.bulletTime = this.game.clock.getElapsedTime();
+		this.shootCount++;
 	}
 
     addSphere(){
@@ -110,7 +130,6 @@ class User{
     }
 
     load(){
-
 
 
     	const loader = new GLTFLoader( ).setPath(`${this.game.assetsPath}factory/`);
@@ -197,6 +216,13 @@ class User{
 				}
 				// user.object.add(this.object);
 
+				if(this.nameObject!=undefined){
+					//this.object.add(this.nameObject);
+					this.root.add(this.nameObject);
+					this.nameObject.position.set(0, 1.8, 0);
+					this.nameObject.layers.set(0);
+				}
+
                 this.animations = {};
 
                 gltf.animations.forEach( animation => {
@@ -215,6 +241,7 @@ class User{
 				this.ready = true;
 
 				this.game.startRendering();
+
     		},
 			// called while loading is progressing
 			xhr => {
@@ -224,13 +251,17 @@ class User{
 			err => {
 				console.error( err );
 			}
+
 		);
 	}
 
     set action(name){
-		if (this.actionName == name.toLowerCase()) return;    
-		
-		//console.log(`User action:${name}`);
+		this.setAction(name);
+	}
+	setAction(name){
+		if (this.actionName == name.toLowerCase()) return;
+
+		// console.log(`User action:${this.id}${name}`);
 		if(name.toLowerCase()==="run"){
 			this.isRun =true;
 		}
@@ -271,7 +302,7 @@ class User{
 				else if(name == 'firing'){
 					q = this.rifleDirection['fpsFiring'];
 					// console.log("fpsFiring");
-				}	
+				}
 			}
 			else{
 				q = this.rifleDirection[name.toLowerCase()];
@@ -294,6 +325,8 @@ class User{
 		//this.healthPoint-=bullet.damage;
 	}
 	update(dt){
+
+
 		this.perspective = this.game.controller.perspective;
 		if (this.mixer) this.mixer.update(dt);
 		if (this.rotateRifle !== undefined){
@@ -322,6 +355,33 @@ class User{
 		if(this.healthPoint<=0){
 			// console.log("gameover")
 			this.healthPoint = 100;
+		}
+
+		if (this.game.remoteData.length>0&&this.game.user!==this&&this.ready){
+			//let found = false;
+			for(let data of this.game.remoteData){
+				if (data.id != this.id) continue;
+				//Found the player
+				//console.log(data.id)
+				//const dy =this.root.rotation.y-data.heading;
+				this.root.position.set( data.x, data.y, data.z );
+
+				//console.log(data.rotate)
+				//this.root.rotation = data.rotate
+				// console.log(data.heading)
+				// console.log(dy)
+				//this.root.rotation.y = data.heading;
+				//console.log(this.root)
+				if(data.hasOwnProperty('rotate')&&data.rotate.hasOwnProperty('x'))
+				 	this.root.rotation.set( data.rotate.x, data.rotate.y, data.rotate.z, 'XYZ' );
+				//this.root.rotateOnWorldAxis(new Vector3(0, 1, 0), dy);
+				//const euler = new THREE.Euler(0, data.heading, 0);
+				//this.object.quaternion.setFromEuler( euler );
+				//this.actionName = data.action;
+				this.setAction(data.action);
+				//console.log(this.actionName)
+				//found = true;
+			}
 		}
 	}
 }

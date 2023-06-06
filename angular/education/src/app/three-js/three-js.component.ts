@@ -20,9 +20,9 @@ export class ThreeJsComponent implements OnInit{
 	onBeforeUnload() {
 		return false;
 	}
-	private map:number;
-	private skin:number;
-	public finish:number;
+	private map:number = 0;
+	private skin:number = 0;
+	public finish:number = 0;
 	private socket: any;
 	private game: any;
 	private url = Global.backURL+"/user/addData";
@@ -33,38 +33,14 @@ export class ThreeJsComponent implements OnInit{
 		private router: Router,
 		private handler:BackErrorHandler) 
 		{
-			this.finish = 0;
-			this.map = Global.map_choice;
-			this.skin = Global.skin_choice;
-			this.socket = wsService.connect("localhost:8084");
+			
 		// console.log(this.socket)
 		// this.socket.on('setId', function(data:any){
 		// 	console.log(data)
 		// });
 		// this.sendMessage();
 		}
-    // loadScript(url: string) {
-	// 	const body = <HTMLDivElement> document.body;
-	// 	const script = document.createElement('script');
-	// 	script.innerHTML = '';
-	// 	script.src = url;
-	// 	script.async = false;
-	// 	script.defer = true;
-	// 	body.appendChild(script);
-	// }
-	// gameFinish(i:number, self:any) {
-		
-	// 	self.finish = i
-	// }
 
-	sendMessage() {
-		console.log("send")
-		this.socket.emit('sendMessage', { message: "msg" });
-	}
-	// ngOnChanges(changes: SimpleChanges) {
-	// 	// changes.prop contains the old and the new value...
-	// 	console.log(changes)
-	//   }
 	updateData(time:number, hitrate:number) {
 		const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
 		this.http.post(this.url, 
@@ -85,16 +61,16 @@ export class ThreeJsComponent implements OnInit{
 	}
 	ngOnDestroy(): void {
 		this.game.stopRendering();
-		this.finish = 0
-		// delete this.game;
-		// this.game.delete;
+		this.finish = 0;
 	}
-	ngAfterViewInit(): void {	
-		// document.addEventListener("DOMContentLoaded", ()=>{
-		// 	const game = new Game(this.socket);
-		// });
+	ngAfterViewInit(): void {
+		this.finish = 0;
+		this.map = Global.map_choice;
+		this.skin = Global.skin_choice;
+		this.socket = this.wsService.connect("localhost:8084");	
 		// console.log("here")
-		this.game = new Game(this.map, this.skin, this.socket, (result:any)=> {
+		console.log(this.map);
+		this.game = new Game(localStorage.getItem('username'),this.map, this.skin, this.socket, (result:any)=> {
 			// console.log(result)
 			this.finish = 1;
 			this.updateData(result.time, result.hitrate);

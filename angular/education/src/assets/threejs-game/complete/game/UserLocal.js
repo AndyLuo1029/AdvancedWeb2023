@@ -1,8 +1,9 @@
+import {User} from "./User.js";
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { Group,
     Object3D,
     Vector3,
     Quaternion,
-    Raycaster,
     AnimationMixer,
     SphereGeometry,
     MeshBasicMaterial,
@@ -10,48 +11,73 @@ import { Group,
     BufferGeometry,
     Line
 } from '../../libs/three137/three.module.js';
-import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
-import { DRACOLoader } from '../../libs/three137/DRACOLoader.js';
-import * as THREE from '../../libs/three137/three.module.js';
-import {User} from "./User.js";
 
 class UserLocal extends User{
-    constructor(socket, game, pos, heading) {
+    constructor(game, pos, heading) {
         super(game, pos, heading);
-        this.id;
+
         const user = this;
-        // const socket = io.connect();
+        const socket = game.socket;
+        // const socket = game.socket;
         socket.on('setId', function(data){
             user.id = data.id;
-            console.log(user.id);
+            // console.log(user.id);
+            socket.emit('chat message',{id:user.id,message:`connected`});
+            socket.emit('init', game.userRole);
         });
         socket.on('remoteData', function(data){
+            //console.log(data);
             game.remoteData = data;
         });
-        // socket.on('deletePlayer', function(data){
-        //     const players = game.remotePlayers.filter(function(player){
-        //         if (player.id == data.id){
-        //             return player;
-        //         }
-        //     });
-        //     if (players.length>0){
-        //         let index = game.remotePlayers.indexOf(players[0]);
-        //         if (index!=-1){
-        //             game.remotePlayers.splice( index, 1 );
-        //             game.scene.remove(players[0].object);
-        //         }
-        //     }else{
-        //         index = game.initialisingPlayers.indexOf(data.id);
-        //         if (index!=-1){
-        //             const player = game.initialisingPlayers[index];
-        //             player.deleted = true;
-        //             game.initialisingPlayers.splice(index, 1);
-        //         }
-        //     }
-        // });
+        socket.on('deletePlayer', function(data){
+            const users = game.remoteUsers.filter(function(user){
+                if (user.id == data.id){
+                    return user;
+                }
+            });
+
+            if (users.length>0){
+                let index = game.remoteUsers.indexOf(users[0]);
+                if (index!=-1){
+                    
+                    game.remoteUsers.splice( index, 1 );
+
+
+                    let root = users[0].root;
+                    //
+                    // let object = users[0].object;
+                    // // sb的 ID删不掉，就在这
+                    // for ( let children of object.children ) {
+                    //     object.remove( children );
+                    // }
+                    // console.log(root.children);
+                    // console.log(root.children[0]);
+                    // console.log(root.children[1]);
+                    for ( let croot of root.children){
+                        //console.log(croot)
+                        if(croot instanceof Group)
+                        {
+                            //console.log(croot)
+                            continue;}
+                         root.remove(croot);
+                    }
+            
+                    //game.scene.remove(users[0].object);
+                    game.scene.remove(users[0].root);
+                    socket.emit('chat message',{id:data.id,message:`disconnected`});
+                }
+            }else{
+                // index = game.initialisingPlayers.indexOf(data.id);
+                // if (index!=-1){
+                //     const player = game.initialisingPlayers[index];
+                //     player.deleted = true;
+                //     game.initialisingPlayers.splice(index, 1);
+                // }
+            }
+        });
 
         socket.on('chat message', function(data){
-            console.log(data.id,data.message)
+            // console.log(data.id,data.message)
 
             let pre_message=document.getElementById("pre_message")
             let message_container = document.createElement("div")
@@ -59,11 +85,12 @@ class UserLocal extends User{
             let messageElement = document.createElement("div")
             messageElement.className = "message";
             messageElement.innerText =`${data.id}:${data.message}`;
-            console.log(messageElement,message_container,pre_message)
+            //console.log(messageElement,message_container,pre_message)
             message_container.appendChild(messageElement);
             pre_message.appendChild(message_container);
             pre_message.scrollTop =pre_message.scrollHeight;
         });
+
 
         // $('#msg-form').submit(function(e){
         //     socket.emit('chat message', { id:game.chatSocketId, message:$('#m').val() });
@@ -87,24 +114,25 @@ class UserLocal extends User{
             message.setAttribute('disabled','disabled');
         }
 
+
     }
     updateSocket(){
         if (this.socket !== undefined){
             //console.log(`PlayerLocal.updateSocket - rotation(${this.object.rotation.x.toFixed(1)},${this.object.rotation.y.toFixed(1)},${this.object.rotation.z.toFixed(1)})`);
 
-
             this.socket.emit('update', {
                 x: this.root.position.x,
                 y: this.root.position.y,
                 z: this.root.position.z,
-                h: this.root.rotation.y,
+                rotate: {x:this.root.rotation.x,y:this.root.rotation.y,z:this.root.rotation.z},
                 //pb: this.object.rotation.x,
-                action: this.action
+                action: this.actionName
             })
         }
     }
     update(dt){
         super.update(dt);
+        //onsole.log(this.root.rotation)
         this.updateSocket();
 
     }

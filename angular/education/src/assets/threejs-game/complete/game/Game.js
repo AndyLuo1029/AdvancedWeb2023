@@ -2,7 +2,6 @@ import * as THREE from '../../libs/three137/three.module.js';
 import { GLTFLoader } from '../../libs/three137/GLTFLoader.js';
 import { RGBELoader } from '../../libs/three137/RGBELoader.js';
 import { NPCHandler } from './NPCHandler.js';
-// import { NPCHandler } from '../NPCHandler.js';
 import { LoadingBar } from '../../libs/LoadingBar.js';
 import { Pathfinding } from '../../libs/pathfinding/Pathfinding.js';
 import { User } from './User.js';
@@ -12,19 +11,25 @@ import { BulletHandler } from './BulletHandler.js';
 import { FrontSight} from './frontSight.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { CQBHandler } from './CQBHandler.js';
+import {Vector3} from "../../libs/three137/three.module.js";
+import { Group } from '../../libs/three137/three.module.js';
 
 
 class Game{
-	constructor(map, avatar, socket, result){
-		this.socket = socket;
+	constructor(username, map, avatar, socket, result){
 		// 根据前端传入的选择，切换场景
 		this.scenes = [
 			'scene1',
 			'scene2',
 			'multiplayer'
 		];
+		this.username = username;
 		this.sceneIndex = map == undefined ? 0 : map;
 		this.currentScene = this.scenes[this.sceneIndex];
+		this.socket = socket;
+		this.sceneEnd = false;
+		this.gametime = 0;
+		this.hitrate = 0;
 
 		this.startPosition = [
 			[21, 0.186, 0],
@@ -43,16 +48,23 @@ class Game{
 
 		this.result = result;
 
+		//socketio传的数据
+		this.remoteData=[];
+		//得到的远程玩家
+		this.remoteUsers =[];
+		//初始化player 需要加载完才能进入remoteUsers
+		this.initialisingPlayers = [];
 		// 创建场景容器
 		const container = document.getElementById( 'three' );
+		
 
 		this.clock = new THREE.Clock(); // 用于计算时间差
 
         this.loadingBar = new LoadingBar(); // 加载状态界面
         this.loadingBar.visible = false; // 初始不可见
 
-		// this.assetsPath = '../../assets/'; // 资源路径
-        this.assetsPath = './assets/threejs-game/assets/';
+		this.assetsPath = './assets/threejs-game/assets/';; // 资源路径
+        
 		// 创建相机，并设置位置和旋转角度
 		this.camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 500 );
 		this.camera.position.set(this.cameraStartPosition[this.sceneIndex][0],this.cameraStartPosition[this.sceneIndex][1],this.cameraStartPosition[this.sceneIndex][2]);
@@ -111,6 +123,11 @@ class Game{
 		this.tmpVec = new THREE.Vector3(); // 创建临时向量
 
 		window.addEventListener( 'resize', this.resize ); // 监听调整窗口大小事件
+
+		if(this.sceneIndex != 2){
+			let t = document.getElementById('container');//选取id为test的元素
+			t.style.display = 'none';	// 隐藏选择的元素
+		}
 	}
 
 	/*
@@ -269,7 +286,9 @@ class Game{
 	load(){
         this.loadEnvironment();
 		this.npcHandler = new NPCHandler(this);
-		this.user = new UserLocal(this.socket, this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
+		this.user = new UserLocal(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
+
+		//new User(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
 		// this.user = new User(this, new THREE.Vector3(this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]) , 1*Math.PI);
     }
 
@@ -365,11 +384,42 @@ class Game{
 			this.renderer.setAnimationLoop( this.render.bind(this) );
 		}
 	}
+
+	// 在游戏结束时释放资源，取消eventListener
 	stopRendering() {
-		window.removeEventListener( 'resize', this.resize );
+		// 删除所有eventListener
 		this.renderer.setAnimationLoop(null);
-		this.gameFinish = null
-		this.user = null
+
+		for ( let croot of this.camera.children){
+			//console.log(croot)
+			if(croot instanceof Group)
+			{
+				//console.log(croot)
+				continue;}
+			this.camera.remove(croot);
+		}
+		document.exitPointerLock();
+		// controller
+		document.removeEventListener('keydown', this.controller.keyDown);
+        document.removeEventListener('keyup', this.controller.keyUp);
+        document.removeEventListener('mousedown', this.controller.mouseDown);
+        document.removeEventListener('mouseup', this.controller.mouseUp);
+        document.removeEventListener('mousemove', this.controller.mouseMove);
+		this.controller.domElement.removeEventListener('click', this.controller.domElement.requestPointerLock); 
+        document.removeEventListener( 'pointerlockchange', this.controller.onPointerlockChange );
+        document.removeEventListener( 'pointerlockerror', this.controller.onPointerlockError );
+
+		// CQBHandler
+		document.removeEventListener('keydown', this.CQBHandler.keyDown);
+
+		// game
+		window.removeEventListener( 'resize', this.resize );
+
+		// npchandler
+		// this.renderer.domElement.removeEventListener( 'click', this.npcHandler.raycast);
+
+		// 释放资源
+		
 		// this.controller.clear();
 		this.scene.traverse((child) => {
 			if (child.material) {
@@ -379,25 +429,44 @@ class Game{
 			  child.geometry.dispose();
 			}
 			child = null;
-		});
-	
-		// 场景中的参数释放清理或者置空等
+		})
+		this.user = null
 		this.renderer.forceContextLoss();
 		this.renderer.dispose();
 		this.scene.clear();
-		this.flows = [];
 		this.scene = null;
 		this.camera = null;
-		this.controls = null;
 		this.renderer = null;
+
 	}
+
 	/* 
 	该函数在每一帧被调用，用于更新游戏中的各个对象并进行渲染。
 	具体而言，它会计算时间差值 dt，并分别调用 NPC、用户、控制器和子弹管理器的 update 函数来更新它们的状态。
 	然后，它会调用渲染器的 render 函数，将场景渲染到屏幕上。
 	*/
 	render() {
+		if( this.sceneEnd && this.CQBHandler !== undefined && this.CQBHandler.canExit){
+			// 已经阅读完游戏结束提示，可以退出游戏
+			this.gametime = parseInt(this.CQBHandler.sceneTime);
+			this.hitrate = ((this.user.hitCount / this.user.shootCount) * 100);
+			this.hitrate = Math.round(this.hitrate*1000)/1000;
+			if(this.result!=undefined){
+				this.result({
+					time:this.gametime,
+					hitrate:this.hitrate
+				});
+			}
+			else console.log('result is undefined');
+			return;
+		}
+		
 		const dt = this.clock.getDelta();
+
+		if(this.sceneIndex == 2){
+			this.updateRemoteUsers(dt);
+		}
+
 		if(this.controller === undefined || this.controller.isLocked === false){
 			// print hints
 			this.clickLabel.visible = true;
@@ -418,6 +487,61 @@ class Game{
 		this.renderer.render( this.scene, this.camera );
 		this.labelRenderer.render(this.scene, this.camera);
     }
+
+	updateRemoteUsers(dt) {
+		const game = this;
+		const remoteUsers = [];
+		if (this.remoteData===undefined || this.remoteData.length == 0) return;
+
+		// console.log(this.remoteData);
+		// console.log(this.initialisingPlayers);
+		// console.log(this.remoteUsers);
+		this.remoteData.forEach( function(data){
+			if (game.user.id !== data.id){
+				// //Is this player being initialised?
+				let iplayer;
+				game.initialisingPlayers.forEach( function(user){
+					if (user.id === data.id) iplayer = user;
+				});
+				//If not being initialised check the remotePlayers array
+				if (iplayer===undefined){
+					//console.log(114514)
+					let r_user;
+					//console.log(game.remoteUsers===undefined)
+					game.remoteUsers.forEach( function(user){
+						//console.log(user)
+						if (!user===undefined && user.id === data.id) r_user = user;
+					});
+					if (r_user===undefined){
+						//console.log("Init")
+						//Initialise player
+						let user = new User( game, new Vector3(data.x,data.y,data.z),1*Math.PI,data.id, data.model )
+						// console.log(data);
+						game.initialisingPlayers.push(user);
+					}else{
+						//Player exists
+						remoteUsers.push(r_user);
+					}
+				}
+			}
+		});
+
+		//console.log(remoteUsers)
+		if(remoteUsers.length!==0)
+			this.remoteUsers =this.remoteUsers.concat(remoteUsers);
+		this.initialisingPlayers.forEach(function(user){
+			if(!game.remoteUsers.includes(user))
+				game.remoteUsers.push(user);
+		})
+
+
+		//this.getIniPlayers();
+		//console.log(this.remoteUsers);
+		//
+		//console.log(this.remoteUsers);
+		this.remoteUsers.forEach(function(user){ if(user.ready)user.update( dt ); });
+	}
+
 }
 
 export { Game };
