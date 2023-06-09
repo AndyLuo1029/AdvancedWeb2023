@@ -27,7 +27,7 @@ sphereIntersectsCylinder(px, py, pz, pr, cx, cy, cz, cr, ch)：
 */
 
 class BulletHandler{
-    constructor(game){
+    constructor(game,user){
         this.game = game;
         this.scene = game.scene;
         const geometry = new CylinderGeometry(0.01, 0.01, 0.08);
@@ -40,7 +40,8 @@ class BulletHandler{
 
         this.npcs = this.game.npcHandler.npcs;
         
-        this.user = this.game.user;
+        //this.user = this.game.user;
+        this.user = user;
         this.haveBlink = 0;
 
         this.forward = new Vector3( 0, 0, -1 );

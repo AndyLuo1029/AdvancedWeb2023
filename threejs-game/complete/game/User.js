@@ -106,16 +106,33 @@ class User{
 	
 	shoot(){
 		this.perspective = this.game.controller.perspective;
-		if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
+		if (this.bulletHandler === undefined) {
+			if(this==this.game.user)
+				this.bulletHandler = this.game.bulletHandler;
+			else {
+				let user = this;
+				this.game.remoteBulletHandlers.forEach(function(bh){
+					if(bh.user===user){
+						user.bulletHandler = bh;
+					}
+
+				});
+			}
+		}
 		if(this.perspective == 3){
 			this.root.getWorldPosition(this.tmpVec);
 			this.tmpVec.y += 1.5;
 		}
 		else{
-			this.camera.getWorldPosition(this.tmpVec);
+			this.root.getWorldPosition(this.tmpVec);
 		}
-		this.camera.getWorldQuaternion(this.tmpQuat);
+
+		if(this==this.game.user){this.camera.getWorldQuaternion(this.tmpQuat);console.log("本地",this.tmpQuat)}
+		else {
+			console.log(this.tmpQuat)
+		}
 		this.bulletHandler.createBullet( this.tmpVec, this.tmpQuat );
+
 		this.bulletTime = this.game.clock.getElapsedTime();
 		this.shootCount++;
 	}
@@ -342,6 +359,8 @@ class User{
 			this.aim.visible = false;
 			if(this.speed===0)this.action ="firing";
 			const elapsedTime = this.game.clock.getElapsedTime() - this.bulletTime;
+			//console.log(this.game.clock.getElapsedTime())
+			//console.log(this.bulletTime)
 			if (elapsedTime > 0.6) {
 				this.shoot();
 				this.aim.rotateX(Math.random() * Math.PI);
@@ -374,11 +393,19 @@ class User{
 				//console.log(this.root)
 				if(data.hasOwnProperty('rotate')&&data.rotate.hasOwnProperty('x'))
 				 	this.root.rotation.set( data.rotate.x, data.rotate.y, data.rotate.z, 'XYZ' );
+				//console.log(data.q);
+				if(data.q!==undefined)
+					this.tmpQuat =new Quaternion(data.q._x,data.q._y,data.q._z,data.q._w)
 				//this.root.rotateOnWorldAxis(new Vector3(0, 1, 0), dy);
 				//const euler = new THREE.Euler(0, data.heading, 0);
 				//this.object.quaternion.setFromEuler( euler );
 				//this.actionName = data.action;
 				this.setAction(data.action);
+				if(this.actionName=="firing"||this.actionName=="firewalk"){
+					this.isFiring = true;
+					if(this.bulletTime===0||this.bulletTime===undefined)this.bulletTime = this.game.clock.getElapsedTime();
+				}
+				else {this.isFiring=false;this.bulletTime=0;}
 				//console.log(this.actionName)
 				//found = true;
 			}

@@ -51,6 +51,8 @@ class Game{
 		this.remoteUsers =[];
 		//初始化player 需要加载完才能进入remoteUsers
 		this.initialisingPlayers = [];
+		//远程子弹handler
+		this.remoteBulletHandlers = [];
 		// 创建场景容器
 		const container = document.createElement( 'div' );
 		document.body.appendChild( container );
@@ -382,7 +384,7 @@ class Game{
 		if (this.npcHandler.ready && this.user.ready && this.bulletHandler == undefined){
 			this.controller = new Controller(this);
 			this.controller.connect();
-			this.bulletHandler = new BulletHandler(this);
+			this.bulletHandler = new BulletHandler(this,this.user);
 			if(this.sceneIndex != 2) this.CQBHandler = new CQBHandler(this);
 			this.renderer.setAnimationLoop( this.render.bind(this) );
 		}
@@ -513,6 +515,8 @@ class Game{
 						//console.log("Init")
 						//Initialise player
 						let user = new User( game, new Vector3(data.x,data.y,data.z),1*Math.PI,data.id, data.model )
+						let rbh = new BulletHandler(game,user);
+						game.remoteBulletHandlers.push(rbh);
 						// console.log(data);
 						game.initialisingPlayers.push(user);
 					}else{
@@ -536,7 +540,16 @@ class Game{
 		//console.log(this.remoteUsers);
 		//
 		//console.log(this.remoteUsers);
-		this.remoteUsers.forEach(function(user){ if(user.ready)user.update( dt ); });
+		this.remoteUsers.forEach(function(user){
+			if(user.ready){
+				user.update( dt );
+			}
+		});
+		this.remoteBulletHandlers.forEach(function (bh){
+			if(bh.user.ready){
+				bh.update( dt );
+			}
+		});
 	}
 
 }

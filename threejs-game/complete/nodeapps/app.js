@@ -47,6 +47,7 @@ io.sockets.on('connection', function(socket){
             socket.userData.z = data.z;
             socket.userData.rotate = data.rotate;
             socket.userData.action = data.action;
+            socket.userData.q = data.q;
         }
     });
     //var time =0;
@@ -84,7 +85,8 @@ setInterval(function(){
                 rotate: socket.userData.rotate,
                 //pb: socket.userData.pb,
                 action: socket.userData.action,
-                model: socket.userData.model
+                model: socket.userData.model,
+                q:socket.userData.q
             });
         }
     }
