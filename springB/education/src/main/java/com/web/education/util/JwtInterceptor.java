@@ -21,18 +21,10 @@ public class JwtInterceptor implements HandlerInterceptor {
             return true;
         }
         response.setContentType("application/json;charset=utf-8");
-
         String token = request.getHeader(AUTH);
         String username =  request.getHeader(AUTH_USER_NAME);
         log.info("token=" + token);
         log.info("username=" + username);
-//        if (StrUtil.isEmpty(token)) {
-//            throw new ValidationException("Authorization不允许为空，请重新登录");
-//        }
-//
-//        if (StrUtil.isEmpty(username)) {
-//            throw new ValidationException("用户名不允许为空，请重新登录");
-//        }
         if(username == null || username.equals("") || token == null || token.equals("")) {
             response.setStatus(403);
             return false;

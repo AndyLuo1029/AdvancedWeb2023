@@ -1,13 +1,10 @@
 import { AfterViewInit, Component, ElementRef, OnInit } from '@angular/core';
-import { NgClass } from '@angular/common'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
-import { GridHelper } from 'three';
 import { animation } from '@angular/animations';
 import { Router } from '@angular/router';
 import { Global } from '../global';
-import { color } from 'echarts';
 @Component({
   selector: 'app-select',
   templateUrl: './select.component.html',
@@ -126,9 +123,7 @@ class User{
 		if (!resource) {
 			return resource;
 		}
-  
 		// handle children and when material is an array of materials or
-		// uniform is array of textures
 		if (Array.isArray(resource)) {
 			resource.forEach(resource => this.track(resource));
 			return resource;

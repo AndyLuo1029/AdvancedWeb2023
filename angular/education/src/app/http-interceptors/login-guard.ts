@@ -6,7 +6,6 @@ import {
 
 
 export const loginGuard: CanMatchFn|CanActivateFn = () => {
-
   const router = inject(Router);
   const username = localStorage.getItem("username");
   if (username != null && username != "") {

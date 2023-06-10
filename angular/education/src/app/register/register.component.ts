@@ -73,12 +73,10 @@ export class RegisterComponent {
   PasswordValidator(confirmPasswordInput: string) {
     let confirmPasswordControl: FormControl;
     let passwordControl: FormControl;
-  
     return (control: FormControl): { [key: string]: boolean } | null => {
       if (!control.parent) {
         return null;
       }
-  
       if (!confirmPasswordControl) {
         confirmPasswordControl = control;
         passwordControl = control.parent.get(confirmPasswordInput) as FormControl;
@@ -86,7 +84,6 @@ export class RegisterComponent {
           confirmPasswordControl.updateValueAndValidity();
         });
       }
-  
       if (passwordControl.value !== confirmPasswordControl.value) {
         return {
           notMatch: true
@@ -119,11 +116,6 @@ export class RegisterComponent {
           }
         }
       });
-    // if (this.number === 'admin' && this.password === '123456') {
-    //   // sessionStorage.setItem('access_token', 'true')
-    //   this.router.navigate(['/'])
-     
-    // } 
   }
 
 }
