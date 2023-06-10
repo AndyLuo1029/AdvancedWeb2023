@@ -371,7 +371,7 @@ class User{
 						child.material.color.set(this.color[this.id]);
 					}
                 });
-					this.muzzle.scale.set(0.9, 0.9, 0.9);		
+				
 			
 
                 this.animations = {};
