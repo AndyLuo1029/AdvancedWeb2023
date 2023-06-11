@@ -1,11 +1,12 @@
 import {NPC} from './NPC.js';
 import {GLTFLoader} from '../../libs/three137/GLTFLoader.js';
 import {DRACOLoader} from '../../libs/three137/DRACOLoader.js';
-import {Skeleton, Raycaster} from '../../libs/three137/three.module.js';
+import {Skeleton, Raycaster, Vector3} from '../../libs/three137/three.module.js';
 import * as THREE from '../../libs/three137/three.module.js';
 
 class NPCHandler{
     constructor( game ){
+		this.isMaster = true;
         this.game = game;
 		this.loadingBar = this.game.loadingBar;
 		this.ready = false;
@@ -30,7 +31,26 @@ class NPCHandler{
 			"A", "B", "C", "D"
 		];
 		this.npcs = [];
+		//console.log(this.game.user)
+		let self = this;
+		this.game.user.socket.on('npcMessage',function(data){
+			//console.log(this.isMaster)
+			//console.log(data.id)
+			//console.log(self.game.user.socket.id)
+			if(data.id!==self.game.user.socket.id){
+				self.isMaster=false;
+				self.updateNpcs(data.npcsPos);
+			}
+		})
 		this.load();
+	}
+
+	updateNpcs(npcsPos) {
+		//console.log(this.npcs[0].object.position);
+		//console.log(new Vector3(npcsPos[0].x,npcsPos[0].y,npcsPos[0].z))
+		console.log(this.npcs[0].object.position)
+		this.npcs[0].position =new Vector3(npcsPos[0].x,npcsPos[0].y,npcsPos[0].z)
+		//console.log(this.npcs[0].object.position);
 	}
 
 	initMouseHandler(){
@@ -257,10 +277,15 @@ class NPCHandler{
 
 		const npc = new NPC(options);
 
-		npc.object.position.copy(this.randomWaypoint);
 
-		npc.newPath(this.randomWaypoint);
-		
+		//重要
+		this.pos = this.randomWaypoint;
+		npc.object.position.copy(this.pos);
+		this.path = this.randomWaypoint;
+		//console.log(this.path)
+		npc.newPath(this.path);
+
+
 		this.npcs.push(npc);
 
 		this.loadingBar.visible = !this.loadingBar.loaded;
@@ -313,11 +338,29 @@ class NPCHandler{
     
     get randomWaypoint(){
 		const index = Math.floor(Math.random()*this.waypoints.length);
+		//const index = 0;
 		return this.waypoints[index];
 	}
 
     update(dt){
-        if (this.npcs) this.npcs.forEach( npc => npc.update(dt) );
+        if (this.npcs) {
+			if(this.isMaster){
+				this.npcs.forEach( npc => npc.update(dt) );
+				let temP=[];
+				this.npcs.forEach(function(npc){
+					temP.push(npc.object.position)
+				})
+				this.npcP = temP;
+			}
+		}
+		if(this.isMaster){
+
+			this.game.user.socket.emit('updateNpc',{
+				npcsPos:this.npcP
+			})
+		}
+
+
     }
 }
 

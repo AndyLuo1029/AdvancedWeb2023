@@ -12,8 +12,10 @@ app.get('/',function(req, res) {
     res.sendFile(__dirname + '../game/index.html');
 });
 
-
+let npcMasterId ;
+let npcsPos;
 io.sockets.on('connection', function(socket){
+
     //-6, 0.021, -2
     console.log(`${socket.id} connected`);
     socket.emit('setId', { id:socket.id });
@@ -38,7 +40,6 @@ io.sockets.on('connection', function(socket){
     //     //socket.userData.pb = data.pb;
     //     socket.userData.action = "Idle";
     // });
-
     socket.on('update', function(data){
         //console.log(socket.id,data.x,data.y,data.z)
         if(socket.userData != undefined){
@@ -55,6 +56,12 @@ io.sockets.on('connection', function(socket){
         console.log(`chat message:${data.id} ${data.message}`);
         //io.to(data.id).emit('chat message', { id: socket.id, message: data.message });
         io.emit('chat message', { id: data.id, message: data.message });
+    })
+
+    socket.on('updateNpc',function(data){
+        npcMasterId = socket.id;
+        npcsPos = data.npcsPos
+        //console.log(npcMasterId,data.npcsPos)
     })
 });
 
@@ -90,9 +97,10 @@ setInterval(function(){
             });
         }
     }
-
-
     if (pack.length>0) {
         io.emit('remoteData', pack);
     }
+    if(npcMasterId!==undefined)
+    io.emit('npcMessage', { id: npcMasterId, npcsPos: npcsPos });
+
 }, 40);

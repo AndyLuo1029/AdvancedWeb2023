@@ -53,6 +53,8 @@ class Game{
 		this.initialisingPlayers = [];
 		//远程子弹handler
 		this.remoteBulletHandlers = [];
+		//本地玩家
+		this.user;
 		// 创建场景容器
 		const container = document.createElement( 'div' );
 		document.body.appendChild( container );
@@ -290,8 +292,9 @@ class Game{
 	// 加载游戏资源，包括环境、NPC 和用户等。
 	load(){
         this.loadEnvironment();
-		this.npcHandler = new NPCHandler(this);
+
 		this.user = new UserLocal(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
+		this.npcHandler = new NPCHandler(this);
 
 		//new User(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
 		// this.user = new User(this, new THREE.Vector3(this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]) , 1*Math.PI);
@@ -479,7 +482,10 @@ class Game{
 			this.clickLabel.visible = false;
 			if (this.controller !== undefined) this.controller.update(dt);	
 			if (this.user !== undefined ) this.user.update(dt);
-			if (this.npcHandler !== undefined ) this.npcHandler.update(dt);
+			if (this.npcHandler !== undefined ) {
+				//console.log(this.npcHandler.npcs)
+				this.npcHandler.update(dt);
+			}
 			if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
 		}
 		if (this.CQBHandler !== undefined) this.CQBHandler.update(dt);

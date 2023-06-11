@@ -128,7 +128,8 @@ class UserLocal extends User{
                 z: this.root.position.z,
                 rotate: {x:this.root.rotation.x,y:this.root.rotation.y,z:this.root.rotation.z},
                 action: this.actionName,
-                q:tmpQuat
+                q:tmpQuat,
+
             })
         }
     }

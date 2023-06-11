@@ -69,6 +69,7 @@ class NPC{
 
     get randomWaypoint(){
 		const index = Math.floor(Math.random()*this.waypoints.length);
+		//const index = 0;
 		return this.waypoints[index];
 	}
 	setTargetDirection(pt){
@@ -98,7 +99,7 @@ class NPC{
 		
 		// Calculate a path to the target and store it
 		this.calculatedPath = this.pathfinder.findPath(player.position, pt, this.ZONE, this.navMeshGroup);
-
+		//console.log(this.calculatedPath,player.position,pt,this.ZONE, this.navMeshGroup)
 		if (this.calculatedPath && this.calculatedPath.length) {
 			this.action = 'walking';
 			
@@ -185,8 +186,11 @@ class NPC{
 	get position(){
 		return this.object.position;
 	}
-
+	set position(x){
+		this.object.position.add(x.sub(this.object.position));
+	}
 	update(dt){
+		//console.log(this.calculatedPath)
 		if(this.nameObject != undefined){
 			if(this.dead) this.nameObject.visible = false;
 			else this.nameObject.visible = true;
