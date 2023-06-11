@@ -189,7 +189,8 @@ class NPC{
 	set position(x){
 		this.object.position.add(x.sub(this.object.position));
 	}
-	update(dt){
+	update(dt,isMaster){
+		console.log(this.actionName)
 		//console.log(this.calculatedPath)
 		if(this.nameObject != undefined){
 			if(this.dead) this.nameObject.visible = false;
@@ -200,7 +201,7 @@ class NPC{
 		
 		if (this.mixer) this.mixer.update(dt);
 		
-        if (this.calculatedPath && this.calculatedPath.length) {
+        if (this.calculatedPath && this.calculatedPath.length&&isMaster) {
             const targetPosition = this.calculatedPath[0];
 
             const vel = targetPosition.clone().sub(player.position);
@@ -234,7 +235,7 @@ class NPC{
                 }
             }
         }else{
-            if (!this.dead && this.waypoints!==undefined) this.newPath(this.randomWaypoint);
+            if (!this.dead && this.waypoints!==undefined&&isMaster) this.newPath(this.randomWaypoint);
         }
     }
 }

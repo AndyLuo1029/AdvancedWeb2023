@@ -48,8 +48,9 @@ class NPCHandler{
 	updateNpcs(npcsPos) {
 		//console.log(this.npcs[0].object.position);
 		//console.log(new Vector3(npcsPos[0].x,npcsPos[0].y,npcsPos[0].z))
-		console.log(this.npcs[0].object.position)
-		this.npcs[0].position =new Vector3(npcsPos[0].x,npcsPos[0].y,npcsPos[0].z)
+		//console.log(this.npcs[0].object.position)
+		for(let i =0;i<this.npcs.length;i++)
+			this.npcs[i].position =new Vector3(npcsPos[i].x,npcsPos[i].y,npcsPos[i].z)
 		//console.log(this.npcs[0].object.position);
 	}
 
@@ -344,8 +345,9 @@ class NPCHandler{
 
     update(dt){
         if (this.npcs) {
+
+				this.npcs.forEach( npc => npc.update(dt,this.isMaster) );
 			if(this.isMaster){
-				this.npcs.forEach( npc => npc.update(dt) );
 				let temP=[];
 				this.npcs.forEach(function(npc){
 					temP.push(npc.object.position)
