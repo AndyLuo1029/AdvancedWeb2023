@@ -54,9 +54,9 @@ io.sockets.on('connection', function(socket){
     });
     //var time =0;
     socket.on('chat message',  async function(data){
-        console.log(`chat message:${data.id} ${data.message}`);
+        console.log(`chat message:${data.name} ${data.message}`);
         //io.to(data.id).emit('chat message', { id: socket.id, message: data.message });
-        io.emit('chat message', { id: data.id, message: data.message });
+        io.emit('chat message', { id: data.id,name:data.name, message: data.message });
     })
 
     socket.on('updateNpc',function(data){

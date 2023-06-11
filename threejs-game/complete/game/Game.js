@@ -27,7 +27,7 @@ class Game{
 		this.sceneEnd = false;
 		this.gametime = 0;
 		this.hitrate = 0;
-
+		this.username = username;
 		this.startPosition = [
 			[21, 0.186, 0],
 			[-11.78609367674414, 0.13426758701522457, -23.89975828918036],
@@ -293,7 +293,7 @@ class Game{
 	load(){
         this.loadEnvironment();
 
-		this.user = new UserLocal(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
+		this.user = new UserLocal(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI,this.username);
 		this.npcHandler = new NPCHandler(this);
 
 		//new User(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);

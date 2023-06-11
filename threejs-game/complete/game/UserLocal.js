@@ -14,8 +14,9 @@ import { Group,
 } from '../../libs/three137/three.module.js';
 
 class UserLocal extends User{
-    constructor(game, pos, heading) {
+    constructor(game, pos, heading,username) {
         super(game, pos, heading);
+        this.name = username;
 
         const user = this;
         const socket = io.connect();
@@ -85,7 +86,10 @@ class UserLocal extends User{
             message_container.className = "message_container";
             let messageElement = document.createElement("div")
             messageElement.className = "message";
-            messageElement.innerText =`${data.id}:${data.message}`;
+            if(data.name===undefined){
+                messageElement.innerText =`${data.id}:${data.message}`;
+            }
+            else messageElement.innerText =`${data.name}:${data.message}`;
             //console.log(messageElement,message_container,pre_message)
             message_container.appendChild(messageElement);
             pre_message.appendChild(message_container);
@@ -109,8 +113,10 @@ class UserLocal extends User{
             message.focus();
         }
         else {
+            let self = this;
+            console.log(self.name)
             if(message.value!=="")
-                this.socket.emit('chat message',{id:this.id,message:`${message.value}`});
+                this.socket.emit('chat message',{id:this.id,name:self.name,message:`${message.value}`});
             message.value="";
             message.setAttribute('disabled','disabled');
         }
