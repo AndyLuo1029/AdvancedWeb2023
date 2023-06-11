@@ -518,9 +518,12 @@ class Game{
 						if (!user===undefined && user.id === data.id) r_user = user;
 					});
 					if (r_user===undefined){
-						//console.log("Init")
+						console.log(data.id,data.name)
+						console.log(typeof data.id);
+						console.log(typeof data.name);
+
 						//Initialise player
-						let user = new User( game, new Vector3(data.x,data.y,data.z),1*Math.PI,data.id, data.model )
+						let user = new User( game, new Vector3(data.x,data.y,data.z),1*Math.PI,data.id,data.name, data.model )
 						let rbh = new BulletHandler(game,user);
 						game.remoteBulletHandlers.push(rbh);
 						// console.log(data);

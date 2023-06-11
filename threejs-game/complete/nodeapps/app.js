@@ -44,6 +44,7 @@ io.sockets.on('connection', function(socket){
     socket.on('update', function(data){
         //console.log(socket.id,data.x,data.y,data.z)
         if(socket.userData != undefined){
+            socket.userData.name = data.name;
             socket.userData.x = data.x;
             socket.userData.y = data.y;
             socket.userData.z = data.z;
@@ -86,6 +87,7 @@ setInterval(function(){
         if (socket.userData!==undefined){
             pack.push({
                 id: socket.id,
+                name:socket.userData.name,
                 // model: socket.userData.model,
                 // colour: socket.userData.colour,
                 x: socket.userData.x,

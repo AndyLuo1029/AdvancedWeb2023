@@ -16,7 +16,7 @@ import * as THREE from '../../libs/three137/three.module.js';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 class User{
-    constructor(game, pos, heading,id, model){
+    constructor(game, pos, heading,id,name, model){
 
 		this.role = game.userRole;
 		if(model != undefined) this.role = model; // 远程用户选择不同模型
@@ -33,7 +33,7 @@ class User{
 		if(id!=undefined){
 			this.id = id;
 			this.nameDiv = document.createElement('div');
-			this.nameDiv.textContent = this.id;
+			this.nameDiv.textContent = name;
 			this.nameDiv.style.color = 'white';
 			this.nameDiv.style.fontSize = '10px';
 			this.nameDiv.style.textAlign = 'center';

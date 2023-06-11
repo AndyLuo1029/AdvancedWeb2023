@@ -128,7 +128,9 @@ class UserLocal extends User{
             //console.log(`PlayerLocal.updateSocket - rotation(${this.object.rotation.x.toFixed(1)},${this.object.rotation.y.toFixed(1)},${this.object.rotation.z.toFixed(1)})`);
             let tmpQuat = new Quaternion();
             this.camera.getWorldQuaternion(tmpQuat);
+            let self = this;
             this.socket.emit('update', {
+                name:self.name,
                 x: this.root.position.x,
                 y: this.root.position.y,
                 z: this.root.position.z,
