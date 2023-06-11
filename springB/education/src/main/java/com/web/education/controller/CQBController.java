@@ -30,7 +30,6 @@ public class CQBController {
     @PostMapping(value = "/user/data")
     public @ResponseBody
     Object getData(@RequestBody String username) throws IOException {
-//        System.out.println(username);
         QueryWrapper<Cqb> wrapper=new QueryWrapper<>();
         wrapper.eq("username",username);
         wrapper.orderByDesc("date");
@@ -39,7 +38,6 @@ public class CQBController {
         if (cqbList == null || cqbList.isEmpty()) {
             return new ErrorResponse("无数据", 401);
         } else {
-//            return new UserRegisterResponse("注册成功", 200);
             return cqbList;
         }
     }

@@ -39,15 +39,6 @@ export class UserInfoComponent {
   public options = {};
   dataSource :UserTableElement[] = [];
   displayedColumns: string[] = ['position', 'hitrate', 'time', 'date'];
-  ELEMENT_DATA =  [
-    {position: '1', hitrate: 99, time: '1.0079', date: 'H'},
-    {position: '2', hitrate: 87, time: '4.0026', date: 'He'},
-    {position: '3', hitrate: 100, time: '6', date: 'Li'},
-    {position: '4', hitrate: 30, time: '9.0122', date: 'Be'},
-    {position: '5', hitrate: 45, time: '', date: 'B'},
-    {position: '6', hitrate: 1, time: '12.0107', date: 'C'},
-    {position: '7', hitrate: 0, time: '14.0067', date: 'N'},
-  ];
   time:number[] = []
   initChart() {
     const ec = echarts as any;
@@ -119,10 +110,8 @@ export class UserInfoComponent {
         }
       });
   }
-// 俯视地图 各种敌人击杀数 命中率 通过率
-  
+
   getChartData() {
-    // let time = [60,1200,110,30,40,50,10,8]
     let timetext = []
     for(let i in this.time) {
       let text = ""

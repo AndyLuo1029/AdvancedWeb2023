@@ -20,9 +20,7 @@ public class JwtUtil {
 
 
     public static String createToken(String username){
-        //当前时间
         Date now = new Date();
-        //1. header
         Algorithm algorithm = Algorithm.HMAC256(SECRET);
         String token = JWT.create()
                 .withIssuer(ISSUSRE)
@@ -30,7 +28,6 @@ public class JwtUtil {
                 .withExpiresAt(new Date(now.getTime() + EXPIRE_DATE))
                 .withClaim("username", username)
                 .sign(algorithm);
-
         return token;
     }
 

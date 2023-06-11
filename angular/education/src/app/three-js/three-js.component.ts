@@ -67,11 +67,9 @@ export class ThreeJsComponent implements OnInit{
 		this.finish = 0;
 		this.map = Global.map_choice;
 		this.skin = Global.skin_choice;
-		this.socket = this.wsService.connect("localhost:8084");	
-		// console.log("here")
-		console.log(this.map);
+		this.url = Global.nodeURL
+		this.socket = this.wsService.connect(this.url);	
 		this.game = new Game(localStorage.getItem('username'),this.map, this.skin, this.socket, (result:any)=> {
-			// console.log(result)
 			this.finish = 1;
 			this.updateData(result.time, result.hitrate);
 			this.router.navigate(['/home'],{ replaceUrl: true });
