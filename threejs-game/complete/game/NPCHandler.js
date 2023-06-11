@@ -1,7 +1,7 @@
 import {NPC} from './NPC.js';
 import {GLTFLoader} from '../../libs/three137/GLTFLoader.js';
 import {DRACOLoader} from '../../libs/three137/DRACOLoader.js';
-import {Skeleton, Raycaster, Vector3} from '../../libs/three137/three.module.js';
+import {Skeleton, Raycaster, Vector3,Quaternion} from '../../libs/three137/three.module.js';
 import * as THREE from '../../libs/three137/three.module.js';
 
 class NPCHandler{
@@ -39,18 +39,22 @@ class NPCHandler{
 			//console.log(self.game.user.socket.id)
 			if(data.id!==self.game.user.socket.id){
 				self.isMaster=false;
-				self.updateNpcs(data.npcsPos);
+				self.updateNpcs(data.npcsPos,data.npcsQua);
 			}
 		})
 		this.load();
 	}
 
-	updateNpcs(npcsPos) {
+	updateNpcs(npcsPos,npcsQua) {
 		//console.log(this.npcs[0].object.position);
 		//console.log(new Vector3(npcsPos[0].x,npcsPos[0].y,npcsPos[0].z))
 		//console.log(this.npcs[0].object.position)
-		for(let i =0;i<this.npcs.length;i++)
+		//console.log(this.npcs[0].quaternion)
+		for(let i =0;i<this.npcs.length;i++){
 			this.npcs[i].position =new Vector3(npcsPos[i].x,npcsPos[i].y,npcsPos[i].z)
+			this.npcs[i].qua = new Quaternion(npcsQua[i]._x,npcsQua[i]._y,npcsQua[i]._z,npcsQua[i]._w)
+		}
+		//console.log(this.npcs[0].quaternion)
 		//console.log(this.npcs[0].object.position);
 	}
 
@@ -349,16 +353,20 @@ class NPCHandler{
 				this.npcs.forEach( npc => npc.update(dt,this.isMaster) );
 			if(this.isMaster){
 				let temP=[];
+				let temQ=[];
 				this.npcs.forEach(function(npc){
 					temP.push(npc.object.position)
+					temQ.push(npc.object.quaternion)
 				})
 				this.npcP = temP;
+				this.npcQua = temQ;
 			}
 		}
 		if(this.isMaster){
 
 			this.game.user.socket.emit('updateNpc',{
-				npcsPos:this.npcP
+				npcsPos:this.npcP,
+				npcsQua:this.npcQua
 			})
 		}
 

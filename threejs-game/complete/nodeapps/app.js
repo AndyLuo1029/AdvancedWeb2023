@@ -14,6 +14,7 @@ app.get('/',function(req, res) {
 
 let npcMasterId ;
 let npcsPos;
+let npcsQua;
 io.sockets.on('connection', function(socket){
 
     //-6, 0.021, -2
@@ -61,6 +62,7 @@ io.sockets.on('connection', function(socket){
     socket.on('updateNpc',function(data){
         npcMasterId = socket.id;
         npcsPos = data.npcsPos
+        npcsQua = data.npcsQua
         //console.log(npcMasterId,data.npcsPos)
     })
 });
@@ -101,6 +103,6 @@ setInterval(function(){
         io.emit('remoteData', pack);
     }
     if(npcMasterId!==undefined)
-    io.emit('npcMessage', { id: npcMasterId, npcsPos: npcsPos });
+    io.emit('npcMessage', { id: npcMasterId, npcsPos: npcsPos ,npcsQua:npcsQua});
 
 }, 40);

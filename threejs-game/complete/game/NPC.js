@@ -189,8 +189,11 @@ class NPC{
 	set position(x){
 		this.object.position.add(x.sub(this.object.position));
 	}
+	set qua(x){
+		this.object.quaternion.copy(x);
+	}
 	update(dt,isMaster){
-		console.log(this.actionName)
+		//console.log(this.actionName)
 		//console.log(this.calculatedPath)
 		if(this.nameObject != undefined){
 			if(this.dead) this.nameObject.visible = false;
