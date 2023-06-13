@@ -1,7 +1,6 @@
 import * as THREE from '../../libs/three137/three.module.js';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { CQBConfig } from './CQBConfig.js';
-import { DoubleSide } from 'three';
 
 
 class CQBHandler{

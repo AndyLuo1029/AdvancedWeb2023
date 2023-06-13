@@ -111,14 +111,15 @@ class BulletHandler{
                 if (bullet.userData.targetType==1){
                     const p2 = this.user.position.clone();
                     p2.y += 1.2;
-                    hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 2.4, 0.4);
+                    hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 2.4, 0.3);
                     if (hit) target = this.user;
                 }else{
                     this.npcs.some( npc => {
-                        if (!npc.dead){
+                        if (!npc.dead && !npc.ai){
+                            // can't hit ai npc
                             const p2 = npc.position.clone();
                             p2.y += 1.5;
-                            hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 3.0, 0.5);
+                            hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 3.0, 0.3);
                             if (hit){
                                 target = npc;
                                 return true;

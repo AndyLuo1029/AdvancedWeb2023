@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
+const axios = require('axios');
 
 app.use('/',express.static('../game/'));
 app.use('/libs',express.static('../../libs/'));
@@ -11,6 +12,34 @@ app.use('/assets',express.static('../../assets/'));
 app.get('/',function(req, res) {
     res.sendFile(__dirname + '../game/index.html');
 });
+
+const token = "d8n3dpa3qksfoces8l3knqhyndmk11ha";
+
+const gptdata1 = "{\"system\":\"你是一个小助手\",\"message\":[\"user:";
+const gptdata2 = "\"],\"temperature\":\"0.9\"}";
+
+const ai = async (message) => {
+    let gptdata = gptdata1 + message + gptdata2;
+
+    options = {
+        method: 'POST',
+        url: "https://eolink.o.apispace.com/ai-chatgpt/create",
+        headers: {
+          'content-type': 'application/json',
+          "X-APISpace-Token":token,
+          "Authorization-Type":"apikey",
+        },
+        data: gptdata,
+        crossDomain: true
+    };
+    try {
+        const response = await axios.request(options);
+        console.log(response.data.result);
+        return response.data.result;
+    } catch (error) {
+        console.error(error);
+    }
+};
 
 let npcMasterId ;
 let npcsPos;
@@ -72,6 +101,17 @@ io.sockets.on('connection', function(socket){
 
         //console.log(npcMasterId,data.npcsPos)
     })
+
+    socket.on('AImessage',async function(data){
+        console.log("AImessage",data.message);
+        // data.message就是要发送给GPT的input
+        // 发送给GPT，获得回复
+        ai(data.message).then((res)=>{
+        // 单独回传这条回复
+        socket.emit('AImessage', res);
+        });
+        // socket.emit('AImessage', 'Test reply.');
+    });
 });
 
 http.listen(8084, function(){

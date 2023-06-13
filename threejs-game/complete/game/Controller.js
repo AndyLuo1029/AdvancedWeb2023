@@ -88,6 +88,16 @@ class Controller{
             this.user.sendMessage(this.keys.enter);
             return;
         }
+        // console.log(e.keyCode);
+        let pre_message=document.getElementById("pre_message");
+        switch(e.keyCode){ 
+            case 38:
+                pre_message.scrollTop -= 20;
+                break;
+            case 40:
+                pre_message.scrollTop += 20;
+                break;
+        }
         if(this.keys.enter)return;
 
         switch(e.keyCode){

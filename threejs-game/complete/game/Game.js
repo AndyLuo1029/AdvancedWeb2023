@@ -11,6 +11,7 @@ import { BulletHandler } from './BulletHandler.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { CQBHandler } from './CQBHandler.js';
 import {Vector3} from "../../libs/three137/three.module.js";
+import { AIHandler } from './AIHandler.js';
 
 
 class Game{
@@ -132,7 +133,7 @@ class Game{
 		window.addEventListener( 'resize', this.resize ); // 监听调整窗口大小事件
 
 		if(this.sceneIndex != 2){
-			let t = document.getElementById('container');//选取id为test的元素
+			let t = document.getElementById('container');
 			t.style.display = 'none';	// 隐藏选择的元素
 		}
 	}
@@ -294,6 +295,7 @@ class Game{
         this.loadEnvironment();
 
 		this.user = new UserLocal(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI,this.username);
+		this.AIHandler = new AIHandler(this);
 		this.npcHandler = new NPCHandler(this);
 
 		//new User(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
@@ -419,6 +421,9 @@ class Game{
 		// npchandler
 		// this.renderer.domElement.removeEventListener( 'click', this.npcHandler.raycast);
 
+		// AIHandler
+		document.removeEventListener('keydown', this.AIHandler.keyDown);
+
 		// 释放资源
 		this.user = null
 		// this.controller.clear();
@@ -477,20 +482,24 @@ class Game{
 			// print CQB hints
 			if(this.CQBHandler.prompt) this.CQBHandler.prompt.visible = true;
 		}
+		else if(this.AIHandler !== undefined && this.AIHandler.AIlock){
+			// AI chat control logic...
+			if(this.AIHandler.prompt) this.AIHandler.prompt.visible = true;
+		}
 		else{
 			if(this.CQBHandler !== undefined && this.CQBHandler.prompt) this.CQBHandler.prompt.visible = false;
+			if(this.AIHandler !== undefined && this.AIHandler.prompt) this.AIHandler.prompt.visible = false;
 			this.clickLabel.visible = false;
 			if (this.controller !== undefined) this.controller.update(dt);	
 			if (this.user !== undefined ) this.user.update(dt);
-			if (this.npcHandler !== undefined ) {
-				//console.log(this.npcHandler.npcs)
-				this.npcHandler.update(dt);
-			}
-			if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
 		}
+		if (this.npcHandler !== undefined ) this.npcHandler.update(dt);
+		if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
 		if (this.CQBHandler !== undefined) this.CQBHandler.update(dt);
+		if (this.AIHandler !== undefined) this.AIHandler.update(dt);
 		this.renderer.render( this.scene, this.camera );
 		this.labelRenderer.render(this.scene, this.camera);
+		// console.log(this.user.position);
     }
 
 	updateRemoteUsers(dt) {

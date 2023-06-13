@@ -6,6 +6,7 @@ class NPC{
 		const fps = options.fps || 30; //default fps
 		this.name = options.name == undefined ? 'NPC' : options.name;
 		this.hp = 3;
+		this.ai = false;
 		// this.id = parseInt(Math.random()*(99-10+1)+10,10);
 
 		// add name to npc when name is not default
@@ -14,6 +15,10 @@ class NPC{
 			this.nameDiv.textContent = this.name;
 			this.nameDiv.style.color = 'rgb(255, 0, 0)';
 			this.nameDiv.style.fontSize = '50px';
+			if(this.name == 'AI Bot'){
+				this.nameDiv.style.color = 'rgb(0, 255, 0)';
+				this.nameDiv.style.fontSize = '20px';
+			}
 			this.nameDiv.style.textAlign = 'center';
 			this.nameDiv.style.width = '100px';
 			this.nameDiv.style.height = '100px';
@@ -84,7 +89,7 @@ class NPC{
 	newPath(pt){
         const player = this.object;
         
-        if (this.pathfinder===undefined){
+        if (this.pathfinder===undefined && !this.ai){
             this.calculatedPath = [ pt.clone() ];
             //Calculate target direction
             this.setTargetDirection( pt.clone() );
