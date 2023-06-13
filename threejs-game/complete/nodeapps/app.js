@@ -26,6 +26,9 @@ io.sockets.on('connection', function(socket){
     });
 
     socket.on('disconnect', function(){
+        if(socket.id===npcMasterId){
+            npcMasterId = null;
+        }
         console.log(`${socket.id} disconnected`)
         socket.broadcast.emit('deletePlayer', { id: socket.id });
     });
@@ -61,9 +64,12 @@ io.sockets.on('connection', function(socket){
     })
 
     socket.on('updateNpc',function(data){
-        npcMasterId = socket.id;
-        npcsPos = data.npcsPos
-        npcsQua = data.npcsQua
+        if(npcMasterId ===null||npcMasterId===undefined||npcMasterId ===socket.id){
+            npcMasterId = socket.id;
+            npcsPos = data.npcsPos
+            npcsQua = data.npcsQua
+        }
+
         //console.log(npcMasterId,data.npcsPos)
     })
 });

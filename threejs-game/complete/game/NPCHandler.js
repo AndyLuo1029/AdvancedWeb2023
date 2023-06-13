@@ -41,11 +41,16 @@ class NPCHandler{
 				self.isMaster=false;
 				self.updateNpcs(data.npcsPos,data.npcsQua);
 			}
+			if(data.id===null||data.id===undefined){
+				self.isMaster=true;
+			}
 		})
 		this.load();
 	}
 
 	updateNpcs(npcsPos,npcsQua) {
+		// console.log(npcsPos)
+		// console.log(npcsQua)
 		//console.log(this.npcs[0].object.position);
 		//console.log(new Vector3(npcsPos[0].x,npcsPos[0].y,npcsPos[0].z))
 		//console.log(this.npcs[0].object.position)
