@@ -26,6 +26,7 @@ export class ThreeJsComponent implements OnInit{
 	private socket: any;
 	private game: any;
 	private url = Global.backURL+"/user/addData";
+	private nodeUrl = Global.nodeURL;
 	constructor(
 		public http:HttpClient, 
 		private ngZone:NgZone, 
@@ -67,8 +68,7 @@ export class ThreeJsComponent implements OnInit{
 		this.finish = 0;
 		this.map = Global.map_choice;
 		this.skin = Global.skin_choice;
-		this.url = Global.nodeURL
-		this.socket = this.wsService.connect(this.url);	
+		this.socket = this.wsService.connect(this.nodeUrl);	
 		this.game = new Game(localStorage.getItem('username'),this.map, this.skin, this.socket, (result:any)=> {
 			this.finish = 1;
 			this.updateData(result.time, result.hitrate);
