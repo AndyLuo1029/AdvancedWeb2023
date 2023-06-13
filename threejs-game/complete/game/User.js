@@ -124,10 +124,13 @@ class User{
 			this.tmpVec.y += 1.5;
 		}
 		else{
-			this.root.getWorldPosition(this.tmpVec);
+			this.camera.getWorldPosition(this.tmpVec);
 		}
 
-		if(this==this.game.user){this.camera.getWorldQuaternion(this.tmpQuat);console.log("本地",this.tmpQuat)}
+		if(this==this.game.user){
+			this.camera.getWorldQuaternion(this.tmpQuat);
+			// console.log("本地",this.tmpQuat)
+		}
 		else {
 			console.log(this.tmpQuat)
 		}

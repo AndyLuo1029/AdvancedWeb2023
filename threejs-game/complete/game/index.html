@@ -18,7 +18,7 @@
       .chat_container{
           display:flex;
           flex-direction: column;
-          height:150px;
+          height:300px;
           overflow-y:scroll;
       }
       .message_container{
@@ -65,7 +65,7 @@
         let socket, f = function(){};
 
         document.addEventListener("DOMContentLoaded", () => {
-            const game = new Game('user1',2,0,socket,f);
+            const game = new Game('user1',0,0,socket,f);
             window.game = game;
         });
     </script>

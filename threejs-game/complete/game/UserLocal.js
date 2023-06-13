@@ -114,8 +114,6 @@ class UserLocal extends User{
             message.value="";
             message.setAttribute('disabled','disabled');
         }
-
-
     }
     updateSocket(){
         if (this.socket !== undefined){
