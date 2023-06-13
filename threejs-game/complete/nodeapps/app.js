@@ -7,8 +7,6 @@ const axios = require('axios');
 app.use('/',express.static('../game/'));
 app.use('/libs',express.static('../../libs/'));
 app.use('/assets',express.static('../../assets/'));
-// app.use(express.static('../../libs/pathfinding'));
-// app.use(express.static('../../libs/three137'));
 app.get('/',function(req, res) {
     res.sendFile(__dirname + '../game/index.html');
 });
@@ -62,19 +60,7 @@ io.sockets.on('connection', function(socket){
         socket.broadcast.emit('deletePlayer', { id: socket.id });
     });
 
-    // socket.on('init', function(data){
-    //     // console.log(`socket.init ${data.model}`);
-    //     // socket.userData.model = data.model;
-    //     // socket.userData.colour = data.colour;
-    //     socket.userData.x = data.x;
-    //     socket.userData.y = data.y;
-    //     socket.userData.z = data.z;
-    //     socket.userData.heading = data.h;
-    //     //socket.userData.pb = data.pb;
-    //     socket.userData.action = "Idle";
-    // });
     socket.on('update', function(data){
-        //console.log(socket.id,data.x,data.y,data.z)
         if(socket.userData != undefined){
             socket.userData.name = data.name;
             socket.userData.x = data.x;
@@ -88,7 +74,6 @@ io.sockets.on('connection', function(socket){
     //var time =0;
     socket.on('chat message',  async function(data){
         console.log(`chat message:${data.name} ${data.message}`);
-        //io.to(data.id).emit('chat message', { id: socket.id, message: data.message });
         io.emit('chat message', { id: data.id,name:data.name, message: data.message });
     })
 
@@ -98,8 +83,6 @@ io.sockets.on('connection', function(socket){
             npcsPos = data.npcsPos
             npcsQua = data.npcsQua
         }
-
-        //console.log(npcMasterId,data.npcsPos)
     })
 
     socket.on('AImessage',async function(data){
@@ -121,13 +104,9 @@ http.listen(8084, function(){
 setInterval(function(){
 
     const nsp = io.of('/');
-    //console.log( io.sockets.sockets);
-    //console.log(io.sockets.sockets)
     let pack = [];
 
     for(let cs of io.sockets.sockets){
-        // console.log(id)
-        // const socket = nsp.connected[id];
         const socket = cs[1];
         //Only push sockets that have been initialised
         if (socket.userData!==undefined){

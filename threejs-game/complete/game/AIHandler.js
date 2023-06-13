@@ -9,7 +9,6 @@ class AIHandler{
         this.user = this.game.user;
         this.socket = this.user.socket;
         this.socket.on('AImessage', function(data){
-            // console.log(data);
             let pre_message=document.getElementById("pre_message")
             let message_container = document.createElement("div")
             message_container.className = "message_container";
@@ -17,7 +16,6 @@ class AIHandler{
             let messageElement = document.createElement("div")
             messageElement.className = "message";
             messageElement.innerText =`ChatGPT:${data}`;
-            //console.log(messageElement,message_container,pre_message)
             message_container.appendChild(messageElement);
             pre_message.appendChild(message_container);
             pre_message.scrollTop =pre_message.scrollHeight;
@@ -72,24 +70,20 @@ class AIHandler{
     keyDown=(e)=>{
         if(this.AIlock){
             if(e.keyCode ===13 && this.input){
-                // console.log('in enter');
                 this.enter = !this.enter;
                 // send ajax socket and get return message
                 if(this.enter){
-                    // console.log('input');
                     this.message.removeAttribute('disabled');
                     this.message.focus();
                 }
                 else{
                     if(message.value!=="") {
-                        // console.log(this.socket.id);
                         let pre_message=document.getElementById("pre_message")
                         let message_container = document.createElement("div")
                         message_container.className = "message_container";
                         let messageElement = document.createElement("div")
                         messageElement.className = "message";
                         messageElement.innerText =`User:${message.value}`;
-                        //console.log(messageElement,message_container,pre_message)
                         message_container.appendChild(messageElement);
                         pre_message.appendChild(message_container);
                         pre_message.scrollTop =pre_message.scrollHeight;
@@ -97,12 +91,9 @@ class AIHandler{
                     }
                     this.message.value = "";
                     this.message.setAttribute('disabled','disabled');
-                    // console.log('send');
                 }
             }
             if(this.enter && this.input) return;
-
-            // console.log(e.keyCode);
 
             if(this.topMenu){
                 switch(e.keyCode){

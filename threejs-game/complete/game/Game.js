@@ -297,9 +297,6 @@ class Game{
 		this.user = new UserLocal(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI,this.username);
 		this.AIHandler = new AIHandler(this);
 		this.npcHandler = new NPCHandler(this);
-
-		//new User(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
-		// this.user = new User(this, new THREE.Vector3(this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]) , 1*Math.PI);
     }
 
 	// 加载环境模型及其子对象，并设置导航网格和阴影等属性。
@@ -418,9 +415,6 @@ class Game{
 		// game
 		window.removeEventListener( 'resize', this.resize );
 
-		// npchandler
-		// this.renderer.domElement.removeEventListener( 'click', this.npcHandler.raycast);
-
 		// AIHandler
 		document.removeEventListener('keydown', this.AIHandler.keyDown);
 
@@ -452,8 +446,6 @@ class Game{
 	render() {
 		if( this.sceneEnd && this.CQBHandler !== undefined && this.CQBHandler.canExit){
 			// 已经阅读完游戏结束提示，可以退出游戏
-			// this.stopRendering();
-			// console.log('quit game');
 			this.gametime = parseInt(this.CQBHandler.sceneTime);
 			this.hitrate = ((this.user.hitCount / this.user.shootCount) * 100);
 			this.hitrate = Math.round(this.hitrate*1000)/1000;
@@ -499,31 +491,23 @@ class Game{
 		if (this.AIHandler !== undefined) this.AIHandler.update(dt);
 		this.renderer.render( this.scene, this.camera );
 		this.labelRenderer.render(this.scene, this.camera);
-		// console.log(this.user.position);
     }
 
 	updateRemoteUsers(dt) {
 		const game = this;
 		const remoteUsers = [];
 		if (this.remoteData===undefined || this.remoteData.length == 0) return;
-
-		// console.log(this.remoteData);
-		// console.log(this.initialisingPlayers);
-		// console.log(this.remoteUsers);
 		this.remoteData.forEach( function(data){
 			if (game.user.id !== data.id){
-				// //Is this player being initialised?
+				//Is this player being initialised?
 				let iplayer;
 				game.initialisingPlayers.forEach( function(user){
 					if (user.id === data.id) iplayer = user;
 				});
 				//If not being initialised check the remotePlayers array
 				if (iplayer===undefined){
-					//console.log(114514)
 					let r_user;
-					//console.log(game.remoteUsers===undefined)
 					game.remoteUsers.forEach( function(user){
-						//console.log(user)
 						if (!user===undefined && user.id === data.id) r_user = user;
 					});
 					if (r_user===undefined){
@@ -535,7 +519,6 @@ class Game{
 						let user = new User( game, new Vector3(data.x,data.y,data.z),1*Math.PI,data.id,data.name, data.model )
 						let rbh = new BulletHandler(game,user);
 						game.remoteBulletHandlers.push(rbh);
-						// console.log(data);
 						game.initialisingPlayers.push(user);
 					}else{
 						//Player exists
@@ -545,7 +528,6 @@ class Game{
 			}
 		});
 
-		//console.log(remoteUsers)
 		if(remoteUsers.length!==0)
 			this.remoteUsers =this.remoteUsers.concat(remoteUsers);
 		this.initialisingPlayers.forEach(function(user){
@@ -553,11 +535,6 @@ class Game{
 				game.remoteUsers.push(user);
 		})
 
-
-		//this.getIniPlayers();
-		//console.log(this.remoteUsers);
-		//
-		//console.log(this.remoteUsers);
 		this.remoteUsers.forEach(function(user){
 			if(user.ready){
 				user.update( dt );

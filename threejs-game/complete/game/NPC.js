@@ -7,8 +7,6 @@ class NPC{
 		this.name = options.name == undefined ? 'NPC' : options.name;
 		this.hp = 3;
 		this.ai = false;
-		// this.id = parseInt(Math.random()*(99-10+1)+10,10);
-
 		// add name to npc when name is not default
 		if (this.name != 'NPC'){
 			this.nameDiv = document.createElement('div');
@@ -74,7 +72,6 @@ class NPC{
 
     get randomWaypoint(){
 		const index = Math.floor(Math.random()*this.waypoints.length);
-		//const index = 0;
 		return this.waypoints[index];
 	}
 	setTargetDirection(pt){
@@ -96,15 +93,12 @@ class NPC{
             this.action = 'walking';
             return;
         }
-        
-		//console.log(`New path to ${pt.x.toFixed(1)}, ${pt.y.toFixed(2)}, ${pt.z.toFixed(2)}`);	
 
 		const targetGroup = this.pathfinder.getGroup(this.ZONE, pt);
 		const closestTargetNode = this.pathfinder.getClosestNode(pt, this.ZONE, targetGroup);
 		
 		// Calculate a path to the target and store it
 		this.calculatedPath = this.pathfinder.findPath(player.position, pt, this.ZONE, this.navMeshGroup);
-		//console.log(this.calculatedPath,player.position,pt,this.ZONE, this.navMeshGroup)
 		if (this.calculatedPath && this.calculatedPath.length) {
 			this.action = 'walking';
 			
@@ -198,8 +192,6 @@ class NPC{
 		this.object.quaternion.copy(x);
 	}
 	update(dt,isMaster){
-		//console.log(this.actionName)
-		//console.log(this.calculatedPath)
 		if(this.nameObject != undefined){
 			if(this.dead) this.nameObject.visible = false;
 			else this.nameObject.visible = true;

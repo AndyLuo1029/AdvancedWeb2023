@@ -32,13 +32,9 @@ class NPCHandler{
 			"A", "B", "C", "D"
 		];
 		this.npcs = [];
-		//console.log(this.game.user)
 		let self = this;
 		if(this.scene == 'multiplayer') {
 			this.game.user.socket.on('npcMessage',function(data){
-				//console.log(this.isMaster)
-				//console.log(data.id)
-				//console.log(self.game.user.socket.id)
 				if(data.id!==self.game.user.socket.id){
 					self.isMaster=false;
 					self.updateNpcs(data.npcsPos,data.npcsQua);
@@ -56,18 +52,10 @@ class NPCHandler{
 	}
 
 	updateNpcs(npcsPos,npcsQua) {
-		// console.log(npcsPos)
-		// console.log(npcsQua)
-		//console.log(this.npcs[0].object.position);
-		//console.log(new Vector3(npcsPos[0].x,npcsPos[0].y,npcsPos[0].z))
-		//console.log(this.npcs[0].object.position)
-		//console.log(this.npcs[0].quaternion)
 		for(let i =0;i<this.npcs.length;i++){
 			this.npcs[i].position =new Vector3(npcsPos[i].x,npcsPos[i].y,npcsPos[i].z)
 			this.npcs[i].qua = new Quaternion(npcsQua[i]._x,npcsQua[i]._y,npcsQua[i]._z,npcsQua[i]._w)
 		}
-		//console.log(this.npcs[0].quaternion)
-		//console.log(this.npcs[0].object.position);
 	}
 
 	initMouseHandler(){
@@ -126,10 +114,10 @@ class NPCHandler{
 				`swat-guy.glb`,
 				// called when the resource is loaded
 				gltf => {
-					if(i == currentNPCCounts) {
+					if(i == currentNPCCounts && this.scene !== "multiplayer") {
 						this.initAInpc(gltf);
 					}
-					else {
+					else if(i < currentNPCCounts){
 						if (this.scene == "scene1"){
 							this.initScene1Npcs(gltf, i);
 						}
@@ -137,7 +125,7 @@ class NPCHandler{
 							this.initScene2Npcs(gltf, i);
 						}
 						else{
-							// TODO: multi mode
+							// multi mode
 							this.initNPCs(gltf);
 						}
 					}
@@ -328,7 +316,6 @@ class NPCHandler{
 		this.pos = this.randomWaypoint;
 		npc.object.position.copy(this.pos);
 		this.path = this.randomWaypoint;
-		//console.log(this.path)
 		npc.newPath(this.path);
 
 
@@ -384,7 +371,6 @@ class NPCHandler{
     
     get randomWaypoint(){
 		const index = Math.floor(Math.random()*this.waypoints.length);
-		//const index = 0;
 		return this.waypoints[index];
 	}
 
