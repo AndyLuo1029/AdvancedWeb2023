@@ -35,7 +35,6 @@ class Controller{
         this.cameraBase.position.copy( this.camera.position );
         this.cameraBase.quaternion.copy( this.camera.quaternion );
         this.target.attach( this.cameraBase );
-        //this.target.rotateY(0.7);
 
         this.cameraHigh = new Camera();
         this.cameraHigh.position.copy( this.camera.position );
@@ -67,9 +66,6 @@ class Controller{
                         v:false,
                         shift:false,
                         enter:false
-                        //space:false,
-                        // mousedown:false,
-                        //mouseorigin:{x:0, y:0}
                     };
 
         this.domElement = document.body;
@@ -87,6 +83,16 @@ class Controller{
             this.keys.enter = !this.keys.enter;
             this.user.sendMessage(this.keys.enter);
             return;
+        }
+        // press up and down to scroll
+        let pre_message=document.getElementById("pre_message");
+        switch(e.keyCode){ 
+            case 38:
+                pre_message.scrollTop -= 20;
+                break;
+            case 40:
+                pre_message.scrollTop += 20;
+                break;
         }
         if(this.keys.enter)return;
 
@@ -200,7 +206,6 @@ class Controller{
     }
 
     update(dt=0.0167){ 
-        // console.log(this.user.position); 
         let playerMoved = false;
         let speed;
         this.keyHandler();
@@ -217,20 +222,13 @@ class Controller{
 
             const pos = this.target.position.clone().add(forward.multiplyScalar(speed));
             pos.y += 2;
-            //console.log(`Moving>> target rotation:${this.target.rotation} forward:${forward} pos:${pos}`);
-            
             this.raycaster.set( pos, this.down );
-
             const intersects = this.raycaster.intersectObject( this.navmesh );
-
             if ( intersects.length>0 ){
                 this.target.position.copy(intersects[0].point);
                 playerMoved = true;
             }
         }
-        // else{
-        //     speed = 0;
-        //  }
 
         if (Math.abs(this.move.right)>0.1){
             const right = this.right.clone().applyQuaternion(this.target.quaternion);
@@ -253,9 +251,6 @@ class Controller{
                 this.target.position.copy(intersects[0].point);
                 playerMoved = true;
             }
-            // const theta = dt * (this.move.right-0.1) * 1;
-            // this.target.rotateY(theta);
-            //playerMoved = true;
         }
 
         if(this.move.up===0&&this.move.right===0)speed =0;
@@ -265,10 +260,7 @@ class Controller{
         else this.user.speed =0;
 
         if(this.rotate.right!==0){
-            // const theta = dt * (this.rotate.right - 0.1);
-            // this.target.rotateY(theta);
              this.target.rotateOnWorldAxis(this.yAxis, this.rotate.right);
-            //this.target.rotation.y -= this.rotate.right
             this.rotate.right = 0;
             playerMoved = true;
         }
@@ -277,29 +269,10 @@ class Controller{
             this.target.rotateX(this.rotate.up);
 
             this.rotateAngle += this.rotate.up;
-            // console.log(this.rotateAngle)
-
-            // let rotBorder = 0;
-            // if(this.perspective == 3){
-            //     rotBorder = 2.80;
-            // }
-            // else {
-            //     rotBorder = 2.75;
-            // }
-            // if(Math.abs(this.target.rotation.x) < rotBorder){
-            //     if(this.target.rotation.x > 0){
-            //         this.target.rotation.x = rotBorder;
-            //     }   
-            //     else{
-            //         this.target.rotation.x = -rotBorder;
-            //     }
-            // }
-
             this.rotate.up = 0;
             playerMoved = true;
         }
 
-        //console.log(playerMoved)
         if (playerMoved){
             this.cameraBase.getWorldPosition(this.tmpVec3);
             this.camera.position.lerp(this.tmpVec3, 0.7);
@@ -314,7 +287,6 @@ class Controller{
 
 
          if (this.look.up==0 && this.look.right==0){
-             //console.log(this.tmpVec3,this.target.position,this.camera.position)
             let lerpSpeed = 0.7;
             this.cameraBase.getWorldPosition(this.tmpVec3);
              if (this.game.seeUser(this.tmpVec3, true)){

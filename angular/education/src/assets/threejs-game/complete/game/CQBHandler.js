@@ -1,7 +1,6 @@
 import * as THREE from '../../libs/three137/three.module.js';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { CQBConfig } from './CQBConfig.js';
-import { DoubleSide } from 'three';
 
 
 class CQBHandler{
@@ -42,10 +41,10 @@ class CQBHandler{
 		this.promptDiv = document.createElement( 'div' );
 		this.promptDiv.style.backgroundColor = 'rgba(107, 122, 143, 0.5)';
 		this.promptDiv.style.height = '25%';
-        this.promptDiv.style.lineHeight = 'normal';
 		this.promptDiv.style.width = '80%';
         this.promptDiv.style.color = 'white';
 		this.promptDiv.style.fontSize = '30px';
+        this.promptDiv.style.lineHeight = 'normal';
         this.promptDiv.style.marginTop = window.innerHeight * 0.35 + 'px';
         this.promptDiv.style.padding = '10px';
         this.promptDiv.style.borderRadius = '10px';
@@ -66,10 +65,7 @@ class CQBHandler{
     
     // 添加引导路线
     addPath() {
-        // console.log("addPath"); // for debug
-
         this.pathPoints = [...this.positions];
-        // console.log(this.pathPoints); // for debug
         this.pointsToUse = [this.game.user.position, this.pathPoints[0]];
         const curve = new THREE.CatmullRomCurve3(this.pointsToUse);
 
@@ -188,7 +184,6 @@ class CQBHandler{
         else{
             // 整个场景结束
             this.sceneEnd = true;
-            // console.log('end');
             this.sceneTime = this.clock.getElapsedTime();
             this.clock.stop();
         }
@@ -219,7 +214,6 @@ class CQBHandler{
                 this.sceneStart = true;
                 this.clock = new THREE.Clock();
                 this.clock.start();
-                // console.log('start');
             }
         }
         else if(this.sceneEnd && this.positions.length == 0 && !this.CQBlock){
@@ -234,7 +228,6 @@ class CQBHandler{
         else if(!this.CQBlock && !this.missionFinished && this.read && !this.sceneEnd){
             // 读取完任务点文字提示后，等待击杀对应目标
             let target = this.config.targets[this.scene][this.round][this.pointIndex];
-            // if(target!=undefined) console.log(this.npcs[target].name);
             if(target!=undefined && this.npcs[target].dead){
                 this.missionFinished = true;
             }

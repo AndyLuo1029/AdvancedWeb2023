@@ -1,5 +1,4 @@
 import { Group,
-         Object3D,
          Vector3,
          Quaternion,
          Raycaster,
@@ -16,7 +15,7 @@ import * as THREE from '../../libs/three137/three.module.js';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 class User{
-    constructor(game, pos, heading,id, model){
+    constructor(game, pos, heading,id,name, model){
 
 		this.role = game.userRole;
 		if(model != undefined) this.role = model; // 远程用户选择不同模型
@@ -33,7 +32,7 @@ class User{
 		if(id!=undefined){
 			this.id = id;
 			this.nameDiv = document.createElement('div');
-			this.nameDiv.textContent = this.id;
+			this.nameDiv.textContent = name;
 			this.nameDiv.style.color = 'white';
 			this.nameDiv.style.fontSize = '10px';
 			this.nameDiv.style.textAlign = 'center';
@@ -94,19 +93,28 @@ class User{
 	set firing(mode){
 		this.isFiring = mode;
 		if (mode){
-			//console.log(this.speed)
 			this.action =  (Math.abs(this.speed) === 0 ) ? "firing" : "firingwalk";
-			//console.log(this.action)
 			this.bulletTime = this.game.clock.getElapsedTime();
 		}else{
 			this.action = 'idle';
 		}
-		//console.log(this.action)
 	}
 	
 	shoot(){
 		this.perspective = this.game.controller.perspective;
-		if (this.bulletHandler === undefined) this.bulletHandler = this.game.bulletHandler;
+		if (this.bulletHandler === undefined) {
+			if(this==this.game.user)
+				this.bulletHandler = this.game.bulletHandler;
+			else {
+				let user = this;
+				this.game.remoteBulletHandlers.forEach(function(bh){
+					if(bh.user===user){
+						user.bulletHandler = bh;
+					}
+
+				});
+			}
+		}
 		if(this.perspective == 3){
 			this.root.getWorldPosition(this.tmpVec);
 			this.tmpVec.y += 1.5;
@@ -114,8 +122,15 @@ class User{
 		else{
 			this.camera.getWorldPosition(this.tmpVec);
 		}
-		this.camera.getWorldQuaternion(this.tmpQuat);
+
+		if(this==this.game.user){
+			this.camera.getWorldQuaternion(this.tmpQuat);
+		}
+		else {
+			console.log(this.tmpQuat)
+		}
 		this.bulletHandler.createBullet( this.tmpVec, this.tmpQuat );
+
 		this.bulletTime = this.game.clock.getElapsedTime();
 		this.shootCount++;
 	}
@@ -141,7 +156,6 @@ class User{
 		loader.load( 'Idle.glb', function( object ){
 			user.anim=	object.animations[0]
 		});
-		// console.log(this.animations);
 		let url, color, avatarScale;
 		if(this.role < 3){
 			url = 'eve2.glb';
@@ -214,10 +228,8 @@ class User{
 						}
 					);
 				}
-				// user.object.add(this.object);
 
 				if(this.nameObject!=undefined){
-					//this.object.add(this.nameObject);
 					this.root.add(this.nameObject);
 					this.nameObject.position.set(0, 1.8, 0);
 					this.nameObject.layers.set(0);
@@ -228,12 +240,7 @@ class User{
                 gltf.animations.forEach( animation => {
 					if(animation.name.toLowerCase()=='walking')this.animations['walk']=animation;
                     else this.animations[animation.name.toLowerCase()] = animation;
-
-					// console.log(this.animations);
-					//console.log(animation.name.toLowerCase())
                 })
-				//this.animations['idle']=user.anim;
-				//console.log(this.animations)
                 this.mixer = new AnimationMixer(gltf.scene);
 
                 this.action = 'idle';
@@ -260,8 +267,6 @@ class User{
 	}
 	setAction(name){
 		if (this.actionName == name.toLowerCase()) return;
-
-		// console.log(`User action:${this.id}${name}`);
 		if(name.toLowerCase()==="run"){
 			this.isRun =true;
 		}
@@ -270,8 +275,6 @@ class User{
 		}
 
 		const clip = this.animations[name.toLowerCase()];
-
-		//console.log(clip)
 		if (clip!==undefined){
 			const action = this.mixer.clipAction( clip );
 			if (name=='shot'){
@@ -292,16 +295,13 @@ class User{
 			this.curAction = action;
 		}
 		if (this.rifle && this.rifleDirection){
-			// console.log(this.perspective,name);
 			let q = undefined;
 			if(this.perspective == 1){
 				if(name == 'firingwalk'){
 					q = this.rifleDirection['fpsFiringwalk'];
-					// console.log("fpsFiringwalk");
 				}
 				else if(name == 'firing'){
 					q = this.rifleDirection['fpsFiring'];
-					// console.log("fpsFiring");
 				}
 			}
 			else{
@@ -320,13 +320,8 @@ class User{
 			}
 		}
 	}
-	getHit(bullet){
-		//判断子弹是否与自己相交（hitbox相交）若相交则
-		//this.healthPoint-=bullet.damage;
-	}
+
 	update(dt){
-
-
 		this.perspective = this.game.controller.perspective;
 		if (this.mixer) this.mixer.update(dt);
 		if (this.rotateRifle !== undefined){
@@ -346,41 +341,27 @@ class User{
 				this.shoot();
 				this.aim.rotateX(Math.random() * Math.PI);
 				this.aim.visible = true;
-				if(this.healthPoint>0)this.healthPoint-=20;//开枪自残
 			}
 		}
 		else{
 			this.aim.visible = false;
 		}
-		if(this.healthPoint<=0){
-			// console.log("gameover")
-			this.healthPoint = 100;
-		}
 
 		if (this.game.remoteData.length>0&&this.game.user!==this&&this.ready){
-			//let found = false;
 			for(let data of this.game.remoteData){
 				if (data.id != this.id) continue;
 				//Found the player
-				//console.log(data.id)
-				//const dy =this.root.rotation.y-data.heading;
 				this.root.position.set( data.x, data.y, data.z );
-
-				//console.log(data.rotate)
-				//this.root.rotation = data.rotate
-				// console.log(data.heading)
-				// console.log(dy)
-				//this.root.rotation.y = data.heading;
-				//console.log(this.root)
 				if(data.hasOwnProperty('rotate')&&data.rotate.hasOwnProperty('x'))
 				 	this.root.rotation.set( data.rotate.x, data.rotate.y, data.rotate.z, 'XYZ' );
-				//this.root.rotateOnWorldAxis(new Vector3(0, 1, 0), dy);
-				//const euler = new THREE.Euler(0, data.heading, 0);
-				//this.object.quaternion.setFromEuler( euler );
-				//this.actionName = data.action;
+				if(data.q!==undefined)
+					this.tmpQuat =new Quaternion(data.q._x,data.q._y,data.q._z,data.q._w);
 				this.setAction(data.action);
-				//console.log(this.actionName)
-				//found = true;
+				if(this.actionName=="firing"||this.actionName=="firewalk"){
+					this.isFiring = true;
+					if(this.bulletTime===0||this.bulletTime===undefined)this.bulletTime = this.game.clock.getElapsedTime();
+				}
+				else {this.isFiring=false;this.bulletTime=0;}
 			}
 		}
 	}

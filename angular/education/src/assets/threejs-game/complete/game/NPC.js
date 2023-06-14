@@ -6,14 +6,17 @@ class NPC{
 		const fps = options.fps || 30; //default fps
 		this.name = options.name == undefined ? 'NPC' : options.name;
 		this.hp = 3;
-		// this.id = parseInt(Math.random()*(99-10+1)+10,10);
-
+		this.ai = false;
 		// add name to npc when name is not default
 		if (this.name != 'NPC'){
 			this.nameDiv = document.createElement('div');
 			this.nameDiv.textContent = this.name;
 			this.nameDiv.style.color = 'rgb(255, 0, 0)';
 			this.nameDiv.style.fontSize = '50px';
+			if(this.name == 'AI Bot'){
+				this.nameDiv.style.color = 'rgb(0, 255, 0)';
+				this.nameDiv.style.fontSize = '20px';
+			}
 			this.nameDiv.style.textAlign = 'center';
 			this.nameDiv.style.width = '100px';
 			this.nameDiv.style.height = '100px';
@@ -83,22 +86,19 @@ class NPC{
 	newPath(pt){
         const player = this.object;
         
-        if (this.pathfinder===undefined){
+        if (this.pathfinder===undefined && !this.ai){
             this.calculatedPath = [ pt.clone() ];
             //Calculate target direction
             this.setTargetDirection( pt.clone() );
             this.action = 'walking';
             return;
         }
-        
-		//console.log(`New path to ${pt.x.toFixed(1)}, ${pt.y.toFixed(2)}, ${pt.z.toFixed(2)}`);	
 
 		const targetGroup = this.pathfinder.getGroup(this.ZONE, pt);
 		const closestTargetNode = this.pathfinder.getClosestNode(pt, this.ZONE, targetGroup);
 		
 		// Calculate a path to the target and store it
 		this.calculatedPath = this.pathfinder.findPath(player.position, pt, this.ZONE, this.navMeshGroup);
-
 		if (this.calculatedPath && this.calculatedPath.length) {
 			this.action = 'walking';
 			
@@ -185,8 +185,13 @@ class NPC{
 	get position(){
 		return this.object.position;
 	}
-
-	update(dt){
+	set position(x){
+		this.object.position.add(x.sub(this.object.position));
+	}
+	set qua(x){
+		this.object.quaternion.copy(x);
+	}
+	update(dt,isMaster){
 		if(this.nameObject != undefined){
 			if(this.dead) this.nameObject.visible = false;
 			else this.nameObject.visible = true;
@@ -196,7 +201,7 @@ class NPC{
 		
 		if (this.mixer) this.mixer.update(dt);
 		
-        if (this.calculatedPath && this.calculatedPath.length) {
+        if (this.calculatedPath && this.calculatedPath.length&&isMaster) {
             const targetPosition = this.calculatedPath[0];
 
             const vel = targetPosition.clone().sub(player.position);
@@ -230,7 +235,7 @@ class NPC{
                 }
             }
         }else{
-            if (!this.dead && this.waypoints!==undefined) this.newPath(this.randomWaypoint);
+            if (!this.dead && this.waypoints!==undefined&&isMaster) this.newPath(this.randomWaypoint);
         }
     }
 }

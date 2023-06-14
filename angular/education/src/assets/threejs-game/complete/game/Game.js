@@ -8,11 +8,10 @@ import { User } from './User.js';
 import {UserLocal} from './UserLocal.js'
 import { Controller } from './Controller.js';
 import { BulletHandler } from './BulletHandler.js';
-import { FrontSight} from './frontSight.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { CQBHandler } from './CQBHandler.js';
 import {Vector3} from "../../libs/three137/three.module.js";
-import { Group } from '../../libs/three137/three.module.js';
+import { AIHandler } from './AIHandler.js';
 
 
 class Game{
@@ -23,14 +22,13 @@ class Game{
 			'scene2',
 			'multiplayer'
 		];
-		this.username = username;
 		this.sceneIndex = map == undefined ? 0 : map;
 		this.currentScene = this.scenes[this.sceneIndex];
 		this.socket = socket;
 		this.sceneEnd = false;
 		this.gametime = 0;
 		this.hitrate = 0;
-
+		this.username = username;
 		this.startPosition = [
 			[21, 0.186, 0],
 			[-11.78609367674414, 0.13426758701522457, -23.89975828918036],
@@ -54,16 +52,19 @@ class Game{
 		this.remoteUsers =[];
 		//初始化player 需要加载完才能进入remoteUsers
 		this.initialisingPlayers = [];
+		//远程子弹handler
+		this.remoteBulletHandlers = [];
+		//本地玩家
+		this.user;
 		// 创建场景容器
 		const container = document.getElementById( 'three' );
-		
 
 		this.clock = new THREE.Clock(); // 用于计算时间差
 
         this.loadingBar = new LoadingBar(); // 加载状态界面
         this.loadingBar.visible = false; // 初始不可见
 
-		this.assetsPath = './assets/threejs-game/assets/';; // 资源路径
+		this.assetsPath = './assets/threejs-game/assets/'; // 资源路径
         
 		// 创建相机，并设置位置和旋转角度
 		this.camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 500 );
@@ -113,10 +114,16 @@ class Game{
 
 		this.load(); // 加载模型和角色
 
-		// add frontSight to camera
-		const frontSight = new FrontSight(THREE);
-		this.camera.add(frontSight.frontSight);
-		this.camera.add(frontSight.frontSightRing);
+		// 添加准星
+		const frontSightGeometry = new THREE.CircleGeometry(0.002);
+        const frontSightRingGeometry = new THREE.RingGeometry(0.005, 0.007, 32);
+        const frontSightMaterial = new THREE.MeshBasicMaterial({color: 0x1aff00});
+        const frontSight = new THREE.Mesh(frontSightGeometry, frontSightMaterial);
+        const frontSightRing = new THREE.Mesh(frontSightRingGeometry, frontSightMaterial);
+        frontSight.position.set(0, 0, -1);
+        frontSightRing.position.set(0, 0, -1);
+		this.camera.add(frontSight);
+		this.camera.add(frontSightRing);
 		this.scene.add(this.camera); // 将相机添加到场景中
 
 		this.raycaster = new THREE.Raycaster(); // 创建射线投射器
@@ -125,7 +132,7 @@ class Game{
 		window.addEventListener( 'resize', this.resize ); // 监听调整窗口大小事件
 
 		if(this.sceneIndex != 2){
-			let t = document.getElementById('container');//选取id为test的元素
+			let t = document.getElementById('container');
 			t.style.display = 'none';	// 隐藏选择的元素
 		}
 	}
@@ -285,11 +292,10 @@ class Game{
 	// 加载游戏资源，包括环境、NPC 和用户等。
 	load(){
         this.loadEnvironment();
-		this.npcHandler = new NPCHandler(this);
-		this.user = new UserLocal(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
 
-		//new User(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI);
-		// this.user = new User(this, new THREE.Vector3(this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]) , 1*Math.PI);
+		this.user = new UserLocal(this, new THREE.Vector3( this.startPosition[this.sceneIndex][0], this.startPosition[this.sceneIndex][1], this.startPosition[this.sceneIndex][2]), 1*Math.PI,this.username);
+		this.AIHandler = new AIHandler(this);
+		this.npcHandler = new NPCHandler(this);
     }
 
 	// 加载环境模型及其子对象，并设置导航网格和阴影等属性。
@@ -379,7 +385,7 @@ class Game{
 		if (this.npcHandler.ready && this.user.ready && this.bulletHandler == undefined){
 			this.controller = new Controller(this);
 			this.controller.connect();
-			this.bulletHandler = new BulletHandler(this);
+			this.bulletHandler = new BulletHandler(this,this.user);
 			if(this.sceneIndex != 2) this.CQBHandler = new CQBHandler(this);
 			this.renderer.setAnimationLoop( this.render.bind(this) );
 		}
@@ -390,15 +396,8 @@ class Game{
 		// 删除所有eventListener
 		this.renderer.setAnimationLoop(null);
 
-		for ( let croot of this.camera.children){
-			//console.log(croot)
-			if(croot instanceof Group)
-			{
-				//console.log(croot)
-				continue;}
-			this.camera.remove(croot);
-		}
 		document.exitPointerLock();
+
 		// controller
 		document.removeEventListener('keydown', this.controller.keyDown);
         document.removeEventListener('keyup', this.controller.keyUp);
@@ -415,11 +414,11 @@ class Game{
 		// game
 		window.removeEventListener( 'resize', this.resize );
 
-		// npchandler
-		// this.renderer.domElement.removeEventListener( 'click', this.npcHandler.raycast);
+		// AIHandler
+		document.removeEventListener('keydown', this.AIHandler.keyDown);
 
 		// 释放资源
-		
+		this.user = null
 		// this.controller.clear();
 		this.scene.traverse((child) => {
 			if (child.material) {
@@ -430,14 +429,12 @@ class Game{
 			}
 			child = null;
 		})
-		this.user = null
 		this.renderer.forceContextLoss();
 		this.renderer.dispose();
 		this.scene.clear();
 		this.scene = null;
 		this.camera = null;
 		this.renderer = null;
-
 	}
 
 	/* 
@@ -451,6 +448,7 @@ class Game{
 			this.gametime = parseInt(this.CQBHandler.sceneTime);
 			this.hitrate = ((this.user.hitCount / this.user.shootCount) * 100);
 			this.hitrate = Math.round(this.hitrate*1000)/1000;
+			// 调用函数返回数据
 			if(this.result!=undefined){
 				this.result({
 					time:this.gametime,
@@ -475,15 +473,21 @@ class Game{
 			// print CQB hints
 			if(this.CQBHandler.prompt) this.CQBHandler.prompt.visible = true;
 		}
+		else if(this.AIHandler !== undefined && this.AIHandler.AIlock){
+			// AI chat control logic...
+			if(this.AIHandler.prompt) this.AIHandler.prompt.visible = true;
+		}
 		else{
 			if(this.CQBHandler !== undefined && this.CQBHandler.prompt) this.CQBHandler.prompt.visible = false;
+			if(this.AIHandler !== undefined && this.AIHandler.prompt) this.AIHandler.prompt.visible = false;
 			this.clickLabel.visible = false;
 			if (this.controller !== undefined) this.controller.update(dt);	
 			if (this.user !== undefined ) this.user.update(dt);
-			if (this.npcHandler !== undefined ) this.npcHandler.update(dt);
-			if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
 		}
+		if (this.npcHandler !== undefined ) this.npcHandler.update(dt);
+		if (this.bulletHandler !== undefined) this.bulletHandler.update(dt);
 		if (this.CQBHandler !== undefined) this.CQBHandler.update(dt);
+		if (this.AIHandler !== undefined) this.AIHandler.update(dt);
 		this.renderer.render( this.scene, this.camera );
 		this.labelRenderer.render(this.scene, this.camera);
     }
@@ -492,31 +496,28 @@ class Game{
 		const game = this;
 		const remoteUsers = [];
 		if (this.remoteData===undefined || this.remoteData.length == 0) return;
-
-		// console.log(this.remoteData);
-		// console.log(this.initialisingPlayers);
-		// console.log(this.remoteUsers);
 		this.remoteData.forEach( function(data){
 			if (game.user.id !== data.id){
-				// //Is this player being initialised?
+				//Is this player being initialised?
 				let iplayer;
 				game.initialisingPlayers.forEach( function(user){
 					if (user.id === data.id) iplayer = user;
 				});
 				//If not being initialised check the remotePlayers array
 				if (iplayer===undefined){
-					//console.log(114514)
 					let r_user;
-					//console.log(game.remoteUsers===undefined)
 					game.remoteUsers.forEach( function(user){
-						//console.log(user)
 						if (!user===undefined && user.id === data.id) r_user = user;
 					});
 					if (r_user===undefined){
-						//console.log("Init")
+						console.log(data.id,data.name)
+						console.log(typeof data.id);
+						console.log(typeof data.name);
+
 						//Initialise player
-						let user = new User( game, new Vector3(data.x,data.y,data.z),1*Math.PI,data.id, data.model )
-						// console.log(data);
+						let user = new User( game, new Vector3(data.x,data.y,data.z),1*Math.PI,data.id,data.name, data.model );
+						let rbh = new BulletHandler(game,user);
+						game.remoteBulletHandlers.push(rbh);
 						game.initialisingPlayers.push(user);
 					}else{
 						//Player exists
@@ -526,7 +527,6 @@ class Game{
 			}
 		});
 
-		//console.log(remoteUsers)
 		if(remoteUsers.length!==0)
 			this.remoteUsers =this.remoteUsers.concat(remoteUsers);
 		this.initialisingPlayers.forEach(function(user){
@@ -534,12 +534,16 @@ class Game{
 				game.remoteUsers.push(user);
 		})
 
-
-		//this.getIniPlayers();
-		//console.log(this.remoteUsers);
-		//
-		//console.log(this.remoteUsers);
-		this.remoteUsers.forEach(function(user){ if(user.ready)user.update( dt ); });
+		this.remoteUsers.forEach(function(user){
+			if(user.ready){
+				user.update( dt );
+			}
+		});
+		this.remoteBulletHandlers.forEach(function (bh){
+			if(bh.user.ready){
+				bh.update( dt );
+			}
+		});
 	}
 
 }

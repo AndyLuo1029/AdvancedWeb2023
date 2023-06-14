@@ -1,11 +1,13 @@
 import {NPC} from './NPC.js';
 import {GLTFLoader} from '../../libs/three137/GLTFLoader.js';
 import {DRACOLoader} from '../../libs/three137/DRACOLoader.js';
-import {Skeleton, Raycaster} from '../../libs/three137/three.module.js';
+import {Skeleton, Raycaster, Vector3,Quaternion} from '../../libs/three137/three.module.js';
 import * as THREE from '../../libs/three137/three.module.js';
 
 class NPCHandler{
     constructor( game ){
+		this.AIHandler = game.AIHandler;
+		this.isMaster = true;
         this.game = game;
 		this.loadingBar = this.game.loadingBar;
 		this.ready = false;
@@ -30,7 +32,30 @@ class NPCHandler{
 			"A", "B", "C", "D"
 		];
 		this.npcs = [];
+		let self = this;
+		if(this.scene == 'multiplayer') {
+			this.game.user.socket.on('npcMessage',function(data){
+				if(data.id!==self.game.user.socket.id){
+					self.isMaster=false;
+					self.updateNpcs(data.npcsPos,data.npcsQua);
+				}
+				if(data.id===null||data.id===undefined){
+					self.isMaster=true;
+				}
+			});
+		}
+		this.scene1AIPoints = this.AIHandler.NPCposition['scene1'];
+		this.scene2AIPoints = this.AIHandler.NPCposition['scene2'];
+		this.multiAIPoints = this.AIHandler.NPCposition['multiplayer'];
+
 		this.load();
+	}
+
+	updateNpcs(npcsPos,npcsQua) {
+		for(let i =0;i<this.npcs.length;i++){
+			this.npcs[i].position =new Vector3(npcsPos[i].x,npcsPos[i].y,npcsPos[i].z)
+			this.npcs[i].qua = new Quaternion(npcsQua[i]._x,npcsQua[i]._y,npcsQua[i]._z,npcsQua[i]._w)
+		}
 	}
 
 	initMouseHandler(){
@@ -65,62 +90,44 @@ class NPCHandler{
         dracoLoader.setDecoderPath( `${this.game.assetsPath}../libs/three137/draco/` );
         loader.setDRACOLoader( dracoLoader );
         this.loadingBar.visible = true;
-		
-		// // Load a GLTF resource
-		// loader.load(
-		// 	// resource URL
-		// 	`swat-guy.glb`,
-		// 	// called when the resource is loaded
-		// 	gltf => {
-		// 		if (this.game.pathfinder){
-		// 			this.initNPCs(gltf);
-		// 		}else{
-		// 			this.gltf = gltf;
-		// 		}
-		// 	},
-		// 	// called while loading is progressing
-		// 	xhr => {
-
-		// 		this.loadingBar.update( 'swat-guy', xhr.loaded, xhr.total );
-
-		// 	},
-		// 	// called when loading has errors
-		// 	err => {
-
-		// 		console.error( err );
-
-		// 	}
-		// );
 
 		let currentNPCCounts;
 
 		if (this.scene == "scene1"){
 			currentNPCCounts = this.scene1Points.length;
+			this.aiNPCpoints = this.scene1AIPoints;
 		}
 		else if(this.scene == "scene2"){
 			currentNPCCounts = this.scene2Points.length;
+			this.aiNPCpoints = this.scene2AIPoints;
 		}
 		else{
 			// multi mode NPC nums
 			currentNPCCounts = 4;
+			this.aiNPCpoints = this.multiAIPoints;
 		}
 
 		// Load a GLTF resource
-		for (let i=0; i<currentNPCCounts; i++){
+		for (let i=0; i<=currentNPCCounts; i++){
 			loader.load(
 				// resource URL
 				`swat-guy.glb`,
 				// called when the resource is loaded
 				gltf => {
-					if (this.scene == "scene1"){
-						this.initScene1Npcs(gltf, i);
+					if(i == currentNPCCounts && this.scene !== "multiplayer") {
+						this.initAInpc(gltf);
 					}
-					else if(this.scene == "scene2"){
-						this.initScene2Npcs(gltf, i);
-					}
-					else{
-						// TODO: multi mode
-						this.initNPCs(gltf);
+					else if(i < currentNPCCounts){
+						if (this.scene == "scene1"){
+							this.initScene1Npcs(gltf, i);
+						}
+						else if(this.scene == "scene2"){
+							this.initScene2Npcs(gltf, i);
+						}
+						else{
+							// multi mode
+							this.initNPCs(gltf);
+						}
 					}
 					this.ready = true;
 					this.game.startRendering();
@@ -139,6 +146,53 @@ class NPCHandler{
 				}
 			);
 		}
+	}
+
+	initAInpc(gltf){
+		const object = gltf.scene;
+
+		object.traverse(function(child){
+			if (child.isMesh){
+				child.castShadow = true;
+				child.frustumCulled = false;
+				child.visible = true; 
+			}
+		});
+
+		const options = {
+			object: object,
+			speed: 0.8,
+			animations: gltf.animations,
+			// waypoints: this.waypoints,
+			app: this.game,
+			showPath: false,
+			zone: 'factory',
+			name: 'AI Bot',
+		};
+
+		const npc = new NPC(options);
+
+		npc.object.position.copy(this.aiNPCpoints);
+
+		const player = npc.object;
+
+		if(this.scene == "scene1"){
+			player.rotation.y = -Math.PI/2;	
+		}
+		else if(this.scene == "scene2"){
+			player.rotation.y = Math.PI;
+		}
+		else {
+			player.rotation.y = Math.PI;
+		}
+
+		// set action
+		npc.action = 'idle';
+		npc.ai = true;
+		
+		this.npcs.push(npc)
+
+		this.loadingBar.visible = !this.loadingBar.loaded;
 	}
 
 	initScene1Npcs(gltf = this.gltf, i){
@@ -257,10 +311,14 @@ class NPCHandler{
 
 		const npc = new NPC(options);
 
-		npc.object.position.copy(this.randomWaypoint);
 
-		npc.newPath(this.randomWaypoint);
-		
+		//重要
+		this.pos = this.randomWaypoint;
+		npc.object.position.copy(this.pos);
+		this.path = this.randomWaypoint;
+		npc.newPath(this.path);
+
+
 		this.npcs.push(npc);
 
 		this.loadingBar.visible = !this.loadingBar.loaded;
@@ -317,7 +375,29 @@ class NPCHandler{
 	}
 
     update(dt){
-        if (this.npcs) this.npcs.forEach( npc => npc.update(dt) );
+        if (this.npcs) {
+
+				this.npcs.forEach( npc => npc.update(dt,this.isMaster) );
+			if(this.isMaster){
+				let temP=[];
+				let temQ=[];
+				this.npcs.forEach(function(npc){
+					temP.push(npc.object.position)
+					temQ.push(npc.object.quaternion)
+				})
+				this.npcP = temP;
+				this.npcQua = temQ;
+			}
+		}
+		if(this.isMaster && this.scene == 'multiplayer'){
+
+			this.game.user.socket.emit('updateNpc',{
+				npcsPos:this.npcP,
+				npcsQua:this.npcQua
+			})
+		}
+
+
     }
 }
 

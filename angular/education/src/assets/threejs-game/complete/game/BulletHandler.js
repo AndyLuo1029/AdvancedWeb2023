@@ -27,22 +27,17 @@ sphereIntersectsCylinder(px, py, pz, pr, cx, cy, cz, cr, ch)：
 */
 
 class BulletHandler{
-    constructor(game){
+    constructor(game,user){
         this.game = game;
         this.scene = game.scene;
         const geometry = new CylinderGeometry(0.01, 0.01, 0.08);
         geometry.rotateX( Math.PI/2 );
-        // geometry.rotateY( Math.PI/2 );
         const material = new MeshBasicMaterial();
         this.bullet = new Mesh(geometry, material);
-
         this.bullets = [];
-
         this.npcs = this.game.npcHandler.npcs;
-        
-        this.user = this.game.user;
+        this.user = user;
         this.haveBlink = 0;
-
         this.forward = new Vector3( 0, 0, -1 );
         this.xAxis = new Vector3( 1, 0, 0 );
         this.tmpVec3 = new Vector3();
@@ -67,7 +62,6 @@ class BulletHandler{
         this.scene.add(bullet);
         bullet.visible = true;
         this.bullets.push(bullet);
-
         
         // add audio
         const listener = this.listener;
@@ -106,18 +100,18 @@ class BulletHandler{
         
             for(let i=1; i<=iterations; i++){
                 p.lerpVectors(p1, p3, i/iterations);
-                // console.log(bullet.userData);
                 if (bullet.userData.targetType==1){
                     const p2 = this.user.position.clone();
                     p2.y += 1.2;
-                    hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 2.4, 0.4);
+                    hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 2.4, 0.3);
                     if (hit) target = this.user;
                 }else{
                     this.npcs.some( npc => {
-                        if (!npc.dead){
+                        if (!npc.dead && !npc.ai){
+                            // can't hit ai npc
                             const p2 = npc.position.clone();
                             p2.y += 1.5;
-                            hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 3.0, 0.5);
+                            hit = sphereIntersectsCylinder(p.x, p.y, p.z, 0.01, p2.x, p2.y, p2.z, 3.0, 0.3);
                             if (hit){
                                 target = npc;
                                 return true;
@@ -132,7 +126,6 @@ class BulletHandler{
                 this.user.hitCount++;
                 target.hp -= 1;
                 bullet.userData.remove = true;
-                // console.log([target.name,target.hp]);
                 this.blink(target);
                 if(target.hp<=0) target.action = 'shot';
             }else{
